@@ -114,7 +114,7 @@
         </button>
         <button onclick="switchTab('stok')" id="nav-stok" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200">
           <i class="fa-solid fa-boxes-stacked text-lg w-5"></i>
-          <span>Stok & Barang Masuk</span>
+          <span>Stok Barang</span>
         </button>
         <button onclick="switchTab('hutang')" id="nav-hutang" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200">
           <i class="fa-solid fa-book-bookmark text-lg w-5"></i>
@@ -1687,16 +1687,17 @@
       document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
       document.getElementById(`tab-${tabName}`).classList.remove('hidden');
 
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200";
-      });
-      document.querySelectorAll('.nav-btn-admin').forEach(btn => {
-        btn.className = "nav-btn-admin w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200";
+      // Reset semua status aktif tombol navigasi
+      document.querySelectorAll('.nav-btn, .nav-btn-admin').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white', 'shadow-lg', 'shadow-emerald-950/20');
+        btn.classList.add('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
       });
 
+      // Set tombol aktif baru
       const activeBtn = document.getElementById(`nav-${tabName}`);
       if (activeBtn) {
-        activeBtn.className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 bg-emerald-600 text-white shadow-lg shadow-emerald-950/20";
+        activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
+        activeBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-lg', 'shadow-emerald-950/20');
       }
 
       // Close mobile sidebar if open
