@@ -118,5 +118,45 @@ Gunakan akun bawaan berikut setelah melakukan seeding database:
 
 ---
 
+## 📷 Panduan Mengaktifkan Kamera HP Kasir (Non-HTTPS)
+Browser modern pada HP (Chrome, Safari, dll.) melarang keras akses perangkat keras seperti kamera pada protokol HTTP biasa (Non-HTTPS) demi alasan keamanan, kecuali untuk alamat `localhost`. Jika kasir mengakses POS menggunakan IP lokal server (misal: `http://192.168.1.100:3000`), kamera HP tidak akan bisa terbuka secara otomatis.
+
+Berikut adalah 2 cara mudah untuk membebaskan akses kamera tersebut:
+
+### Cara 1: Konfigurasi Flags di Google Chrome HP Kasir (Sangat Direkomendasikan & Cepat)
+1.  Buka aplikasi **Google Chrome** pada HP Android/iOS kasir Anda.
+2.  Ketik alamat berikut di address bar Chrome lalu tekan Enter/Go:
+    ```
+    chrome://flags/#unsafely-treat-insecure-origin-as-secure
+    ```
+3.  Cari bagian **"Insecure origins treated as secure"**.
+4.  Pada kotak input teks yang disediakan, masukkan alamat IP server POS Anda lengkap beserta port-nya (misal: `http://192.168.1.100:3000`).
+5.  Ubah pilihan dropdown di sebelahnya dari **Disabled** menjadi **Enabled**.
+6.  Tekan tombol **Relaunch** di bagian kanan bawah layar untuk memulai ulang Chrome.
+7.  Buka kembali alamat POS tersebut. Browser kini menganggap koneksi aman dan kamera HP kasir akan langsung terbuka secara otomatis saat tombol scan ditekan.
+
+### Cara 2: Menggunakan Layanan Tunneling HTTPS Sederhana (localtunnel)
+Jika Anda ingin mengakses aplikasi kasir lewat internet secara aman (HTTPS) dengan SSL gratis bawaan untuk uji coba cepat:
+1.  Jalankan localtunnel secara gratis di server (pastikan server terkoneksi internet):
+    ```bash
+    npx localtunnel --port 3000
+    ```
+2.  Gunakan tautan `https` yang diberikan (misal: `https://toko-rejeki.localtunnel.me`) untuk diakses di HP kasir. Karena menggunakan HTTPS, kamera HP akan langsung terbuka secara otomatis tanpa perlu konfigurasi tambahan.
+
+### Cara 3: Integrasi dengan Cloudflare Tunnel + Domain Sendiri (Solusi Terbaik & Paling Aman untuk Produksi)
+Jika Anda memiliki domain kustom (misal: `tokoanda.com`) dan menggunakan Cloudflare, ini adalah solusi paling profesional:
+1.  **Otomatis HTTPS**: Cloudflare Tunnel (`cloudflared`) secara otomatis menyediakan sertifikat SSL/TLS (HTTPS) resmi dan gratis untuk domain Anda.
+2.  **Kamera Langsung Aktif**: Karena diakses menggunakan HTTPS resmi (misal: `https://pos.tokoanda.com`), browser HP kasir akan menganggap koneksi 100% aman dan **kamera HP akan langsung terbuka secara otomatis** tanpa perlu mengatur konfigurasi flags di HP kasir.
+3.  **Keamanan Ekstra**: Anda tidak perlu membuka port (*port forwarding*) di router toko Anda. Koneksi dibuat secara keluar (*outbound*) dari server lokal ke jaringan Cloudflare, sehingga server Anda terlindungi dari serangan siber luar.
+4.  **Cara Setup Singkat**:
+    *   Install `cloudflared` di server Ubuntu Anda.
+    *   Login dan hubungkan dengan akun Cloudflare Anda: `cloudflared tunnel login`.
+    *   Buat tunnel baru: `cloudflared tunnel create pos-toko`.
+    *   Rute kustom domain ke localhost server: `cloudflared tunnel route dns pos-toko pos.tokoanda.com`.
+    *   Jalankan tunnel untuk mengarahkan ke port aplikasi POS: `cloudflared tunnel run --url http://localhost:3000 pos-toko`.
+
+
+---
+
 ## 📄 Lisensi
 Proyek ini dilisensikan di bawah Lisensi MIT - Lihat file [LICENSE](LICENSE) untuk detail lebih lanjut.

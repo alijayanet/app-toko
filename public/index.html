@@ -2831,6 +2831,12 @@
     // ==========================================
 
     function openCameraScanner() {
+      // Deteksi kelayakan HTTPS/Secure Context untuk kamera HP
+      const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+      if (!window.isSecureContext && !isLocalhost) {
+        alert("⚠️ Izin Kamera Diblokir Browser HP (Non-HTTPS):\n\nKamera HP kasir tidak dapat terbuka secara otomatis karena browser membatasi akses hardware pada koneksi HTTP biasa (IP Jaringan Lokal).\n\nSilakan ikuti Panduan Kamera HP Non-HTTPS di README atau aktifkan bendera keamanan Chrome flag di HP Anda agar kamera berfungsi.");
+      }
+
       openModal('modal-camera-scanner');
       const config = { fps: 15, qrbox: { width: 250, height: 180 } };
       html5QrcodeScanner = new Html5Qrcode("scanner-reader");
@@ -2844,6 +2850,8 @@
         () => {}
       ).catch((err) => {
         console.error("Gagal membuka kamera: ", err);
+        alert("Gagal mengaktifkan kamera. Pastikan browser diberikan izin kamera dan konfigurasikan Chrome flags jika menggunakan IP jaringan lokal.");
+        closeCameraScanner();
       });
     }
 
