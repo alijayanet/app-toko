@@ -69,12 +69,11 @@ npm install
 ```
 
 ### Langkah 3: Konfigurasi Environment File
-Buat file bernama `.env` di direktori root proyek dan isi dengan konfigurasi port Anda:
-```env
-PORT=3000
-HOST=0.0.0.0
+Pada server Ubuntu, buat file `.env` dengan menyalin file template `env.example.txt` menggunakan perintah berikut:
+```bash
+cp env.example.txt .env
 ```
-*(Catatan: Host `0.0.0.0` memastikan server Express dapat diakses dari IP lokal mana pun dalam jaringan Wi-Fi/LAN toko Anda).*
+Setelah disalin, Anda dapat menyesuaikan konfigurasi port di dalam `.env` jika diperlukan (secara default diset ke `PORT=3000` dan `HOST=0.0.0.0` agar server Express dapat diakses dari IP lokal mana pun dalam jaringan Wi-Fi/LAN toko Anda).
 
 ### Langkah 4: Seeding Database Awal
 Jalankan perintah berikut untuk menginisialisasi database SQLite (`pos.db`) dan membuat tabel-tabel data master beserta data awal (users, settings, dan produk dummy):
