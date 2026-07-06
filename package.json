@@ -1,0 +1,18 @@
+{
+  "name": "centralized-pos-sqlite",
+  "version": "1.0.0",
+  "description": "Centralized POS Application with SQLite, designed for Ubuntu Server deployment",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "seed": "node src/seed.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "author": "Antigravity",
+  "license": "ISC"
+}

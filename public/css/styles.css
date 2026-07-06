@@ -1,0 +1,96 @@
+/* ==========================================================================
+   CSS CUSTOM UNTUK THERMAL PRINTING & DESIGN POS
+   ========================================================================== */
+
+/* Kelas Pembantu Umum */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
+/* Penyesuaian Glassmorphism & Animasi Hover */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.dark .glass-panel {
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(55, 65, 81, 0.5);
+}
+
+/* ==========================================================================
+   LOGIKA CETAK THERMAL ( window.print() )
+   ========================================================================== */
+@media print {
+  /* Sembunyikan seluruh elemen halaman web di layar */
+  body * {
+    visibility: hidden;
+    background: transparent !important;
+  }
+
+  /* Tampilkan hanya area struk thermal */
+  #thermal-receipt, #thermal-receipt * {
+    visibility: visible;
+  }
+
+  #thermal-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin: 0;
+    padding: 2mm;
+    background: #fff !important;
+    color: #000 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+    box-shadow: none !important;
+  }
+
+  /* Lebar Dinamis Berdasarkan Konfigurasi Kertas */
+  .receipt-width-58 {
+    width: 54mm !important; /* Margin kompensasi 58mm */
+    max-width: 54mm !important;
+  }
+
+  .receipt-width-80 {
+    width: 76mm !important; /* Margin kompensasi 80mm */
+    max-width: 76mm !important;
+  }
+
+  /* Hilangkan margin bawaan cetak browser (menghilangkan header/footer tanggal & URL) */
+  @page {
+    margin: 0;
+  }
+
+  /* Teks rapi monospace untuk thermal printer */
+  .print-mono {
+    font-family: 'Courier New', Courier, monospace !important;
+  }
+
+  .print-dashed-line {
+    border-top: 1px dashed #000 !important;
+    height: 0;
+    margin: 4px 0 !important;
+  }
+
+  .print-double-dashed-line {
+    border-top: 3px double #000 !important;
+    height: 0;
+    margin: 6px 0 !important;
+  }
+}
