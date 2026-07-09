@@ -384,6 +384,7 @@
                     <th class="px-6 py-4 text-center">Stok Terkecil</th>
                     <th class="px-6 py-4">Satuan & Harga Jual</th>
                     <th class="px-6 py-4 text-center">Status</th>
+                    <th class="px-6 py-4 text-center admin-only">Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="stock-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
@@ -712,7 +713,12 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-1">SKU / Barcode <span class="text-rose-500">*</span></label>
-            <input type="text" id="add-prod-id" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white dark:bg-slate-800">
+            <div class="flex gap-2">
+              <input type="text" id="add-prod-id" required class="flex-1 min-w-0 px-3 py-2 border rounded-xl text-sm bg-white dark:bg-slate-800 focus:ring-1 focus:ring-indigo-500">
+              <button type="button" onclick="scanBarcodeForInput('add-prod-id')" class="bg-indigo-600 hover:bg-indigo-700 text-white w-9 h-9 rounded-xl flex items-center justify-center text-sm shadow-md flex-shrink-0" title="Scan Barcode Kamera">
+                <i class="fa-solid fa-camera"></i>
+              </button>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Produk <span class="text-rose-500">*</span></label>
@@ -764,6 +770,48 @@
           </div>
         </div>
         <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-sm">SIMPAN PRODUK & SATUAN</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Edit Produk & Satuan -->
+  <div id="modal-edit-product" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-thin">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-outfit font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-box text-indigo-500"></i> Edit Produk & Satuan</h3>
+        <button onclick="closeModal('modal-edit-product')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form onsubmit="handleEditProductSubmit(event)" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1">SKU / Barcode (Tidak dapat diubah)</label>
+            <input type="text" id="edit-prod-id" readonly class="w-full px-3 py-2 border rounded-xl text-sm bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Produk <span class="text-rose-500">*</span></label>
+            <input type="text" id="edit-prod-name" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white dark:bg-slate-800">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1">Harga Modal Base <span class="text-rose-500">*</span></label>
+            <input type="number" id="edit-prod-cost" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white dark:bg-slate-800">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1">Minimum Stok</label>
+            <input type="number" id="edit-prod-min-stock" class="w-full px-3 py-2 border rounded-xl text-sm bg-white dark:bg-slate-800">
+          </div>
+        </div>
+        <div class="border-t border-slate-100 dark:border-slate-800 pt-4">
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Konfigurasi Satuan (Multi-Unit)</h4>
+            <button type="button" onclick="addEditUnitRow()" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-plus-circle"></i> Tambah Satuan</button>
+          </div>
+          <div id="edit-prod-units-container" class="space-y-3">
+            <!-- Dinamis -->
+          </div>
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-sm">SIMPAN PERUBAHAN PRODUK</button>
       </form>
     </div>
   </div>
@@ -1204,6 +1252,7 @@
     let activeSubDebtTab = 'piutang';
     let paymentType = 'CASH';
     let html5QrcodeScanner = null;
+    let cameraScanTargetInput = null;
     let purchaseItems = [];
     let loadedReceivables = [];
     let loadedPayables = [];
@@ -1529,7 +1578,7 @@
           const logsTbody = document.getElementById('report-stock-logs-tbody');
           logsTbody.innerHTML = d.stock_history.length
             ? d.stock_history.map(l => {
-                const date = new Date(l.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const date = parseDatabaseDate(l.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 const typeClass = l.type === 'SALE' ? 'bg-rose-100 text-rose-800' : l.type === 'PURCHASE' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
                 return `
                   <tr class="hover:bg-slate-50 dark:hover:bg-slate-800">
@@ -1561,7 +1610,7 @@
               <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 border-b">
                 <td class="px-6 py-4 font-mono font-semibold">${sale.invoice_no}</td>
                 <td class="px-6 py-4">${sale.customer_name} <br><span class="text-xs text-slate-400">${sale.customer_phone}</span></td>
-                <td class="px-6 py-4">${sale.due_date ? new Date(sale.due_date).toLocaleDateString('id-ID') : '-'}</td>
+                <td class="px-6 py-4">${sale.due_date ? parseDatabaseDate(sale.due_date).toLocaleDateString('id-ID') : '-'}</td>
                 <td class="px-6 py-4 text-right">${formatRupiah(sale.total_amount)}</td>
                 <td class="px-6 py-4 text-right text-rose-500 font-bold">${formatRupiah(sale.debt_balance)}</td>
                 <td class="px-6 py-4 text-center">
@@ -1593,7 +1642,7 @@
               <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 border-b">
                 <td class="px-6 py-4 font-mono font-semibold">BELI-${pur.id}</td>
                 <td class="px-6 py-4">${pur.supplier_name} <br><span class="text-xs text-slate-400">${pur.supplier_phone}</span></td>
-                <td class="px-6 py-4">${pur.due_date ? new Date(pur.due_date).toLocaleDateString('id-ID') : '-'}</td>
+                <td class="px-6 py-4">${pur.due_date ? parseDatabaseDate(pur.due_date).toLocaleDateString('id-ID') : '-'}</td>
                 <td class="px-6 py-4 text-right">${formatRupiah(pur.total_amount)}</td>
                 <td class="px-6 py-4 text-right text-rose-500 font-bold">${formatRupiah(pur.debt_balance)}</td>
                 <td class="px-6 py-4 text-center">
@@ -2191,7 +2240,7 @@
         <div class="text-center">HP: ${storeSettings.store_phone || ''}</div>
         <div class="print-dashed-line"></div>
         <div class="flex justify-between"><span>No Nota:</span><span class="font-mono">${receipt.invoice_no}</span></div>
-        <div class="flex justify-between"><span>Tgl:</span><span>${new Date(receipt.sale_date).toLocaleString('id-ID')}</span></div>
+        <div class="flex justify-between"><span>Tgl:</span><span>${parseDatabaseDate(receipt.sale_date).toLocaleString('id-ID')}</span></div>
         ${customerLabel}
         <div class="print-dashed-line"></div>
         
@@ -2211,7 +2260,7 @@
           : `
             <div class="flex justify-between"><span>Uang Muka (DP):</span><span>Rp ${formatNumber(receipt.cash_amount)}</span></div>
             <div class="flex justify-between text-rose-500 font-bold"><span>Sisa Piutang:</span><span>Rp ${formatNumber(receipt.debt_balance)}</span></div>
-            ${receipt.due_date ? `<div class="flex justify-between text-xs"><span>Jatuh Tempo:</span><span>${new Date(receipt.due_date).toLocaleDateString('id-ID')}</span></div>` : ''}
+            ${receipt.due_date ? `<div class="flex justify-between text-xs"><span>Jatuh Tempo:</span><span>${parseDatabaseDate(receipt.due_date).toLocaleDateString('id-ID')}</span></div>` : ''}
           `
         }
         <div class="print-dashed-line"></div>
@@ -2231,6 +2280,7 @@
     function renderStockTable() {
       const tbody = document.getElementById('stock-table-body');
       tbody.innerHTML = '';
+      const role = localStorage.getItem('pos_user_role');
 
       products.forEach(p => {
         const unitsStr = p.units.map(u => `
@@ -2245,6 +2295,13 @@
           ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800">Menipis</span>`
           : `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Aman</span>`;
 
+        const actionsHTML = role === 'ADMIN'
+          ? `<td class="px-6 py-4 text-center admin-only whitespace-nowrap">
+              <button onclick="openEditProductModal('${p.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold mr-1">Edit</button>
+              <button onclick="handleDeleteProduct('${p.id}')" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">Hapus</button>
+             </td>`
+          : `<td class="px-6 py-4 text-center admin-only"></td>`;
+
         const row = document.createElement('tr');
         row.className = "hover:bg-slate-50 dark:hover:bg-slate-800 border-b";
         row.innerHTML = `
@@ -2254,9 +2311,12 @@
           <td class="px-6 py-4 text-center font-bold font-mono ${isLow ? 'text-rose-500' : 'text-slate-700 dark:text-slate-300'}">${p.stock}</td>
           <td class="px-6 py-4">${unitsStr}</td>
           <td class="px-6 py-4 text-center">${statusHTML}</td>
+          ${actionsHTML}
         `;
         tbody.appendChild(row);
       });
+
+      applyRoleVisibility(role);
     }
 
     function filterStockTable() {
@@ -2348,6 +2408,149 @@
           fetchProducts();
         } else {
           alert("Gagal: " + json.message);
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function openEditProductModal(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod) return;
+
+      document.getElementById('edit-prod-id').value = prod.id;
+      document.getElementById('edit-prod-name').value = prod.name;
+      document.getElementById('edit-prod-cost').value = prod.cost_price_base;
+      document.getElementById('edit-prod-min-stock').value = prod.min_stock;
+
+      const container = document.getElementById('edit-prod-units-container');
+      container.innerHTML = '';
+
+      prod.units.forEach(u => {
+        const isBase = u.conversion_factor === 1;
+        const div = document.createElement('div');
+        div.className = "grid grid-cols-12 gap-2 items-center bg-slate-50 dark:bg-slate-800 p-3 rounded-xl relative";
+        div.innerHTML = `
+          <div class="col-span-3">
+            <label class="block text-[10px] text-slate-400">Satuan</label>
+            <input type="text" name="unit_name" value="${u.unit_name}" ${isBase ? 'readonly' : ''} required class="w-full px-2 py-1 border rounded text-xs bg-white dark:bg-slate-800 ${isBase ? 'text-slate-400 bg-slate-100 dark:bg-slate-700 border-none' : ''}">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-[10px] text-slate-400">Faktor</label>
+            <input type="number" name="conversion_factor" value="${u.conversion_factor}" ${isBase ? 'readonly' : ''} required min="1" class="w-full px-2 py-1 border rounded text-xs text-center bg-white dark:bg-slate-800 ${isBase ? 'text-slate-400 bg-slate-100 dark:bg-slate-700 border-none' : ''}">
+          </div>
+          <div class="col-span-3">
+            <label class="block text-[10px] text-slate-400">Harga Eceran</label>
+            <input type="number" name="price_retail" value="${u.price_retail}" required class="w-full px-2 py-1 border rounded text-xs bg-white dark:bg-slate-800">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-[10px] text-slate-400">Harga Grosir</label>
+            <input type="number" name="price_wholesale" value="${u.price_wholesale}" class="w-full px-2 py-1 border rounded text-xs bg-white dark:bg-slate-800">
+          </div>
+          <div class="col-span-2 flex items-center gap-1">
+            <div class="flex-1">
+              <label class="block text-[10px] text-slate-400">Min Grosir</label>
+              <input type="number" name="wholesale_min_qty" value="${u.wholesale_min_qty}" class="w-full px-2 py-1 border rounded text-xs text-center bg-white dark:bg-slate-800">
+            </div>
+            ${isBase ? '<div class="w-5"></div>' : '<button type="button" onclick="this.parentElement.parentElement.remove()" class="text-rose-500 hover:text-rose-700 text-sm mt-3"><i class="fa-solid fa-trash-can"></i></button>'}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      openModal('modal-edit-product');
+    }
+
+    function addEditUnitRow() {
+      const container = document.getElementById('edit-prod-units-container');
+      const div = document.createElement('div');
+      div.className = "grid grid-cols-12 gap-2 items-center bg-slate-50 dark:bg-slate-800 p-3 rounded-xl relative";
+      div.innerHTML = `
+        <div class="col-span-3">
+          <label class="block text-[10px] text-slate-400">Satuan</label>
+          <input type="text" name="unit_name" placeholder="misal: Pak/Dus" required class="w-full px-2 py-1 border rounded text-xs bg-white dark:bg-slate-800 text-white">
+        </div>
+        <div class="col-span-2">
+          <label class="block text-[10px] text-slate-400">Faktor</label>
+          <input type="number" name="conversion_factor" placeholder="e.g. 10" required min="2" class="w-full px-2 py-1 border rounded text-xs text-center bg-white dark:bg-slate-800 text-white">
+        </div>
+        <div class="col-span-3">
+          <label class="block text-[10px] text-slate-400">Harga Eceran</label>
+          <input type="number" name="price_retail" required class="w-full px-2 py-1 border rounded text-xs bg-white dark:bg-slate-800">
+        </div>
+        <div class="col-span-2">
+          <label class="block text-[10px] text-slate-400">Harga Grosir</label>
+          <input type="number" name="price_wholesale" class="w-full px-2 py-1 border rounded text-xs bg-white dark:bg-slate-800">
+        </div>
+        <div class="col-span-2 flex items-center gap-1">
+          <div class="flex-1">
+            <label class="block text-[10px] text-slate-400">Min Grosir</label>
+            <input type="number" name="wholesale_min_qty" class="w-full px-2 py-1 border rounded text-xs text-center bg-white dark:bg-slate-800">
+          </div>
+          <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-rose-500 hover:text-rose-700 text-sm mt-3"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    async function handleEditProductSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-prod-id').value;
+      const name = document.getElementById('edit-prod-name').value.trim();
+      const cost_price_base = parseFloat(document.getElementById('edit-prod-cost').value);
+      const min_stock = parseInt(document.getElementById('edit-prod-min-stock').value || 0);
+
+      const container = document.getElementById('edit-prod-units-container');
+      const rows = container.children;
+      const units = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const unit_name = row.querySelector('[name="unit_name"]').value.trim();
+        const conversion_factor = parseInt(row.querySelector('[name="conversion_factor"]').value);
+        const price_retail = parseFloat(row.querySelector('[name="price_retail"]').value);
+        const price_wholesale = parseFloat(row.querySelector('[name="price_wholesale"]').value || 0);
+        const wholesale_min_qty = parseInt(row.querySelector('[name="wholesale_min_qty"]').value || 0);
+
+        if (unit_name && conversion_factor) {
+          units.push({ unit_name, conversion_factor, price_retail, price_wholesale, wholesale_min_qty });
+        }
+      }
+
+      try {
+        const res = await fetchAPI(`/api/products/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ name, cost_price_base, min_stock, units })
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert("Produk berhasil diperbarui!");
+          closeModal('modal-edit-product');
+          fetchProducts();
+        } else {
+          alert("Gagal memperbarui produk: " + json.message);
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function handleDeleteProduct(productId) {
+      if (!confirm(`Apakah Anda yakin ingin menghapus produk dengan SKU "${productId}"?\n\nTindakan ini tidak dapat dibatalkan.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetchAPI(`/api/products/${productId}`, {
+          method: 'DELETE'
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert("Produk berhasil dihapus!");
+          fetchProducts();
+          updateDashboardReport();
+        } else {
+          alert("Gagal menghapus produk: " + json.message);
         }
       } catch (error) {
         alert(error.message);
@@ -2571,9 +2774,9 @@
         if (!sale) return;
 
         document.getElementById('det-rec-invoice').textContent = sale.invoice_no;
-        document.getElementById('det-rec-date').textContent = new Date(sale.sale_date).toLocaleString('id-ID');
+        document.getElementById('det-rec-date').textContent = parseDatabaseDate(sale.sale_date).toLocaleString('id-ID');
         document.getElementById('det-rec-customer').textContent = sale.customer_name + ' (' + (sale.customer_phone || '-') + ')';
-        document.getElementById('det-rec-due').textContent = sale.due_date ? new Date(sale.due_date).toLocaleDateString('id-ID') : 'Tidak diatur';
+        document.getElementById('det-rec-due').textContent = sale.due_date ? parseDatabaseDate(sale.due_date).toLocaleDateString('id-ID') : 'Tidak diatur';
         
         document.getElementById('det-rec-total').textContent = formatRupiah(sale.total_amount);
         document.getElementById('det-rec-balance').textContent = formatRupiah(sale.debt_balance);
@@ -2606,7 +2809,7 @@
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 border-b dark:hover:bg-slate-800 dark:border-slate-800";
             tr.innerHTML = `
-              <td class="px-4 py-2 text-slate-400">${new Date(p.payment_date).toLocaleString('id-ID')}</td>
+              <td class="px-4 py-2 text-slate-400">${parseDatabaseDate(p.payment_date).toLocaleString('id-ID')}</td>
               <td class="px-4 py-2 text-right font-mono font-bold text-emerald-500">${formatRupiah(p.amount)}</td>
               <td class="px-4 py-2 text-slate-500">${p.note || '-'}</td>
             `;
@@ -2628,9 +2831,9 @@
         if (!pur) return;
 
         document.getElementById('det-pay-id').textContent = `BELI-${pur.id}`;
-        document.getElementById('det-pay-date').textContent = new Date(pur.purchase_date).toLocaleString('id-ID');
+        document.getElementById('det-pay-date').textContent = parseDatabaseDate(pur.purchase_date).toLocaleString('id-ID');
         document.getElementById('det-pay-supplier').textContent = pur.supplier_name + ' (' + (pur.supplier_phone || '-') + ')';
-        document.getElementById('det-pay-due').textContent = pur.due_date ? new Date(pur.due_date).toLocaleDateString('id-ID') : 'Tidak diatur';
+        document.getElementById('det-pay-due').textContent = pur.due_date ? parseDatabaseDate(pur.due_date).toLocaleDateString('id-ID') : 'Tidak diatur';
         
         document.getElementById('det-pay-total').textContent = formatRupiah(pur.total_amount);
         document.getElementById('det-pay-balance').textContent = formatRupiah(pur.debt_balance);
@@ -2663,7 +2866,7 @@
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 border-b dark:hover:bg-slate-800 dark:border-slate-800";
             tr.innerHTML = `
-              <td class="px-4 py-2 text-slate-400">${new Date(p.payment_date).toLocaleString('id-ID')}</td>
+              <td class="px-4 py-2 text-slate-400">${parseDatabaseDate(p.payment_date).toLocaleString('id-ID')}</td>
               <td class="px-4 py-2 text-right font-mono font-bold text-emerald-500">${formatRupiah(p.amount)}</td>
               <td class="px-4 py-2 text-slate-500">${p.note || '-'}</td>
             `;
@@ -2813,6 +3016,15 @@
       }).format(number);
     }
 
+    function parseDatabaseDate(dateStr) {
+      if (!dateStr) return new Date();
+      let formatted = dateStr;
+      if (typeof dateStr === 'string' && dateStr.includes(' ') && !dateStr.includes('T') && !dateStr.includes('Z')) {
+        formatted = dateStr.replace(' ', 'T') + 'Z';
+      }
+      return new Date(formatted);
+    }
+
     function openModal(id) {
       document.getElementById(id).classList.remove('hidden');
     }
@@ -2830,6 +3042,11 @@
     // MOBILE CAMERA SCANNING (html5-qrcode)
     // ==========================================
 
+    function scanBarcodeForInput(inputId) {
+      cameraScanTargetInput = inputId;
+      openCameraScanner();
+    }
+
     function openCameraScanner() {
       // Deteksi kelayakan HTTPS/Secure Context untuk kamera HP
       const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
@@ -2844,8 +3061,18 @@
         { facingMode: "environment" }, 
         config,
         (decodedText) => {
-          scanProductByBarcode(decodedText.trim());
-          closeCameraScanner();
+          const barcode = decodedText.trim();
+          if (cameraScanTargetInput) {
+            const input = document.getElementById(cameraScanTargetInput);
+            if (input) {
+              input.value = barcode;
+              input.dispatchEvent(new Event('input'));
+            }
+            closeCameraScanner();
+          } else {
+            scanProductByBarcode(barcode);
+            closeCameraScanner();
+          }
         },
         () => {}
       ).catch((err) => {
@@ -2856,6 +3083,7 @@
     }
 
     function closeCameraScanner() {
+      cameraScanTargetInput = null;
       if (html5QrcodeScanner) {
         try {
           if (html5QrcodeScanner.isScanning) {
