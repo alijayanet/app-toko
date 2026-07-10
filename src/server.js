@@ -277,6 +277,75 @@ app.post('/api/products', authenticate, (req, res) => {
   }
 });
 
+// Update/Edit Produk (Admin Only)
+app.put('/api/products/:id', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat memperbarui produk.' });
+  }
+  const { id } = req.params;
+  const { name, cost_price_base, min_stock, units } = req.body;
+  if (!name || cost_price_base === undefined || !units || !units.length) {
+    return res.status(400).json({ success: false, message: 'Data tidak lengkap' });
+  }
+  
+  const updateProductTx = db.transaction(() => {
+    db.prepare('UPDATE m_products SET name = ?, cost_price_base = ?, min_stock = ? WHERE id = ?')
+      .run(name, cost_price_base, min_stock || 0, id);
+    
+    // Hapus unit lama
+    db.prepare('DELETE FROM m_product_units WHERE product_id = ?').run(id);
+    
+    // Masukkan unit baru
+    const insertUnit = db.prepare(`
+      INSERT INTO m_product_units (product_id, unit_name, conversion_factor, price_retail, price_wholesale, wholesale_min_qty) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    
+    for (const unit of units) {
+      insertUnit.run(
+        id, 
+        unit.unit_name, 
+        unit.conversion_factor, 
+        unit.price_retail || 0, 
+        unit.price_wholesale || 0, 
+        unit.wholesale_min_qty || 0
+      );
+    }
+  });
+
+  try {
+    updateProductTx();
+    return res.json({ success: true, message: 'Produk berhasil diperbarui' });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Hapus Produk (Admin Only)
+app.delete('/api/products/:id', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat menghapus produk.' });
+  }
+  const { id } = req.params;
+  
+  try {
+    const deleteTx = db.transaction(() => {
+      // Hapus unit terkait
+      db.prepare('DELETE FROM m_product_units WHERE product_id = ?').run(id);
+      // Hapus produk
+      db.prepare('DELETE FROM m_products WHERE id = ?').run(id);
+    });
+    
+    deleteTx();
+    return res.json({ success: true, message: 'Produk berhasil dihapus' });
+  } catch (error) {
+    if (error.message.includes('FOREIGN KEY')) {
+      return res.status(400).json({ success: false, message: 'Produk tidak dapat dihapus karena memiliki riwayat transaksi keuangan/stok. Silakan lakukan penyesuaian stok menjadi 0 jika tidak ingin digunakan kembali.' });
+    }
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Penyesuaian Stok Manual (Admin & Cashier)
 app.post('/api/products/adjust-stock', authenticate, (req, res) => {
   const { product_id, qty_change, note } = req.body;
@@ -749,6 +818,88 @@ app.post('/api/debts/suppliers/pay', authenticate, (req, res) => {
     return res.json({ success: true, message: 'Pembayaran hutang berhasil dicatat', data: result });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+
+
+// ==========================================
+// 4.5 ENDPOINT MANAJEMEN USER / KARYAWAN (SECURED & ADMIN ONLY)
+// ==========================================
+app.get('/api/users', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengelola user.' });
+  }
+  try {
+    const data = db.prepare('SELECT id, username, name, role FROM m_users ORDER BY name ASC').all();
+    return res.json({ success: true, data });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/users', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengelola user.' });
+  }
+  const { username, password, name, role } = req.body;
+  if (!username || !password || !name || !role) {
+    return res.status(400).json({ success: false, message: 'Data tidak lengkap.' });
+  }
+  try {
+    const existing = db.prepare('SELECT id FROM m_users WHERE username = ?').get(username);
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'Username sudah terdaftar.' });
+    }
+    const hashedPass = hashPassword(password);
+    db.prepare('INSERT INTO m_users (username, password, name, role) VALUES (?, ?, ?, ?)').run(username, hashedPass, name, role);
+    return res.json({ success: true, message: 'User berhasil ditambahkan.' });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/users/:id', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengelola user.' });
+  }
+  const { id } = req.params;
+  const { username, password, name, role } = req.body;
+  if (!username || !name || !role) {
+    return res.status(400).json({ success: false, message: 'Data tidak lengkap.' });
+  }
+  try {
+    const existing = db.prepare('SELECT id FROM m_users WHERE username = ? AND id != ?').get(username, id);
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'Username sudah digunakan.' });
+    }
+
+    if (password && password.trim() !== '') {
+      const hashedPass = hashPassword(password);
+      db.prepare('UPDATE m_users SET username = ?, password = ?, name = ?, role = ? WHERE id = ?').run(username, hashedPass, name, role, id);
+    } else {
+      db.prepare('UPDATE m_users SET username = ?, name = ?, role = ? WHERE id = ?').run(username, name, role, id);
+    }
+    return res.json({ success: true, message: 'User berhasil diperbarui.' });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/users/:id', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengelola user.' });
+  }
+  const { id } = req.params;
+  if (parseInt(id) === req.user.id) {
+    return res.status(400).json({ success: false, message: 'Anda tidak dapat menghapus akun Anda sendiri yang sedang aktif.' });
+  }
+  try {
+    db.prepare('DELETE FROM t_sessions WHERE user_id = ?').run(id);
+    db.prepare('DELETE FROM m_users WHERE id = ?').run(id);
+    return res.json({ success: true, message: 'User berhasil dihapus.' });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 

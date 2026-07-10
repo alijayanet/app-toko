@@ -124,6 +124,10 @@
           <i class="fa-solid fa-address-book text-lg w-5"></i>
           <span>Kontak & Relasi</span>
         </button>
+        <button onclick="switchTab('users')" id="nav-users" class="nav-btn-admin w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200">
+          <i class="fa-solid fa-users text-lg w-5"></i>
+          <span>Manajemen User</span>
+        </button>
         <button onclick="switchTab('laporan')" id="nav-laporan" class="nav-btn-admin w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200">
           <i class="fa-solid fa-chart-pie text-lg w-5"></i>
           <span>Dashboard Laporan</span>
@@ -610,6 +614,40 @@
 
               <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-sm">SIMPAN PENGATURAN TOKO</button>
             </form>
+          </div>
+        </section>
+
+        <!-- TAB 7: MANAJEMEN USER (ADMIN ONLY) -->
+        <section id="tab-users" class="tab-content hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold font-outfit">Manajemen Karyawan & User</h2>
+              <p class="text-sm text-slate-400">Daftarkan kasir baru, perbarui profil, reset kata sandi, atau hapus akses kasir.</p>
+            </div>
+            
+            <div>
+              <button onclick="openAddUserModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-user-plus"></i> Tambah User Baru
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase border-b border-slate-200 dark:border-slate-700">
+                    <th class="px-6 py-4">Nama Lengkap</th>
+                    <th class="px-6 py-4">Username Login</th>
+                    <th class="px-6 py-4">Hak Akses (Role)</th>
+                    <th class="px-6 py-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="users-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                  <!-- Dinamis -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -1233,6 +1271,40 @@
     </div>
   </div>
 
+  <!-- Modal Tambah/Edit User -->
+  <div id="modal-user-form" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('modal-user-form')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      <h3 id="user-form-title" class="font-outfit font-bold text-lg mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-user-gear text-indigo-500"></i> Tambah User Baru
+      </h3>
+      <form onsubmit="handleUserFormSubmit(event)" class="space-y-4">
+        <input type="hidden" id="user-form-id">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Lengkap <span class="text-rose-500">*</span></label>
+          <input type="text" id="user-form-name" required placeholder="Contoh: Ahmad Kasir" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Username Login <span class="text-rose-500">*</span></label>
+          <input type="text" id="user-form-username" required placeholder="Contoh: kasir2" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1" id="user-form-pass-label">Password <span class="text-rose-500">*</span></label>
+          <input type="password" id="user-form-password" placeholder="Masukkan password..." class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+          <p id="user-form-pass-help" class="text-[10px] text-slate-400 mt-1 hidden">Kosongkan jika password tidak ingin diganti.</p>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Hak Akses (Role) <span class="text-rose-500">*</span></label>
+          <select id="user-form-role" required class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+            <option value="CASHIER">Kasir (Cashier)</option>
+            <option value="ADMIN">Administrator (Full Access)</option>
+          </select>
+        </div>
+        <button type="submit" id="user-form-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-sm">SIMPAN USER</button>
+      </form>
+    </div>
+  </div>
+
   <!-- CONTAINER STRUK UNTUK THERMAL PRINT (HIDDEN ON SCREEN) -->
   <div id="thermal-receipt" class="hidden"></div>
 
@@ -1256,6 +1328,7 @@
     let purchaseItems = [];
     let loadedReceivables = [];
     let loadedPayables = [];
+    let loadedUsers = [];
     let storeSettings = {
       store_name: 'Toko Kelontong & Grosir Rejeki',
       store_address: 'Jl. Kaliurang KM 12, Sleman',
@@ -1335,6 +1408,9 @@
         fetchCustomers();
         fetchSuppliers();
         updateDashboardReport();
+        if (role === 'ADMIN') {
+          fetchUsers();
+        }
       } else {
         // Tampilkan halaman login
         document.getElementById('login-screen').classList.remove('hidden');
@@ -1352,7 +1428,7 @@
         document.querySelectorAll('.nav-btn-admin').forEach(el => el.classList.add('hidden'));
         
         // Pastikan kasir tidak terdampar di tab admin
-        if (activeTab === 'laporan' || activeTab === 'settings') {
+        if (activeTab === 'laporan' || activeTab === 'settings' || activeTab === 'users') {
           switchTab('kasir');
         }
       }
@@ -1379,6 +1455,7 @@
           localStorage.setItem('pos_user_name', json.data.user.name);
           localStorage.setItem('pos_user_role', json.data.user.role);
           localStorage.setItem('pos_user_username', json.data.user.username);
+          localStorage.setItem('pos_user_id', json.data.user.id);
 
           usernameInput.value = '';
           passwordInput.value = '';
@@ -1410,6 +1487,7 @@
       localStorage.removeItem('pos_user_name');
       localStorage.removeItem('pos_user_role');
       localStorage.removeItem('pos_user_username');
+      localStorage.removeItem('pos_user_id');
       
       cart = [];
       updateCartUI();
@@ -1766,6 +1844,8 @@
         updateDashboardReport();
       } else if (tabName === 'settings') {
         fetchSettings();
+      } else if (tabName === 'users') {
+        fetchUsers();
       }
     }
 
@@ -2882,6 +2962,148 @@
       }
     }
 
+
+    // ==========================================
+    // USER MANAGEMENT CRUD ACTIONS
+    // ==========================================
+
+    function openAddUserModal() {
+      document.getElementById('user-form-id').value = '';
+      document.getElementById('user-form-name').value = '';
+      document.getElementById('user-form-username').value = '';
+      document.getElementById('user-form-password').value = '';
+      document.getElementById('user-form-role').value = 'CASHIER';
+
+      document.getElementById('user-form-title').innerHTML = '<i class="fa-solid fa-user-plus text-indigo-500"></i> Tambah User Baru';
+      document.getElementById('user-form-pass-label').innerHTML = 'Password <span class="text-rose-500">*</span>';
+      document.getElementById('user-form-password').required = true;
+      document.getElementById('user-form-pass-help').classList.add('hidden');
+      document.getElementById('user-form-submit-btn').textContent = 'SIMPAN USER';
+
+      openModal('modal-user-form');
+    }
+
+    function openEditUserModal(userId) {
+      const user = loadedUsers.find(u => u.id === userId);
+      if (!user) return;
+
+      document.getElementById('user-form-id').value = user.id;
+      document.getElementById('user-form-name').value = user.name;
+      document.getElementById('user-form-username').value = user.username;
+      document.getElementById('user-form-password').value = '';
+      document.getElementById('user-form-role').value = user.role;
+
+      document.getElementById('user-form-title').innerHTML = '<i class="fa-solid fa-user-gear text-indigo-500"></i> Edit Detail User / Kasir';
+      document.getElementById('user-form-pass-label').innerHTML = 'Password Baru (Isi jika ingin direset)';
+      document.getElementById('user-form-password').required = false;
+      document.getElementById('user-form-pass-help').classList.remove('hidden');
+      document.getElementById('user-form-submit-btn').textContent = 'PERBARUI USER';
+
+      openModal('modal-user-form');
+    }
+
+    async function handleUserFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('user-form-id').value;
+      const name = document.getElementById('user-form-name').value.trim();
+      const username = document.getElementById('user-form-username').value.trim();
+      const password = document.getElementById('user-form-password').value;
+      const role = document.getElementById('user-form-role').value;
+
+      const payload = { name, username, role };
+      if (password && password.trim() !== '') {
+        payload.password = password;
+      }
+
+      try {
+        let res;
+        if (id) {
+          res = await fetchAPI(`/api/users/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(payload)
+          });
+        } else {
+          if (!password) {
+            alert("Password wajib diisi untuk user baru!");
+            return;
+          }
+          payload.password = password;
+          res = await fetchAPI('/api/users', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+        }
+
+        const json = await res.json();
+        if (json.success) {
+          alert(id ? "Data user berhasil diperbarui!" : "User baru berhasil didaftarkan!");
+          closeModal('modal-user-form');
+          fetchUsers();
+        } else {
+          alert("Gagal: " + json.message);
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function handleDeleteUser(userId) {
+      const currentUserId = parseInt(localStorage.getItem('pos_user_id') || 0);
+      if (userId === currentUserId) {
+        alert("Anda tidak dapat menghapus akun Anda sendiri yang sedang aktif!");
+        return;
+      }
+
+      if (!confirm("Apakah Anda yakin ingin menghapus user ini?\n\nTindakan ini akan membatalkan semua sesi aktif dari user ini.")) {
+        return;
+      }
+
+      try {
+        const res = await fetchAPI(`/api/users/${userId}`, {
+          method: 'DELETE'
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert("User berhasil dihapus!");
+          fetchUsers();
+        } else {
+          alert("Gagal menghapus user: " + json.message);
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function renderUsersTable() {
+      const tbody = document.getElementById('users-table-body');
+      tbody.innerHTML = '';
+      const currentUserId = parseInt(localStorage.getItem('pos_user_id') || 0);
+
+      loadedUsers.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 border-b dark:hover:bg-slate-800 dark:border-slate-800";
+        
+        const isSelf = u.id === currentUserId;
+        const deleteBtn = isSelf 
+          ? `<span class="text-xs text-slate-400 font-medium">Akun Aktif</span>`
+          : `<button onclick="handleDeleteUser(${u.id})" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">Hapus</button>`;
+
+        const roleBadge = u.role === 'ADMIN'
+          ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Administrator</span>`
+          : `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300">Kasir</span>`;
+
+        tr.innerHTML = `
+          <td class="px-6 py-4 font-semibold">${u.name}</td>
+          <td class="px-6 py-4 font-mono font-medium">${u.username}</td>
+          <td class="px-6 py-4">${roleBadge}</td>
+          <td class="px-6 py-4 text-center whitespace-nowrap">
+            <button onclick="openEditUserModal(${u.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold mr-1">Edit & Reset Sandi</button>
+            ${deleteBtn}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
     // ==========================================
     // CONTACTS & RELATIONS CRUD ACTIONS
