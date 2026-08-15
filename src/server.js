@@ -447,6 +447,106 @@ app.delete('/api/products/:id', authenticate, (req, res) => {
   }
 });
 
+// Batch Import Produk dari Excel / CSV (Admin Only)
+app.post('/api/products/import-batch', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengimpor produk.' });
+  }
+
+  const { items, mode } = req.body; // mode: 'upsert' or 'insert_only'
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ success: false, message: 'Daftar produk import kosong.' });
+  }
+
+  const importTx = db.transaction((productList) => {
+    let inserted = 0;
+    let updated = 0;
+    let skipped = 0;
+
+    const findProduct = db.prepare('SELECT id, stock FROM m_products WHERE id = ?');
+    const insertProduct = db.prepare(`
+      INSERT INTO m_products (id, name, category, cost_price_base, stock, min_stock) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    const updateProduct = db.prepare(`
+      UPDATE m_products 
+      SET name = ?, category = ?, cost_price_base = ?, stock = ?, min_stock = ?
+      WHERE id = ?
+    `);
+    const deleteUnits = db.prepare('DELETE FROM m_product_units WHERE product_id = ?');
+    const insertUnit = db.prepare(`
+      INSERT INTO m_product_units (product_id, unit_name, conversion_factor, price_retail, price_wholesale, wholesale_min_qty) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    const insertStockLog = db.prepare(`
+      INSERT INTO t_stock_logs (product_id, qty_change, type, reference_id) 
+      VALUES (?, ?, 'PURCHASE', 'IMPORT EXCEL')
+    `);
+
+    for (const item of productList) {
+      const id = String(item.id || item.sku || item.barcode || '').trim();
+      const name = String(item.name || item.nama || '').trim();
+      if (!id || !name) {
+        skipped++;
+        continue;
+      }
+
+      const category = String(item.category || item.kategori || 'Umum').trim();
+      const cost_price_base = Math.max(0, parseFloat(item.cost_price_base ?? item.harga_modal ?? item.harga_beli ?? 0) || 0);
+      const stock = Math.max(0, parseInt(item.stock ?? item.stok ?? 0) || 0);
+      const min_stock = Math.max(0, parseInt(item.min_stock ?? item.min_stok ?? 0) || 0);
+      const units = Array.isArray(item.units) && item.units.length > 0 ? item.units : [
+        {
+          unit_name: item.unit_name || item.satuan || 'Pcs',
+          conversion_factor: 1,
+          price_retail: Math.max(0, parseFloat(item.price_retail ?? item.harga_jual ?? item.harga_eceran ?? item.eceran ?? 0) || 0),
+          price_wholesale: Math.max(0, parseFloat(item.price_wholesale ?? item.harga_grosir ?? item.grosir ?? 0) || 0),
+          wholesale_min_qty: Math.max(0, parseInt(item.wholesale_min_qty ?? item.min_grosir ?? 0) || 0)
+        }
+      ];
+
+      const existing = findProduct.get(id);
+
+      if (existing) {
+        if (mode === 'insert_only') {
+          skipped++;
+          continue;
+        }
+        // Update product
+        updateProduct.run(name, category, cost_price_base, stock, min_stock, id);
+        deleteUnits.run(id);
+        for (const u of units) {
+          insertUnit.run(id, u.unit_name || 'Pcs', u.conversion_factor || 1, u.price_retail || 0, u.price_wholesale || 0, u.wholesale_min_qty || 0);
+        }
+        updated++;
+      } else {
+        // Insert new product
+        insertProduct.run(id, name, category, cost_price_base, stock, min_stock);
+        for (const u of units) {
+          insertUnit.run(id, u.unit_name || 'Pcs', u.conversion_factor || 1, u.price_retail || 0, u.price_wholesale || 0, u.wholesale_min_qty || 0);
+        }
+        if (stock > 0) {
+          insertStockLog.run(id, stock);
+        }
+        inserted++;
+      }
+    }
+
+    return { inserted, updated, skipped };
+  });
+
+  try {
+    const stats = importTx(items);
+    return res.json({
+      success: true,
+      message: `Import berhasil! Ditambahkan: ${stats.inserted}, Diperbarui: ${stats.updated}, Dilewati: ${stats.skipped}`,
+      stats
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Penyesuaian Stok Manual (Admin & Cashier)
 app.post('/api/products/adjust-stock', authenticate, (req, res) => {
   const { product_id, qty_change, note } = req.body;
@@ -1182,6 +1282,70 @@ app.post('/api/suppliers', authenticate, (req, res) => {
   try {
     db.prepare('INSERT INTO m_suppliers (name, phone, address) VALUES (?, ?, ?)').run(name, phone || '', address || '');
     return res.json({ success: true, message: 'Supplier berhasil ditambahkan' });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// PUT /api/customers/:id — Edit pelanggan (ADMIN only)
+app.put('/api/customers/:id', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengedit data pelanggan.' });
+  }
+  const { id } = req.params;
+  const { name, phone, address } = req.body;
+  if (!name) return res.status(400).json({ success: false, message: 'Nama pelanggan wajib diisi' });
+  try {
+    const result = db.prepare('UPDATE m_customers SET name = ?, phone = ?, address = ? WHERE id = ?').run(name, phone || '', address || '', id);
+    if (result.changes === 0) return res.status(404).json({ success: false, message: 'Pelanggan tidak ditemukan' });
+    return res.json({ success: true, message: 'Data pelanggan berhasil diperbarui' });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// DELETE /api/customers/:id — Hapus pelanggan (ADMIN only)
+app.delete('/api/customers/:id', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat menghapus data pelanggan.' });
+  }
+  const { id } = req.params;
+  try {
+    const result = db.prepare('DELETE FROM m_customers WHERE id = ?').run(id);
+    if (result.changes === 0) return res.status(404).json({ success: false, message: 'Pelanggan tidak ditemukan' });
+    return res.json({ success: true, message: 'Pelanggan berhasil dihapus' });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// PUT /api/suppliers/:id — Edit supplier (ADMIN only)
+app.put('/api/suppliers/:id', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengedit data supplier.' });
+  }
+  const { id } = req.params;
+  const { name, phone, address } = req.body;
+  if (!name) return res.status(400).json({ success: false, message: 'Nama supplier wajib diisi' });
+  try {
+    const result = db.prepare('UPDATE m_suppliers SET name = ?, phone = ?, address = ? WHERE id = ?').run(name, phone || '', address || '', id);
+    if (result.changes === 0) return res.status(404).json({ success: false, message: 'Supplier tidak ditemukan' });
+    return res.json({ success: true, message: 'Data supplier berhasil diperbarui' });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// DELETE /api/suppliers/:id — Hapus supplier (ADMIN only)
+app.delete('/api/suppliers/:id', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat menghapus data supplier.' });
+  }
+  const { id } = req.params;
+  try {
+    const result = db.prepare('DELETE FROM m_suppliers WHERE id = ?').run(id);
+    if (result.changes === 0) return res.status(404).json({ success: false, message: 'Supplier tidak ditemukan' });
+    return res.json({ success: true, message: 'Supplier berhasil dihapus' });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }

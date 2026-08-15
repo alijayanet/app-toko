@@ -26,6 +26,9 @@
   <!-- JsBarcode untuk Cetak Label Barcode Produk -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
+  <!-- SheetJS (xlsx) untuk Export & Import Data Excel / CSV -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -532,6 +535,12 @@
             </div>
             
             <div class="flex flex-wrap items-center gap-2">
+              <button onclick="exportProductsToExcel()" class="admin-only bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-1.5 shadow-sm" title="Export seluruh stok barang ke Excel (.xlsx)">
+                <i class="fa-solid fa-file-excel"></i> Export Excel
+              </button>
+              <button onclick="openImportExcelModal()" class="admin-only bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-1.5 shadow-sm" title="Import data produk dari file Excel/CSV">
+                <i class="fa-solid fa-file-arrow-up"></i> Import Excel
+              </button>
               <button onclick="openPrintBarcodeModal()" class="bg-violet-600 hover:bg-violet-700 text-white px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-sm">
                 <i class="fa-solid fa-barcode"></i> Cetak Barcode
               </button>
@@ -646,28 +655,83 @@
 
         <!-- TAB 4: KONTAK & RELASI -->
         <section id="tab-kontak" class="tab-content hidden space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold font-outfit flex items-center gap-2"><i class="fa-solid fa-users text-emerald-500"></i> Daftar Pelanggan</h3>
-                <button onclick="openModal('modal-add-customer')" class="text-xs bg-indigo-600 text-white font-semibold px-3 py-1.5 rounded-lg">Tambah</button>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold font-outfit">Daftar Pelanggan & Supplier</h2>
+              <p class="text-sm text-slate-400">Kelola kontak pelanggan tetap (bon tempo) dan supplier toko.</p>
+            </div>
+          </div>
+
+          <!-- Sub-tab Pelanggan / Supplier -->
+          <div class="border-b border-slate-200 dark:border-slate-800">
+            <div class="flex gap-6">
+              <button onclick="switchContactTab('pelanggan')" id="btn-contact-pelanggan" class="pb-3 text-sm font-bold border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400">
+                <i class="fa-solid fa-users mr-1"></i> Pelanggan
+              </button>
+              <button onclick="switchContactTab('supplier')" id="btn-contact-supplier" class="admin-only pb-3 text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-600">
+                <i class="fa-solid fa-truck mr-1"></i> Supplier
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel Pelanggan -->
+          <div id="contact-pelanggan-panel" class="space-y-3">
+            <div class="flex flex-col sm:flex-row gap-2 justify-between items-start sm:items-center">
+              <div class="relative flex-1 max-w-md">
+                <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 text-sm"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" id="search-customer-input" onkeyup="filterContactList('customer')" placeholder="Cari nama pelanggan atau telepon..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm">
               </div>
-              <div class="overflow-y-auto max-h-96 scrollbar-thin">
-                <ul id="customer-list-ul" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                  <!-- Dinamis -->
-                </ul>
-              </div>
+              <button onclick="openContactForm('customer')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-user-plus"></i> Tambah Pelanggan
+              </button>
             </div>
 
-            <div class="admin-only bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold font-outfit flex items-center gap-2"><i class="fa-solid fa-truck text-indigo-500"></i> Daftar Supplier</h3>
-                <button onclick="openModal('modal-add-supplier')" class="text-xs bg-indigo-600 text-white font-semibold px-3 py-1.5 rounded-lg">Tambah</button>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm" id="customer-contact-table">
+                  <thead>
+                    <tr class="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase border-b border-slate-200 dark:border-slate-700">
+                      <th class="px-5 py-3">Nama Pelanggan</th>
+                      <th class="px-5 py-3">No Telepon / WA</th>
+                      <th class="px-5 py-3">Alamat</th>
+                      <th class="px-5 py-3 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="customer-list-ul" class="divide-y divide-slate-100 dark:divide-slate-800">
+                    <!-- Dinamis -->
+                  </tbody>
+                </table>
               </div>
-              <div class="overflow-y-auto max-h-96 scrollbar-thin">
-                <ul id="supplier-list-ul" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                  <!-- Dinamis -->
-                </ul>
+            </div>
+          </div>
+
+          <!-- Panel Supplier (Admin Only) -->
+          <div id="contact-supplier-panel" class="space-y-3 hidden admin-only">
+            <div class="flex flex-col sm:flex-row gap-2 justify-between items-start sm:items-center">
+              <div class="relative flex-1 max-w-md">
+                <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 text-sm"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" id="search-supplier-input" onkeyup="filterContactList('supplier')" placeholder="Cari nama supplier atau telepon..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm">
+              </div>
+              <button onclick="openContactForm('supplier')" class="admin-only bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-truck"></i> Tambah Supplier
+              </button>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm" id="supplier-contact-table">
+                  <thead>
+                    <tr class="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase border-b border-slate-200 dark:border-slate-700">
+                      <th class="px-5 py-3">Nama Supplier</th>
+                      <th class="px-5 py-3">No Telepon</th>
+                      <th class="px-5 py-3">Alamat</th>
+                      <th class="px-5 py-3 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="supplier-list-ul" class="divide-y divide-slate-100 dark:divide-slate-800">
+                    <!-- Dinamis -->
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -1517,51 +1581,54 @@
   </div>
 
   <!-- Modal Tambah Pelanggan -->
-  <div id="modal-add-customer" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-outfit font-bold text-lg">Tambah Pelanggan Baru</h3>
-        <button onclick="closeModal('modal-add-customer')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-      </div>
-      <form onsubmit="handleAddCustomerSubmit(event)" class="space-y-4">
+  <!-- Modal Tambah/Edit Pelanggan -->
+  <div id="modal-customer-form" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('modal-customer-form')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      <h3 id="customer-form-title" class="font-outfit font-bold text-lg mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-user-plus text-emerald-500"></i> Tambah Pelanggan Baru
+      </h3>
+      <form onsubmit="handleContactFormSubmit(event, 'customer')" class="space-y-4">
+        <input type="hidden" id="customer-form-id">
         <div>
           <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Pelanggan <span class="text-rose-500">*</span></label>
-          <input type="text" id="add-cust-name" required class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+          <input type="text" id="customer-form-name" required placeholder="Contoh: Budi Santoso" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1">No Telepon/WA</label>
-          <input type="text" id="add-cust-phone" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+          <label class="block text-xs font-semibold text-slate-500 mb-1">No Telepon / WhatsApp</label>
+          <input type="text" id="customer-form-phone" placeholder="Contoh: 08123456789" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-500 mb-1">Alamat</label>
-          <input type="text" id="add-cust-address" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+          <input type="text" id="customer-form-address" placeholder="Contoh: Jl. Merdeka No. 12" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
         </div>
-        <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm">SIMPAN PELANGGAN</button>
+        <button type="submit" id="customer-form-submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-sm">SIMPAN PELANGGAN</button>
       </form>
     </div>
   </div>
 
-  <!-- Modal Tambah Supplier -->
-  <div id="modal-add-supplier" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-outfit font-bold text-lg">Tambah Supplier Baru</h3>
-        <button onclick="closeModal('modal-add-supplier')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-      </div>
-      <form onsubmit="handleAddSupplierSubmit(event)" class="space-y-4">
+  <!-- Modal Tambah/Edit Supplier -->
+  <div id="modal-supplier-form" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('modal-supplier-form')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      <h3 id="supplier-form-title" class="font-outfit font-bold text-lg mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-truck text-indigo-500"></i> Tambah Supplier Baru
+      </h3>
+      <form onsubmit="handleContactFormSubmit(event, 'supplier')" class="space-y-4">
+        <input type="hidden" id="supplier-form-id">
         <div>
           <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Supplier <span class="text-rose-500">*</span></label>
-          <input type="text" id="add-supp-name" required class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+          <input type="text" id="supplier-form-name" required placeholder="Contoh: CV. Maju Bersama" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-500 mb-1">No Telepon</label>
-          <input type="text" id="add-supp-phone" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+          <input type="text" id="supplier-form-phone" placeholder="Contoh: 02112345678" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-500 mb-1">Alamat</label>
-          <input type="text" id="add-supp-address" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+          <input type="text" id="supplier-form-address" placeholder="Contoh: Jl. Industri No. 5" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
         </div>
-        <button type="submit" class="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold text-sm">SIMPAN SUPPLIER</button>
+        <button type="submit" id="supplier-form-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-sm">SIMPAN SUPPLIER</button>
       </form>
     </div>
   </div>
@@ -1597,6 +1664,93 @@
         </div>
         <button type="submit" id="user-form-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-sm">SIMPAN USER</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal Import Excel Stok Barang -->
+  <div id="modal-import-excel" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-widest text-teal-500 font-bold">EXCEL DATA MANAGER</span>
+          <h3 class="font-outfit font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <i class="fa-solid fa-file-excel text-emerald-500"></i> Import Data Produk dari Excel / CSV
+          </h3>
+        </div>
+        <button onclick="closeModal('modal-import-excel')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <!-- Panduan & Template -->
+      <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div>
+          <p class="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-info text-emerald-600"></i> Format Kolom Excel yang Didukung:
+          </p>
+          <p class="text-slate-600 dark:text-slate-400 mt-1">
+            <code>SKU/Barcode</code>, <code>Nama Produk</code>, <code>Kategori</code>, <code>Harga Modal</code>, <code>Stok</code>, <code>Min Stok</code>, <code>Satuan</code>, <code>Harga Eceran</code>, <code>Harga Grosir</code>, <code>Min Grosir</code>
+          </p>
+        </div>
+        <button type="button" onclick="downloadProductExcelTemplate()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-3.5 py-2 rounded-xl font-bold flex items-center gap-2 whitespace-nowrap shadow-sm">
+          <i class="fa-solid fa-download"></i> Unduh Template Excel
+        </button>
+      </div>
+
+      <!-- File Picker / Dropzone -->
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Pilih Berkas Excel (.xlsx, .xls) atau CSV (.csv):</label>
+          <input type="file" id="import-excel-file-input" accept=".xlsx, .xls, .csv" onchange="handleExcelFileSelect(event)" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+        </div>
+
+        <!-- Mode Import -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4 text-xs pt-1">
+          <span class="font-semibold text-slate-500">Mode Import:</span>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="import-mode" value="upsert" checked class="text-emerald-600 focus:ring-emerald-500">
+            <span><strong>Tambah Baru & Perbarui</strong> (Jika SKU sudah ada, data produk diperbarui)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="import-mode" value="insert_only" class="text-emerald-600 focus:ring-emerald-500">
+            <span><strong>Hanya Tambah Baru</strong> (Lewati jika SKU sudah ada)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Status & Preview Parsed Data -->
+      <div id="import-preview-wrapper" class="hidden space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span id="import-preview-count" class="font-bold text-slate-700 dark:text-slate-300">0 data terbaca dari file</span>
+          <span class="text-slate-400">Menampilkan 10 baris pertama sebagai sampel:</span>
+        </div>
+        <div class="border border-slate-200 dark:border-slate-700 rounded-xl overflow-x-auto max-h-56 scrollbar-thin">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-semibold border-b">
+                <th class="px-3 py-2">SKU</th>
+                <th class="px-3 py-2">Nama Produk</th>
+                <th class="px-3 py-2">Kategori</th>
+                <th class="px-3 py-2 text-right">Modal</th>
+                <th class="px-3 py-2 text-center">Stok</th>
+                <th class="px-3 py-2">Satuan</th>
+                <th class="px-3 py-2 text-right">Eceran</th>
+                <th class="px-3 py-2 text-right">Grosir</th>
+              </tr>
+            </thead>
+            <tbody id="import-preview-tbody" class="divide-y divide-slate-100 dark:divide-slate-800">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+        <button type="button" onclick="closeModal('modal-import-excel')" class="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2.5 rounded-xl font-semibold text-xs">
+          Batal
+        </button>
+        <button type="button" id="btn-submit-excel-import" onclick="submitExcelImport()" disabled class="flex-1 bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-700 active:scale-95 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-transform">
+          <i class="fa-solid fa-cloud-arrow-up"></i> PROSES IMPORT KE DATABASE
+        </button>
+      </div>
     </div>
   </div>
 
@@ -4024,6 +4178,283 @@
       }, 150);
     }
 
+    // ==========================================
+    // EXPORT & IMPORT EXCEL / CSV PRODUK (SheetJS)
+    // ==========================================
+
+    let parsedImportProducts = [];
+
+    function exportProductsToExcel() {
+      if (!products || products.length === 0) {
+        alert("Katalog produk kosong, tidak ada data untuk diexport.");
+        return;
+      }
+
+      if (typeof XLSX === 'undefined') {
+        alert("Modul Excel (XLSX) belum selesai dimuat. Pastikan terhubung internet.");
+        return;
+      }
+
+      // Format baris data untuk Excel
+      const excelData = [];
+
+      products.forEach(p => {
+        // Satuan utama (base unit)
+        const baseUnit = (p.units || []).find(u => u.conversion_factor === 1) || (p.units || [])[0] || {};
+        
+        // Satuan sekunder jika ada (misal Pak / Dus)
+        const secondaryUnits = (p.units || []).filter(u => u.id !== baseUnit.id);
+        const multiUnitsText = secondaryUnits.map(u => `${u.unit_name}(1:${u.conversion_factor}|Ec:${u.price_retail}|Gr:${u.price_wholesale})`).join('; ');
+
+        excelData.push({
+          "SKU / Barcode": p.id,
+          "Nama Produk": p.name,
+          "Kategori": p.category || 'Umum',
+          "Harga Modal (Rp)": p.cost_price_base || 0,
+          "Stok": p.stock || 0,
+          "Min Stok": p.min_stock || 0,
+          "Satuan Utama": baseUnit.unit_name || 'Pcs',
+          "Harga Jual Eceran (Rp)": baseUnit.price_retail || 0,
+          "Harga Jual Grosir (Rp)": baseUnit.price_wholesale || 0,
+          "Min Beli Grosir": baseUnit.wholesale_min_qty || 0,
+          "Satuan Tambahan": multiUnitsText
+        });
+      });
+
+      const ws = XLSX.utils.json_to_sheet(excelData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Stok Barang");
+
+      // Lebar kolom otomatis rapi
+      ws['!cols'] = [
+        { wch: 16 }, // SKU
+        { wch: 32 }, // Nama
+        { wch: 15 }, // Kategori
+        { wch: 16 }, // Modal
+        { wch: 10 }, // Stok
+        { wch: 10 }, // Min Stok
+        { wch: 14 }, // Satuan
+        { wch: 22 }, // Eceran
+        { wch: 22 }, // Grosir
+        { wch: 15 }, // Min Grosir
+        { wch: 35 }  // Multi Unit
+      ];
+
+      const fileName = `stok_barang_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      playBeep('success');
+    }
+
+    function downloadProductExcelTemplate() {
+      if (typeof XLSX === 'undefined') {
+        alert("Modul Excel (XLSX) belum selesai dimuat.");
+        return;
+      }
+
+      const templateData = [
+        {
+          "SKU / Barcode": "BRG001",
+          "Nama Produk": "Minyak Goreng Sania 1L",
+          "Kategori": "Sembako",
+          "Harga Modal (Rp)": 15000,
+          "Stok": 24,
+          "Min Stok": 5,
+          "Satuan Utama": "Pcs",
+          "Harga Jual Eceran (Rp)": 17500,
+          "Harga Jual Grosir (Rp)": 16800,
+          "Min Beli Grosir": 6
+        },
+        {
+          "SKU / Barcode": "8992753221102",
+          "Nama Produk": "Susu Kental Manis Frisian Flag 370g",
+          "Kategori": "Minuman",
+          "Harga Modal (Rp)": 10500,
+          "Stok": 48,
+          "Min Stok": 10,
+          "Satuan Utama": "Kaleng",
+          "Harga Jual Eceran (Rp)": 12500,
+          "Harga Jual Grosir (Rp)": 11800,
+          "Min Beli Grosir": 12
+        }
+      ];
+
+      const ws = XLSX.utils.json_to_sheet(templateData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Template");
+
+      ws['!cols'] = [
+        { wch: 16 }, { wch: 35 }, { wch: 15 }, { wch: 16 },
+        { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 22 },
+        { wch: 22 }, { wch: 15 }
+      ];
+
+      XLSX.writeFile(wb, "template_import_produk.xlsx");
+    }
+
+    function openImportExcelModal() {
+      parsedImportProducts = [];
+      const fileInput = document.getElementById('import-excel-file-input');
+      if (fileInput) fileInput.value = '';
+
+      const previewWrapper = document.getElementById('import-preview-wrapper');
+      if (previewWrapper) previewWrapper.classList.add('hidden');
+
+      const btnSubmit = document.getElementById('btn-submit-excel-import');
+      if (btnSubmit) btnSubmit.disabled = true;
+
+      openModal('modal-import-excel');
+    }
+
+    function handleExcelFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (typeof XLSX === 'undefined') {
+        alert("Modul XLSX belum selesai dimuat. Pastikan koneksi internet aktif.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+          if (!rawRows || rawRows.length === 0) {
+            alert("File Excel kosong atau tidak terbaca.");
+            return;
+          }
+
+          parsedImportProducts = [];
+
+          rawRows.forEach((row) => {
+            const getVal = (keys) => {
+              for (const k of keys) {
+                for (const rowKey of Object.keys(row)) {
+                  if (rowKey.toLowerCase().replace(/[^a-z0-9]/g, '') === k.toLowerCase().replace(/[^a-z0-9]/g, '')) {
+                    return row[rowKey];
+                  }
+                }
+              }
+              return '';
+            };
+
+            const id = String(getVal(['sku', 'barcode', 'kode', 'id', 'skubarcode']) || '').trim();
+            const name = String(getVal(['nama', 'namaproduk', 'name', 'productname', 'barang']) || '').trim();
+            
+            if (!id || !name) return; // Lewati baris tanpa SKU / Nama
+
+            const category = String(getVal(['kategori', 'category']) || 'Umum').trim();
+            const cost_price_base = Math.max(0, parseFloat(String(getVal(['hargamodal', 'modal', 'cost', 'hargabeli', 'beli', 'hargamodalrp'])).replace(/[^0-9.]/g, '')) || 0);
+            const stock = Math.max(0, parseInt(String(getVal(['stok', 'stock', 'qty', 'jumlah'])).replace(/[^0-9]/g, '')) || 0);
+            const min_stock = Math.max(0, parseInt(String(getVal(['minstok', 'minstock', 'minimalstok'])).replace(/[^0-9]/g, '')) || 0);
+            const unit_name = String(getVal(['satuan', 'satuanutama', 'unit', 'unitname']) || 'Pcs').trim();
+            const price_retail = Math.max(0, parseFloat(String(getVal(['hargajualeceran', 'eceran', 'hargajual', 'jual', 'retail', 'hargajualeceranrp'])).replace(/[^0-9.]/g, '')) || 0);
+            const price_wholesale = Math.max(0, parseFloat(String(getVal(['hargajualgrosir', 'grosir', 'wholesale', 'hargajualgrosirrp'])).replace(/[^0-9.]/g, '')) || 0);
+            const wholesale_min_qty = Math.max(0, parseInt(String(getVal(['minbeligrosir', 'mingrosir', 'wholesaleminqty'])).replace(/[^0-9]/g, '')) || 0);
+
+            parsedImportProducts.push({
+              id,
+              name,
+              category,
+              cost_price_base,
+              stock,
+              min_stock,
+              unit_name,
+              price_retail,
+              price_wholesale,
+              wholesale_min_qty
+            });
+          });
+
+          if (parsedImportProducts.length === 0) {
+            alert("Tidak ada baris data produk valid yang terbaca. Pastikan kolom SKU/Barcode dan Nama Produk terisi.");
+            return;
+          }
+
+          renderImportPreviewTable();
+        } catch (err) {
+          console.error(err);
+          alert("Gagal membaca file Excel: " + err.message);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    function renderImportPreviewTable() {
+      const previewWrapper = document.getElementById('import-preview-wrapper');
+      const previewCount = document.getElementById('import-preview-count');
+      const previewTbody = document.getElementById('import-preview-tbody');
+      const btnSubmit = document.getElementById('btn-submit-excel-import');
+
+      if (previewWrapper) previewWrapper.classList.remove('hidden');
+      if (previewCount) previewCount.textContent = `${parsedImportProducts.length} produk siap diimport`;
+
+      if (previewTbody) {
+        const sample = parsedImportProducts.slice(0, 10);
+        previewTbody.innerHTML = sample.map(p => `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800">
+            <td class="px-3 py-1.5 font-mono font-medium">${escapeHtml(p.id)}</td>
+            <td class="px-3 py-1.5 font-semibold">${escapeHtml(p.name)}</td>
+            <td class="px-3 py-1.5">${escapeHtml(p.category)}</td>
+            <td class="px-3 py-1.5 text-right font-mono">${formatRupiah(p.cost_price_base)}</td>
+            <td class="px-3 py-1.5 text-center font-mono font-bold">${p.stock}</td>
+            <td class="px-3 py-1.5">${escapeHtml(p.unit_name)}</td>
+            <td class="px-3 py-1.5 text-right font-mono text-emerald-600 font-bold">${formatRupiah(p.price_retail)}</td>
+            <td class="px-3 py-1.5 text-right font-mono text-indigo-600">${formatRupiah(p.price_wholesale)}</td>
+          </tr>
+        `).join('');
+      }
+
+      if (btnSubmit) btnSubmit.disabled = false;
+    }
+
+    async function submitExcelImport() {
+      if (!parsedImportProducts || parsedImportProducts.length === 0) {
+        alert("Tidak ada data produk untuk diimport.");
+        return;
+      }
+
+      const mode = document.querySelector('input[name="import-mode"]:checked')?.value || 'upsert';
+      const btnSubmit = document.getElementById('btn-submit-excel-import');
+      
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mengimpor ${parsedImportProducts.length} produk...`;
+      }
+
+      try {
+        const res = await fetchAPI('/api/products/import-batch', {
+          method: 'POST',
+          body: JSON.stringify({ items: parsedImportProducts, mode })
+        });
+
+        const json = await res.json();
+        if (json.success) {
+          playBeep('success');
+          alert(json.message);
+          closeModal('modal-import-excel');
+          fetchProducts();
+          fetchCategories();
+        } else {
+          playBeep('error');
+          alert("Gagal import: " + (json.message || json.error));
+        }
+      } catch (error) {
+        playBeep('error');
+        alert("Error: " + error.message);
+      } finally {
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> PROSES IMPORT KE DATABASE`;
+        }
+      }
+    }
+
 
     function addNewUnitRow() {
       const container = document.getElementById('add-prod-units-container');
@@ -4727,77 +5158,165 @@
     // CONTACTS & RELATIONS CRUD ACTIONS
     // ==========================================
 
+    function switchContactTab(tab) {
+      const pelangganPanel = document.getElementById('contact-pelanggan-panel');
+      const supplierPanel = document.getElementById('contact-supplier-panel');
+      const btnPelanggan = document.getElementById('btn-contact-pelanggan');
+      const btnSupplier = document.getElementById('btn-contact-supplier');
+      if (tab === 'pelanggan') {
+        pelangganPanel.classList.remove('hidden');
+        supplierPanel.classList.add('hidden');
+        btnPelanggan.className = 'pb-3 text-sm font-bold border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400';
+        btnSupplier.className = 'admin-only pb-3 text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-600';
+      } else {
+        pelangganPanel.classList.add('hidden');
+        supplierPanel.classList.remove('hidden');
+        btnPelanggan.className = 'pb-3 text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-600';
+        btnSupplier.className = 'admin-only pb-3 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400';
+      }
+    }
+
+    function filterContactList(type) {
+      const input = document.getElementById(`search-${type}-input`)?.value?.toUpperCase() || '';
+      const tbodyId = type === 'customer' ? 'customer-list-ul' : 'supplier-list-ul';
+      const rows = document.getElementById(tbodyId)?.getElementsByTagName('tr') || [];
+      for (let i = 0; i < rows.length; i++) {
+        const text = rows[i].textContent.toUpperCase();
+        rows[i].style.display = text.includes(input) ? '' : 'none';
+      }
+    }
+
     function renderCustomerList() {
-      const ul = document.getElementById('customer-list-ul');
-      ul.innerHTML = customers.map(c => `
-        <li class="py-3 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800 px-2 rounded-lg">
-          <div>
-            <strong class="text-sm block">${c.name}</strong>
-            <span class="text-xs text-slate-400 font-mono">${c.phone || 'No Telp/WA -'}</span>
-          </div>
-          <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 px-2.5 py-1 rounded-full"><i class="fa-solid fa-location-dot"></i> ${c.address || 'Alamat -'}</span>
-        </li>
-      `).join('');
+      const tbody = document.getElementById('customer-list-ul');
+      if (!tbody) return;
+      const role = localStorage.getItem('pos_user_role');
+      tbody.innerHTML = customers.length === 0
+        ? `<tr><td colspan="4" class="px-5 py-8 text-center text-slate-400 text-sm"><i class="fa-solid fa-users-slash text-2xl block mb-2"></i>Belum ada pelanggan. Tambah pelanggan baru.</td></tr>`
+        : customers.map(c => `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+            <td class="px-5 py-3">
+              <p class="font-semibold text-sm">${escapeHtml(c.name)}</p>
+            </td>
+            <td class="px-5 py-3 text-xs font-mono text-slate-500">${escapeHtml(c.phone || '—')}</td>
+            <td class="px-5 py-3 text-xs text-slate-500 max-w-[160px] truncate">${escapeHtml(c.address || '—')}</td>
+            <td class="px-5 py-3 text-center whitespace-nowrap">
+              <button onclick="openContactForm('customer', ${JSON.stringify(c)})" class="bg-indigo-100 dark:bg-indigo-900/50 hover:bg-indigo-200 text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-lg text-xs font-semibold mr-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+              ${role === 'ADMIN' ? `<button onclick="deleteContact('customer', ${c.id}, '${escapeHtml(c.name)}')" class="bg-rose-100 dark:bg-rose-900/50 hover:bg-rose-200 text-rose-700 dark:text-rose-300 px-3 py-1.5 rounded-lg text-xs font-semibold"><i class="fa-solid fa-trash"></i> Hapus</button>` : ''}
+            </td>
+          </tr>
+        `).join('');
     }
 
     function renderSupplierList() {
-      const ul = document.getElementById('supplier-list-ul');
-      ul.innerHTML = suppliers.map(s => `
-        <li class="py-3 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800 px-2 rounded-lg">
-          <div>
-            <strong class="text-sm block">${s.name}</strong>
-            <span class="text-xs text-slate-400 font-mono">${s.phone || 'No Telp -'}</span>
-          </div>
-          <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 px-2.5 py-1 rounded-full"><i class="fa-solid fa-location-dot"></i> ${s.address || 'Alamat -'}</span>
-        </li>
-      `).join('');
+      const tbody = document.getElementById('supplier-list-ul');
+      if (!tbody) return;
+      tbody.innerHTML = suppliers.length === 0
+        ? `<tr><td colspan="4" class="px-5 py-8 text-center text-slate-400 text-sm"><i class="fa-solid fa-truck-slash text-2xl block mb-2"></i>Belum ada supplier. Tambah supplier baru.</td></tr>`
+        : suppliers.map(s => `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+            <td class="px-5 py-3">
+              <p class="font-semibold text-sm">${escapeHtml(s.name)}</p>
+            </td>
+            <td class="px-5 py-3 text-xs font-mono text-slate-500">${escapeHtml(s.phone || '—')}</td>
+            <td class="px-5 py-3 text-xs text-slate-500 max-w-[160px] truncate">${escapeHtml(s.address || '—')}</td>
+            <td class="px-5 py-3 text-center whitespace-nowrap">
+              <button onclick="openContactForm('supplier', ${JSON.stringify(s)})" class="bg-indigo-100 dark:bg-indigo-900/50 hover:bg-indigo-200 text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-lg text-xs font-semibold mr-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+              <button onclick="deleteContact('supplier', ${s.id}, '${escapeHtml(s.name)}')" class="bg-rose-100 dark:bg-rose-900/50 hover:bg-rose-200 text-rose-700 dark:text-rose-300 px-3 py-1.5 rounded-lg text-xs font-semibold"><i class="fa-solid fa-trash"></i> Hapus</button>
+            </td>
+          </tr>
+        `).join('');
     }
 
-    async function handleAddCustomerSubmit(e) {
+    function openContactForm(type, data = null) {
+      const isEdit = data !== null;
+      const modalId = type === 'customer' ? 'modal-customer-form' : 'modal-supplier-form';
+      const titleEl = document.getElementById(`${type}-form-title`);
+      const idEl = document.getElementById(`${type}-form-id`);
+      const nameEl = document.getElementById(`${type}-form-name`);
+      const phoneEl = document.getElementById(`${type}-form-phone`);
+      const addressEl = document.getElementById(`${type}-form-address`);
+      const submitBtn = document.getElementById(`${type}-form-submit-btn`);
+
+      if (isEdit) {
+        const icon = type === 'customer' ? 'fa-user-pen text-indigo-500' : 'fa-truck text-indigo-500';
+        const label = type === 'customer' ? 'Edit Data Pelanggan' : 'Edit Data Supplier';
+        if (titleEl) titleEl.innerHTML = `<i class="fa-solid ${icon}"></i> ${label}`;
+        if (idEl) idEl.value = data.id;
+        if (nameEl) nameEl.value = data.name || '';
+        if (phoneEl) phoneEl.value = data.phone || '';
+        if (addressEl) addressEl.value = data.address || '';
+        if (submitBtn) submitBtn.textContent = 'SIMPAN PERUBAHAN';
+      } else {
+        const icon = type === 'customer' ? 'fa-user-plus text-emerald-500' : 'fa-truck text-indigo-500';
+        const label = type === 'customer' ? 'Tambah Pelanggan Baru' : 'Tambah Supplier Baru';
+        if (titleEl) titleEl.innerHTML = `<i class="fa-solid ${icon}"></i> ${label}`;
+        if (idEl) idEl.value = '';
+        if (nameEl) nameEl.value = '';
+        if (phoneEl) phoneEl.value = '';
+        if (addressEl) addressEl.value = '';
+        if (submitBtn) submitBtn.textContent = type === 'customer' ? 'SIMPAN PELANGGAN' : 'SIMPAN SUPPLIER';
+      }
+
+      openModal(modalId);
+    }
+
+    async function handleContactFormSubmit(e, type) {
       e.preventDefault();
-      const name = document.getElementById('add-cust-name').value;
-      const phone = document.getElementById('add-cust-phone').value;
-      const address = document.getElementById('add-cust-address').value;
+      const id = document.getElementById(`${type}-form-id`)?.value;
+      const name = document.getElementById(`${type}-form-name`)?.value?.trim();
+      const phone = document.getElementById(`${type}-form-phone`)?.value?.trim();
+      const address = document.getElementById(`${type}-form-address`)?.value?.trim();
+
+      if (!name) { alert('Nama wajib diisi!'); return; }
+
+      const isEdit = !!id;
+      const endpoint = type === 'customer' ? '/api/customers' : '/api/suppliers';
+      const url = isEdit ? `${endpoint}/${id}` : endpoint;
+      const method = isEdit ? 'PUT' : 'POST';
+      const label = type === 'customer' ? 'Pelanggan' : 'Supplier';
+      const modalId = type === 'customer' ? 'modal-customer-form' : 'modal-supplier-form';
 
       try {
-        const res = await fetchAPI('/api/customers', {
-          method: 'POST',
-          body: JSON.stringify({ name, phone, address })
-        });
+        const res = await fetchAPI(url, { method, body: JSON.stringify({ name, phone, address }) });
         const json = await res.json();
         if (json.success) {
-          alert("Pelanggan berhasil ditambahkan");
-          closeModal('modal-add-customer');
-          e.target.reset();
-          fetchCustomers();
+          playBeep('success');
+          closeModal(modalId);
+          if (type === 'customer') fetchCustomers(); else fetchSuppliers();
+        } else {
+          playBeep('error');
+          alert('Gagal: ' + (json.message || json.error || 'Terjadi kesalahan'));
         }
       } catch (error) {
+        playBeep('error');
         alert(error.message);
       }
     }
 
-    async function handleAddSupplierSubmit(e) {
-      e.preventDefault();
-      const name = document.getElementById('add-supp-name').value;
-      const phone = document.getElementById('add-supp-phone').value;
-      const address = document.getElementById('add-supp-address').value;
+    async function deleteContact(type, id, name) {
+      const label = type === 'customer' ? 'pelanggan' : 'supplier';
+      if (!confirm(`Hapus ${label} "${name}"?\n\nData transaksi terkait tidak akan terhapus, hanya info kontak yang dihapus.`)) return;
 
+      const endpoint = type === 'customer' ? `/api/customers/${id}` : `/api/suppliers/${id}`;
       try {
-        const res = await fetchAPI('/api/suppliers', {
-          method: 'POST',
-          body: JSON.stringify({ name, phone, address })
-        });
+        const res = await fetchAPI(endpoint, { method: 'DELETE' });
         const json = await res.json();
         if (json.success) {
-          alert("Supplier berhasil ditambahkan");
-          closeModal('modal-add-supplier');
-          e.target.reset();
-          fetchSuppliers();
+          playBeep('success');
+          if (type === 'customer') fetchCustomers(); else fetchSuppliers();
+        } else {
+          playBeep('error');
+          alert('Gagal menghapus: ' + (json.message || json.error || 'Terjadi kesalahan'));
         }
       } catch (error) {
+        playBeep('error');
         alert(error.message);
       }
     }
+
+    // Legacy wrappers untuk kompatibilitas backward
+    async function handleAddCustomerSubmit(e) { return handleContactFormSubmit(e, 'customer'); }
+    async function handleAddSupplierSubmit(e) { return handleContactFormSubmit(e, 'supplier'); }
 
 
     // ==========================================

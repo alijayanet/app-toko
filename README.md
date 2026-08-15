@@ -31,7 +31,14 @@ Sistem POS ini dikembangkan dengan fokus pada kemudahan operasional kasir di lap
 *   **Pembatalan Transaksi (Void)**: Hak akses khusus Admin untuk membatalkan transaksi yang salah secara aman dengan **pemulihan stok barang otomatis** ke database.
 *   **Ekspor Data ke CSV**: Tombol 1-klik untuk mengunduh rekapitulasi data penjualan ke format spreadsheet Excel/CSV.
 
-### 3. 🔍 Pencarian & Pemindaian Responsif (HP & Desktop)
+### 3. 📦 Manajemen Stok & Export/Import Excel (.xlsx / .csv)
+*   **Export Stok ke Excel 1-Klik**: Unduh seluruh daftar produk, barcode/SKU, kategori, modal, stok fisik, satuan, harga eceran, dan harga grosir ke file Excel (.xlsx) dengan kolom yang rapi.
+*   **Import Massal dari Excel / CSV**: Unggah file Excel untuk mendaftarkan ratusan produk sekaligus dalam hitungan detik.
+*   **Download Template Excel**: Tersedia template file Excel siap isi bagi toko baru yang ingin memindahkan data barang dari sistem lama.
+*   **Mode Import Fleksibel**: Pilihan mode *Upsert* (tambah baru & perbarui yang sudah ada) atau *Insert Only* (hanya tambah baru).
+*   **Stock Opname & Stok Masuk**: Fitur penyesuaian selisih stok fisik dan pencatatan belanja stok dari supplier.
+
+### 4. 🔍 Pencarian & Pemindaian Responsif (HP & Desktop)
 *   **Scan Barcode Kamera HP**: Integrasi pemindaian barcode langsung menggunakan kamera HP/tablet kasir tanpa memerlukan alat scanner laser eksternal.
 *   **Pencarian Nama Real-Time**: Modal pencarian nama barang instan yang dilengkapi dengan dropdown pilihan satuan unit dan input kuantitas langsung.
 *   **Smart Fallback Input**: Jika kasir mengetikkan nama barang di input barcode utama, sistem secara cerdas akan langsung membuka modal pencarian manual dan menampilkan hasil filternya secara otomatis.
