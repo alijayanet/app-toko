@@ -23,6 +23,9 @@
   <!-- QRCode.js untuk Generate QRIS Dinamis -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+  <!-- JsBarcode untuk Cetak Label Barcode Produk -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -528,7 +531,10 @@
               <p class="text-sm text-slate-400">Atur katalog produk, stok opname, dan catat barang masuk dari supplier.</p>
             </div>
             
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="openPrintBarcodeModal()" class="bg-violet-600 hover:bg-violet-700 text-white px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-barcode"></i> Cetak Barcode
+              </button>
               <button onclick="openModal('modal-adjust-stock')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2">
                 <i class="fa-solid fa-sliders"></i> Stock Opname
               </button>
@@ -1596,6 +1602,100 @@
 
   <!-- CONTAINER STRUK UNTUK THERMAL PRINT (HIDDEN ON SCREEN) -->
   <div id="thermal-receipt" class="hidden"></div>
+
+  <!-- CONTAINER CETAK LABEL BARCODE (HIDDEN ON SCREEN) -->
+  <div id="barcode-print-area" class="hidden"></div>
+
+  <!-- Modal Cetak Barcode Produk -->
+  <div id="modal-print-barcode" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto scrollbar-thin">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-widest text-violet-500 font-bold">BARCODE GENERATOR</span>
+          <h3 class="font-outfit font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <i class="fa-solid fa-barcode text-violet-500"></i> Cetak Label Barcode Produk
+          </h3>
+        </div>
+        <button onclick="closeModal('modal-print-barcode')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Panel Konfigurasi -->
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-500 mb-1">Pilih Produk</label>
+            <select id="barcode-product-select" onchange="handleBarcodeProductChange()" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-medium focus:ring-2 focus:ring-violet-500">
+              <option value="ALL">-- Cetak Semua Produk Aktif --</option>
+              <!-- Diisi dinamis -->
+            </select>
+          </div>
+
+          <div id="barcode-unit-row">
+            <label class="block font-semibold text-slate-500 mb-1">Pilihan Satuan & Harga</label>
+            <select id="barcode-unit-select" onchange="renderBarcodePreview()" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-medium">
+              <!-- Diisi dinamis -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-500 mb-1">Ukuran Kertas / Label Printer</label>
+            <select id="barcode-label-size" onchange="renderBarcodePreview()" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-semibold">
+              <option value="40x30" selected>Roll 40 x 30 mm (Single Roll Standar)</option>
+              <option value="50x30">Roll 50 x 30 mm (Single Roll Sedang)</option>
+              <option value="33x15">Roll 33 x 15 mm (3 Kolom / Mini Barcode)</option>
+              <option value="a4">Kertas Lembaran A4 / Stiker Tom & Jerry</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-500 mb-1">Jumlah Salinan per Produk (Lembar)</label>
+            <input type="number" id="barcode-copies-count" value="1" min="1" max="100" onchange="renderBarcodePreview()" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-bold">
+          </div>
+
+          <!-- Opsi Informasi di Stiker -->
+          <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+            <label class="block font-semibold text-slate-500 mb-1">Informasi yang Ditampilkan di Stiker:</label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="barcode-show-store" checked onchange="renderBarcodePreview()" class="rounded text-violet-600 focus:ring-violet-500">
+              <span>Nama Toko (<span id="barcode-store-preview-text">TOKO</span>)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="barcode-show-name" checked onchange="renderBarcodePreview()" class="rounded text-violet-600 focus:ring-violet-500">
+              <span>Nama Produk</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="barcode-show-price" checked onchange="renderBarcodePreview()" class="rounded text-violet-600 focus:ring-violet-500">
+              <span>Harga Jual</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="barcode-show-sku" checked onchange="renderBarcodePreview()" class="rounded text-violet-600 focus:ring-violet-500">
+              <span>Kode Barcode / SKU</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Panel Preview Realtime -->
+        <div class="flex flex-col">
+          <label class="block font-semibold text-slate-500 text-xs mb-1">Pratinjau Hasil Cetak (Preview)</label>
+          <div class="flex-1 bg-slate-100 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center min-h-[220px] overflow-auto">
+            <div id="barcode-preview-box" class="bg-white text-black p-3 rounded-xl shadow-md border border-slate-300 flex flex-col items-center justify-between text-center" style="width: 180px; min-height: 120px;">
+              <!-- Dynamic SVG Preview -->
+            </div>
+            <p class="text-[10px] text-slate-400 mt-2 text-center">Kompatibel dengan semua printer label barcode thermal (Xprinter, Panda, Iware, Zebra, dll).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+        <button type="button" onclick="closeModal('modal-print-barcode')" class="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2.5 rounded-xl font-semibold text-xs">
+          Batal
+        </button>
+        <button type="button" onclick="printBarcodeLabels()" class="flex-1 bg-violet-600 hover:bg-violet-700 active:scale-95 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20 transition-transform">
+          <i class="fa-solid fa-print"></i> CETAK LABEL BARCODE
+        </button>
+      </div>
+    </div>
+  </div>
 
 
   <!-- ==========================================================================
@@ -3722,6 +3822,7 @@
 
         const actionsHTML = role === 'ADMIN'
           ? `<td class="px-6 py-4 text-center admin-only whitespace-nowrap">
+              <button onclick="openPrintBarcodeModal('${p.id}')" class="bg-violet-600 hover:bg-violet-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold mr-1" title="Cetak Barcode"><i class="fa-solid fa-barcode"></i></button>
               <button onclick="openEditProductModal('${p.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold mr-1">Edit</button>
               <button onclick="handleDeleteProduct('${p.id}')" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">Hapus</button>
              </td>`
@@ -3762,6 +3863,167 @@
         }
       }
     }
+
+    // ==========================================
+    // LOGIKA GENERATOR & CETAK LABEL BARCODE
+    // ==========================================
+
+    function openPrintBarcodeModal(selectedProductId = null) {
+      const select = document.getElementById('barcode-product-select');
+      if (!select) return;
+
+      select.innerHTML = '<option value="ALL">-- Cetak Semua Produk Aktif (' + (products ? products.length : 0) + ' Produk) --</option>' +
+        (products || []).map(p => `<option value="${p.id}" ${p.id === selectedProductId ? 'selected' : ''}>${escapeHtml(p.name)} (${p.id})</option>`).join('');
+
+      if (selectedProductId) {
+        select.value = selectedProductId;
+      }
+
+      const storeText = document.getElementById('barcode-store-preview-text');
+      if (storeText) storeText.textContent = storeSettings.store_name || 'TOKO';
+
+      handleBarcodeProductChange();
+      openModal('modal-print-barcode');
+    }
+
+    function handleBarcodeProductChange() {
+      const prodId = document.getElementById('barcode-product-select')?.value;
+      const unitRow = document.getElementById('barcode-unit-row');
+      const unitSelect = document.getElementById('barcode-unit-select');
+
+      if (prodId === 'ALL') {
+        if (unitRow) unitRow.classList.add('hidden');
+      } else {
+        if (unitRow) unitRow.classList.remove('hidden');
+        const prod = products.find(p => p.id === prodId);
+        if (prod && unitSelect) {
+          unitSelect.innerHTML = (prod.units || []).map(u => `<option value="${u.id}">${escapeHtml(u.unit_name)} — ${formatRupiah(u.price_retail)}</option>`).join('');
+        }
+      }
+
+      renderBarcodePreview();
+    }
+
+    function renderBarcodePreview() {
+      const prodId = document.getElementById('barcode-product-select')?.value;
+      const previewBox = document.getElementById('barcode-preview-box');
+      if (!previewBox) return;
+
+      let targetProduct = (prodId === 'ALL') ? products[0] : products.find(p => p.id === prodId);
+      if (!targetProduct) {
+        previewBox.innerHTML = '<p class="text-xs text-slate-400">Pilih produk untuk pratinjau</p>';
+        return;
+      }
+
+      const showStore = document.getElementById('barcode-show-store')?.checked ?? true;
+      const showName = document.getElementById('barcode-show-name')?.checked ?? true;
+      const showPrice = document.getElementById('barcode-show-price')?.checked ?? true;
+      const showSku = document.getElementById('barcode-show-sku')?.checked ?? true;
+
+      const unitId = parseInt(document.getElementById('barcode-unit-select')?.value);
+      const unit = (targetProduct.units || []).find(u => u.id === unitId) || targetProduct.units[0];
+      const price = unit ? unit.price_retail : 0;
+      const unitName = unit ? unit.unit_name : 'Pcs';
+
+      previewBox.innerHTML = `
+        ${showStore ? `<div style="font-size:9px; font-weight:bold; color:#475569; text-transform:uppercase; margin-bottom:2px;">${escapeHtml(storeSettings.store_name || 'TOKO')}</div>` : ''}
+        ${showName ? `<div style="font-size:11px; font-weight:bold; line-height:1.2; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(targetProduct.name)}</div>` : ''}
+        ${showPrice ? `<div style="font-size:12px; font-weight:900; color:#16a34a; margin:2px 0;">${formatRupiah(price)} <span style="font-size:9px; font-weight:normal; color:#64748b;">/${escapeHtml(unitName)}</span></div>` : ''}
+        <svg id="preview-barcode-svg" style="max-width:160px; margin:2px auto;"></svg>
+      `;
+
+      if (typeof JsBarcode !== 'undefined') {
+        try {
+          JsBarcode("#preview-barcode-svg", targetProduct.id, {
+            format: "CODE128",
+            width: 1.5,
+            height: 35,
+            displayValue: showSku,
+            fontSize: 10,
+            margin: 2
+          });
+        } catch (e) {
+          console.error("Barcode render error:", e);
+        }
+      }
+    }
+
+    function printBarcodeLabels() {
+      const prodId = document.getElementById('barcode-product-select')?.value;
+      const labelSize = document.getElementById('barcode-label-size')?.value || '40x30';
+      const copies = parseInt(document.getElementById('barcode-copies-count')?.value) || 1;
+
+      const showStore = document.getElementById('barcode-show-store')?.checked ?? true;
+      const showName = document.getElementById('barcode-show-name')?.checked ?? true;
+      const showPrice = document.getElementById('barcode-show-price')?.checked ?? true;
+      const showSku = document.getElementById('barcode-show-sku')?.checked ?? true;
+
+      let targetProducts = (prodId === 'ALL') ? [...products] : [products.find(p => p.id === prodId)].filter(Boolean);
+
+      if (targetProducts.length === 0) {
+        alert("Tidak ada produk yang dipilih!");
+        return;
+      }
+
+      const printArea = document.getElementById('barcode-print-area');
+      if (!printArea) return;
+      printArea.innerHTML = '';
+
+      const containerClass = `label-container-${labelSize}`;
+      let index = 0;
+
+      targetProducts.forEach(p => {
+        const unitId = parseInt(document.getElementById('barcode-unit-select')?.value);
+        const unit = (p.units || []).find(u => u.id === unitId) || p.units[0];
+        const price = unit ? unit.price_retail : 0;
+        const unitName = unit ? unit.unit_name : 'Pcs';
+
+        for (let c = 0; c < copies; c++) {
+          index++;
+          const svgId = `print-barcode-svg-${index}`;
+          const labelDiv = document.createElement('div');
+          labelDiv.className = containerClass;
+
+          labelDiv.innerHTML = `
+            ${showStore ? `<div style="font-size:9px; font-weight:bold; color:#000; text-transform:uppercase; line-height:1;">${escapeHtml(storeSettings.store_name || 'TOKO')}</div>` : ''}
+            ${showName ? `<div style="font-size:10px; font-weight:bold; line-height:1.15; max-height:22px; overflow:hidden; text-align:center;">${escapeHtml(p.name)}</div>` : ''}
+            ${showPrice ? `<div style="font-size:11px; font-weight:bold; line-height:1; color:#000; margin:1px 0;">${formatRupiah(price)}<span style="font-size:8px; font-weight:normal;">/${escapeHtml(unitName)}</span></div>` : ''}
+            <svg id="${svgId}" style="max-width:100%; display:block; margin:0 auto;"></svg>
+          `;
+
+          printArea.appendChild(labelDiv);
+
+          // Render Barcode SVG via JsBarcode
+          if (typeof JsBarcode !== 'undefined') {
+            try {
+              const barWidth = (labelSize === '33x15') ? 1.0 : (labelSize === '40x30') ? 1.3 : 1.5;
+              const barHeight = (labelSize === '33x15') ? 18 : (labelSize === '40x30') ? 28 : 34;
+              JsBarcode(`#${svgId}`, p.id, {
+                format: "CODE128",
+                width: barWidth,
+                height: barHeight,
+                displayValue: showSku,
+                fontSize: 9,
+                margin: 0
+              });
+            } catch (e) {
+              console.error("Barcode print render error:", e);
+            }
+          }
+        }
+      });
+
+      // Pasang kelas cetak barcode pada body
+      document.body.classList.add('printing-barcode');
+
+      setTimeout(() => {
+        window.print();
+        setTimeout(() => {
+          document.body.classList.remove('printing-barcode');
+        }, 500);
+      }, 150);
+    }
+
 
     function addNewUnitRow() {
       const container = document.getElementById('add-prod-units-container');

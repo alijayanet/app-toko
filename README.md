@@ -48,10 +48,11 @@ Sistem POS ini dikembangkan dengan fokus pada kemudahan operasional kasir di lap
 *   **Backup Database 1-Klik**: Tombol unduh cadangan SQLite database (`.db`) langsung dari menu pengaturan untuk perlindungan data toko.
 *   **Edit Profil Mandiri**: Setiap user (kasir/admin) dapat mengganti nama lengkap, username, dan password mereka sendiri secara mandiri tanpa memerlukan bantuan basis data.
 
-### 6. 🖨️ Cetak Struk Thermal Dinamis (58mm / 80mm)
-*   **Pemilih Ukuran Kertas**: Transisi cetak instan antara kertas thermal 58mm atau 80mm dengan penyimpanan otomatis di preferensi browser kasir.
-*   **Identitas Kasir & Toko Dinamis**: Menampilkan nama kasir yang melayani, diskon, nama toko, alamat, telepon, dan catatan kaki struk yang diambil langsung dari pengaturan.
-*   **Layout Cetak Bersih & Monospace**: Teks item belanja tidak terpotong dan tidak ada margin kosong saat dicetak ke printer Bluetooth maupun USB/LAN thermal.
+### 6. 🖨️ Cetak Struk Thermal & Label Barcode Produk
+*   **Struk Thermal 58mm / 80mm**: Format struk kasir bersih, tajam, dan monospace dengan penyimpanan preferensi otomatis.
+*   **Generator & Cetak Label Barcode Produk (CODE128)**: Fitur cetak stiker barcode produk langsung dari database untuk ditempel di rak atau kemasan barang.
+*   **Kompatibel Berbagai Ukuran Label**: Mendukung printer label barcode (Xprinter, Panda, Iware, Zebra, dll.) dengan ukuran **Roll 40x30 mm**, **Roll 50x30 mm**, **Roll 33x15 mm (3 kolom)**, serta **Lembaran Kertas A4 / Stiker Tom & Jerry**.
+*   **Kustomisasi Tampilan Label**: Pilihan menampilkan Nama Toko, Nama Produk, Pilihan Satuan & Harga Jual, dan Barcode Batang + SKU dengan pratinjau (*live preview*) sebelum dicetak.
 
 ---
 
