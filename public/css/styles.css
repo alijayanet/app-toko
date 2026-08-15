@@ -32,65 +32,112 @@
   border: 1px solid rgba(55, 65, 81, 0.5);
 }
 
+/* Sembunyikan #thermal-receipt saat tampilan layar biasa */
+@media screen {
+  #thermal-receipt {
+    display: none !important;
+  }
+}
+
 /* ==========================================================================
    LOGIKA CETAK THERMAL ( window.print() )
+   Presisi untuk Printer Thermal 58mm & 80mm (ESC/POS)
    ========================================================================== */
 @media print {
-  /* Sembunyikan seluruh elemen halaman web di layar */
-  body * {
-    visibility: hidden;
+  /* Reset html & body agar tidak terpotong overflow-hidden */
+  html, body {
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: 'Courier New', Courier, monospace, monospace !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Sembunyikan SEMUA elemen screen UI dengan display: none */
+  #login-screen,
+  #main-app,
+  #sidebar-overlay,
+  #mobile-cart-drawer,
+  #barcode-live-results,
+  .modal-overlay,
+  div[id^="modal-"],
+  header,
+  nav,
+  aside,
+  button,
+  .no-print {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Wadah Utama Struk Thermal */
+  #thermal-receipt {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    margin: 0 auto !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Courier New', Courier, monospace, monospace !important;
+    box-shadow: none !important;
+    border: none !important;
+    page-break-inside: avoid !important;
+  }
+
+  #thermal-receipt * {
+    visibility: visible !important;
+    color: #000000 !important;
     background: transparent !important;
   }
 
-  /* Tampilkan hanya area struk thermal */
-  #thermal-receipt, #thermal-receipt * {
-    visibility: visible;
-  }
-
-  #thermal-receipt {
-    position: absolute;
-    left: 0;
-    top: 0;
-    margin: 0;
-    padding: 2mm;
-    background: #fff !important;
-    color: #000 !important;
-    font-family: 'Courier New', Courier, monospace !important;
-    font-size: 11px !important;
-    line-height: 1.3 !important;
-    box-shadow: none !important;
-  }
-
-  /* Lebar Dinamis Berdasarkan Konfigurasi Kertas */
+  /* Ukuran Kertas Thermal 58mm (Lebar cetak efektif 48mm / 384 dots) */
   .receipt-width-58 {
-    width: 54mm !important; /* Margin kompensasi 58mm */
-    max-width: 54mm !important;
+    width: 48mm !important;
+    max-width: 48mm !important;
+    padding: 1mm !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    margin: 0 auto !important;
   }
 
+  /* Ukuran Kertas Thermal 80mm (Lebar cetak efektif 72mm / 576 dots) */
   .receipt-width-80 {
-    width: 76mm !important; /* Margin kompensasi 80mm */
-    max-width: 76mm !important;
+    width: 72mm !important;
+    max-width: 72mm !important;
+    padding: 2mm !important;
+    font-size: 12.5px !important;
+    line-height: 1.35 !important;
+    margin: 0 auto !important;
   }
 
-  /* Hilangkan margin bawaan cetak browser (menghilangkan header/footer tanggal & URL) */
   @page {
-    margin: 0;
+    margin: 0 !important;
+    size: auto !important;
   }
 
-  /* Teks rapi monospace untuk thermal printer */
   .print-mono {
-    font-family: 'Courier New', Courier, monospace !important;
+    font-family: 'Courier New', Courier, monospace, monospace !important;
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
   }
 
   .print-dashed-line {
-    border-top: 1px dashed #000 !important;
-    height: 0;
-    margin: 4px 0 !important;
+    border-top: 1px dashed #000000 !important;
+    height: 0 !important;
+    margin: 3px 0 !important;
+    display: block !important;
   }
 
   .print-double-dashed-line {
-    border-top: 3px double #000 !important;
-    height: 0;
-    margin: 6px 0 !important;
+    border-top: 3px double #000000 !important;
+    height: 0 !important;
+    margin: 5px 0 !important;
+    display: block !important;
   }
 }

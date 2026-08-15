@@ -12,30 +12,67 @@ Aplikasi POS (Kasir) terpusat, modern, dan sangat ringan yang dirancang khusus u
 
 Sistem POS ini dikembangkan dengan fokus pada kemudahan operasional kasir di lapangan, performa tinggi, dan pencatatan yang komprehensif:
 
-### 1. ⚡ POS & Kasir Pintar (Multi-Unit & Multi-Harga)
+### 1. ⚡ POS & Kasir Pintar (Multi-Unit, Grosir, Diskon & QRIS)
 *   **Multi-Unit Konversi**: Mendukung konversi satuan produk bertingkat (contoh: *Pcs*, *Pak (isi 5)*, *Dus (isi 40)*).
 *   **Multi-Tier Pricing (Grosir Bertingkat)**: Otomatis menghitung harga eceran atau grosir berdasarkan jumlah minimum kuantitas unit yang dibeli.
-*   **Metode Transaksi Fleksibel**: Mendukung pembayaran tunai langsung maupun sistem tempo (bon/piutang belanja) dengan penentuan jatuh tempo.
+*   **Diskon Belanja (Rp)**: Input potongan harga/diskon langsung per transaksi yang tercatat di pembukuan laba bersih dan tercetak di struk belanja.
+*   **Pembayaran QRIS Dinamis (EMVCo)**: Otomatis mengonversi QRIS Statis Merchant menjadi QRIS Dinamis dengan nominal tagihan tepat sesuai total belanjaan. Pelanggan cukup scan melalui BCA, Mandiri, BRI, BNI, GoPay, OVO, DANA, ShopeePay tanpa perlu mengetik nominal secara manual!
+*   **Customer Display QRIS**: Tampilan layar penuh kode QR responsif dan kontras tinggi untuk ditunjukkan ke pembeli atau dicetak.
+*   **Kalkulator Uang Cepat (Quick Cash)**: Tombol instan pecahan uang tunai (`[Uang Pas]`, `10rb`, `20rb`, `50rb`, `100rb`, `200rb`) serta kalkulasi kembalian *real-time*.
+*   **Tahan & Panggil Keranjang (Hold/Park Cart)**: Fitur antrean belanja untuk menunda transaksi pelanggan yang tertunda dan melayani pembeli berikutnya tanpa kehilangan item keranjang.
+*   **Filter Kategori Produk**: Tab pills kategori produk (*Semua*, *Sembako*, *Minuman*, dll.) untuk navigasi item cepat.
+*   **Audio Feedback Bawaan**: Efek suara sintetis Web Audio API (*beep scanner* & *success chime*) tanpa memerlukan file aset audio eksternal.
+*   **Metode Transaksi Fleksibel**: Mendukung pembayaran Tunai, QRIS Dinamis, dan Tempo (bon/piutang pelanggan).
 *   **Shortcut Keyboard**: Navigasi super cepat menggunakan tombol keyboard (`F1` untuk Checkout cepat, `F2` untuk Mengosongkan Keranjang).
 
-### 2. 🔍 Pencarian & Pemindaian Responsif (HP & Desktop)
+### 2. 🧾 Riwayat Penjualan, Cetak Ulang & Pembatalan (Void)
+*   **Riwayat Transaksi Komprehensif**: Filter penjualan berdasarkan rentang tanggal (`Hari Ini`, `7 Hari Terakhir`, `Bulan Ini`), kata kunci pencarian nota/pelanggan/kasir, dan status pembayaran.
+*   **Cetak Ulang Struk (Reprint Receipt)**: Kemampuan mencetak ulang salinan struk thermal kapan saja untuk audit atau permintaan pelanggan.
+*   **Pembatalan Transaksi (Void)**: Hak akses khusus Admin untuk membatalkan transaksi yang salah secara aman dengan **pemulihan stok barang otomatis** ke database.
+*   **Ekspor Data ke CSV**: Tombol 1-klik untuk mengunduh rekapitulasi data penjualan ke format spreadsheet Excel/CSV.
+
+### 3. 🔍 Pencarian & Pemindaian Responsif (HP & Desktop)
 *   **Scan Barcode Kamera HP**: Integrasi pemindaian barcode langsung menggunakan kamera HP/tablet kasir tanpa memerlukan alat scanner laser eksternal.
 *   **Pencarian Nama Real-Time**: Modal pencarian nama barang instan yang dilengkapi dengan dropdown pilihan satuan unit dan input kuantitas langsung.
 *   **Smart Fallback Input**: Jika kasir mengetikkan nama barang di input barcode utama, sistem secara cerdas akan langsung membuka modal pencarian manual dan menampilkan hasil filternya secara otomatis.
 
-### 3. 📒 Pembukuan Piutang Pelanggan & Hutang Toko
+### 4. 📒 Pembukuan Piutang Pelanggan & Hutang Toko
 *   **Piutang Pelanggan (Bon Belanja)**: Pencatatan otomatis transaksi tempo pelanggan beserta riwayat cicilan pelunasan dan status nota.
 *   **Hutang Toko ke Supplier**: Pencatatan belanja stok toko secara tempo ke supplier, log uang muka (DP), dan pelunasan bertahap.
 *   **Rincian Transaksi Lengkap**: Tombol **Detail** pada setiap baris piutang/hutang untuk menampilkan daftar barang yang dibeli serta histori cicilan pembayaran yang lengkap dengan catatan/memo.
 
-### 4. 🔒 Keamanan & Hak Akses Berbasis Peran (RBAC)
+### 5. 🔒 Keamanan, Login Modern & Backup Database
+*   **Halaman Login Glassmorphism**: Desain antarmuka login yang modern dan elegan dengan chip akun demo instan, toggle lihat sandi, serta penguncian sesi otomatis.
 *   **Role CASHIER**: Terbatas hanya untuk melakukan transaksi kasir dan melihat daftar piutang pelanggan. Menu administrator otomatis disembunyikan.
-*   **Role ADMIN**: Akses penuh ke dasbor laporan laba rugi, penyesuaian stok opname, input pembelian supplier, pendaftaran produk baru, dan konfigurasi toko.
+*   **Role ADMIN**: Akses penuh ke dasbor laporan laba rugi, penyesuaian stok opname, input pembelian supplier, pendaftaran produk baru, audit kasir, dan konfigurasi toko.
+*   **Backup Database 1-Klik**: Tombol unduh cadangan SQLite database (`.db`) langsung dari menu pengaturan untuk perlindungan data toko.
 *   **Edit Profil Mandiri**: Setiap user (kasir/admin) dapat mengganti nama lengkap, username, dan password mereka sendiri secara mandiri tanpa memerlukan bantuan basis data.
 
-### 5. 🖨️ Cetak Struk Thermal Dinamis (58mm / 80mm)
-*   **Pemilih Ukuran Kertas**: Transisi cetak instan antara kertas thermal 58mm atau 80mm.
-*   **Header & Footer Toko Dinamis**: Nama toko, alamat, telepon, dan catatan kaki struk diambil secara dinamis dari database pengaturan dan dapat diperbarui sewaktu-waktu oleh Admin.
+### 6. 🖨️ Cetak Struk Thermal Dinamis (58mm / 80mm)
+*   **Pemilih Ukuran Kertas**: Transisi cetak instan antara kertas thermal 58mm atau 80mm dengan penyimpanan otomatis di preferensi browser kasir.
+*   **Identitas Kasir & Toko Dinamis**: Menampilkan nama kasir yang melayani, diskon, nama toko, alamat, telepon, dan catatan kaki struk yang diambil langsung dari pengaturan.
+*   **Layout Cetak Bersih & Monospace**: Teks item belanja tidak terpotong dan tidak ada margin kosong saat dicetak ke printer Bluetooth maupun USB/LAN thermal.
+
+---
+
+## 📱 Fitur Khusus: QRIS Dinamis Otomatis Sesuai Nominal Belanja
+
+Sistem POS ini dilengkapi dengan generator **QRIS Dinamis Otomatis berbasis standar EMVCo QRIS (Quick Response Code Indonesian Standard)**. Fitur ini memungkinkan toko UMKM mengubah QRIS Statis Merchant (seperti QRIS BCA, Mandiri, BRI, BNI, GoPay Usaha, OVO, ShopeePay, DANA Bisnis) menjadi QRIS Dinamis secara otomatis per transaksi:
+
+### 💡 Keuntungan QRIS Dinamis untuk Kasir & Pelanggan:
+1. **Nominal Pas Otomatis**: Pelanggan tidak perlu mengetik nominal pembayaran secara manual saat scan QRIS. Nominal langsung terisi otomatis sesuai total belanjaan (termasuk diskon).
+2. **Mencegah Salah Input**: Menghilangkan risiko pembeli salah mengetik nominal (kurang bayar atau kelebihan bayar).
+3. **Customer Display Pop-up**: Kasir dapat langsung menampilkan kode QR besar di layar monitor kasir atau layar HP kasir untuk di-scan oleh pembeli.
+4. **Kompatibel Semua E-Wallet & M-Banking**: Dapat di-scan menggunakan seluruh aplikasi mobile banking di Indonesia (BCA, Mandiri Livin, BRImo, BNI Mobile, CIMB, Jago, Seabank) dan e-wallet (GoPay, OVO, DANA, ShopeePay, LinkAja, AstraPay).
+
+### ⚙️ Cara Mengaktifkan QRIS Dinamis di Pengaturan Toko:
+1. Login ke akun **Administrator** (`admin`).
+2. Masuk ke menu **Pengaturan Toko**.
+3. **Pilih salah satu metode input**:
+   * **Metode 1 (Sangat Mudah - Upload Gambar)**: Klik tombol **"📸 Upload Gambar/Foto QRIS"**, lalu pilih file foto/screenshot stiker QRIS toko Anda (PNG, JPG, JPEG). Sistem akan langsung membaca kode QR dan mengisi teks payload secara otomatis!
+   * **Metode 2 (Manual)**: Tempelkan (*paste*) string data teks QRIS statis merchant Anda (diawali dengan `000201010211...`) ke dalam kolom teks yang tersedia.
+4. Klik **"SIMPAN PENGATURAN TOKO"**.
+5. Saat transaksi kasir memilih metode bayar **QRIS**, sistem akan otomatis menyisipkan nominal belanja (Tag `54`), mengubah tipe QR menjadi dinamis (Tag `01`), menghitung ulang CRC16, dan merender QR Code dinamis secara instan!
 
 ---
 

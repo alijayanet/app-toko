@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const crypto = require('crypto');
 const db = require('./db');
+const qrisUtil = require('./qrisUtil');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -173,7 +174,7 @@ app.post('/api/settings', authenticate, (req, res) => {
     return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengubah pengaturan.' });
   }
 
-  const { store_name, store_address, store_phone, receipt_footer } = req.body;
+  const { store_name, store_address, store_phone, receipt_footer, qris_static_payload } = req.body;
   if (!store_name) {
     return res.status(400).json({ success: false, message: 'Nama toko wajib diisi.' });
   }
@@ -184,6 +185,9 @@ app.post('/api/settings', authenticate, (req, res) => {
     upsert.run('store_address', store_address || '');
     upsert.run('store_phone', store_phone || '');
     upsert.run('receipt_footer', receipt_footer || '');
+    if (qris_static_payload !== undefined) {
+      upsert.run('qris_static_payload', qris_static_payload.trim());
+    }
   });
 
   try {
@@ -194,21 +198,118 @@ app.post('/api/settings', authenticate, (req, res) => {
   }
 });
 
+// Endpoint Generate Dynamic QRIS EMVCo
+app.get('/api/qris/generate', authenticate, (req, res) => {
+  const amount = parseFloat(req.query.amount || 0);
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ success: false, message: 'Nominal transaksi QRIS tidak valid.' });
+  }
+
+  try {
+    const settingRow = db.prepare("SELECT value FROM m_settings WHERE key = 'qris_static_payload'").get();
+    const staticPayload = settingRow?.value;
+    if (!staticPayload || staticPayload.trim() === '') {
+      return res.status(400).json({ success: false, message: 'QRIS Statis Toko belum diatur di Pengaturan Toko.' });
+    }
+
+    const dynamicPayload = qrisUtil.convertStaticQrisToDynamic(staticPayload, amount);
+    const merchantName = qrisUtil.getMerchantNameFromPayload(staticPayload);
+
+    return res.json({
+      success: true,
+      data: {
+        payload: dynamicPayload,
+        merchant_name: merchantName,
+        amount
+      }
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+// Backup Database (Admin Only)
+app.get('/api/settings/backup', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengunduh backup database.' });
+  }
+  const dbFile = path.resolve(__dirname, '../database.db');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  res.download(dbFile, `backup-pos-${dateStr}.db`, (err) => {
+    if (err) {
+      console.error('Error downloading backup:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, message: 'Gagal mengunduh berkas database' });
+      }
+    }
+  });
+});
+
 
 // ==========================================
 // 1. ENDPOINT PRODUK & SCANNING (SECURED)
 // ==========================================
 
-// Scan Barcode
+// Get Categories
+app.get('/api/products/categories', authenticate, (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT DISTINCT category FROM m_products 
+      WHERE category IS NOT NULL AND category != '' 
+      ORDER BY category ASC
+    `).all();
+    const categories = rows.map(r => r.category);
+    if (!categories.includes('Umum')) categories.unshift('Umum');
+    return res.json({ success: true, data: categories });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Scan Barcode atau Cari Produk (Exact)
 app.get('/api/products/scan/:barcode', authenticate, (req, res) => {
   const { barcode } = req.params;
   try {
-    const product = db.prepare('SELECT * FROM m_products WHERE id = ?').get(barcode);
+    const product = db.prepare(`
+      SELECT * FROM m_products 
+      WHERE LOWER(id) = LOWER(?) 
+         OR LOWER(name) = LOWER(?)
+    `).get(barcode, barcode);
+
     if (!product) {
       return res.status(404).json({ success: false, message: 'Produk tidak ditemukan' });
     }
-    const units = db.prepare('SELECT * FROM m_product_units WHERE product_id = ?').all(barcode);
+    const units = db.prepare('SELECT * FROM m_product_units WHERE product_id = ?').all(product.id);
     return res.json({ success: true, data: { ...product, units } });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Search Produk Multi-Query (By Name, SKU, Satuan, Kategori)
+app.get('/api/products/search', authenticate, (req, res) => {
+  const query = (req.query.q || '').trim();
+  if (!query) {
+    return res.json({ success: true, data: [] });
+  }
+  try {
+    const pattern = `%${query}%`;
+    const products = db.prepare(`
+      SELECT DISTINCT p.* FROM m_products p
+      LEFT JOIN m_product_units u ON p.id = u.product_id
+      WHERE p.id LIKE ? 
+         OR p.name LIKE ? 
+         OR p.category LIKE ? 
+         OR u.unit_name LIKE ?
+      LIMIT 25
+    `).all(pattern, pattern, pattern, pattern);
+
+    const result = products.map(p => {
+      const units = db.prepare('SELECT * FROM m_product_units WHERE product_id = ?').all(p.id);
+      return { ...p, units };
+    });
+
+    return res.json({ success: true, data: result });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
@@ -234,16 +335,16 @@ app.post('/api/products', authenticate, (req, res) => {
     return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mendaftarkan produk baru.' });
   }
 
-  const { id, name, cost_price_base, stock, min_stock, units } = req.body;
+  const { id, name, category, cost_price_base, stock, min_stock, units } = req.body;
   if (!id || !name || cost_price_base === undefined || stock === undefined || !units || !units.length) {
     return res.status(400).json({ success: false, message: 'Data tidak lengkap' });
   }
 
   const insertProductTx = db.transaction(() => {
     db.prepare(`
-      INSERT INTO m_products (id, name, cost_price_base, stock, min_stock) 
-      VALUES (?, ?, ?, ?, ?)
-    `).run(id, name, cost_price_base, stock, min_stock || 0);
+      INSERT INTO m_products (id, name, category, cost_price_base, stock, min_stock) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(id, name, category || 'Umum', cost_price_base, stock, min_stock || 0);
 
     const insertUnit = db.prepare(`
       INSERT INTO m_product_units (product_id, unit_name, conversion_factor, price_retail, price_wholesale, wholesale_min_qty) 
@@ -283,14 +384,14 @@ app.put('/api/products/:id', authenticate, (req, res) => {
     return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat memperbarui produk.' });
   }
   const { id } = req.params;
-  const { name, cost_price_base, min_stock, units } = req.body;
+  const { name, category, cost_price_base, min_stock, units } = req.body;
   if (!name || cost_price_base === undefined || !units || !units.length) {
     return res.status(400).json({ success: false, message: 'Data tidak lengkap' });
   }
   
   const updateProductTx = db.transaction(() => {
-    db.prepare('UPDATE m_products SET name = ?, cost_price_base = ?, min_stock = ? WHERE id = ?')
-      .run(name, cost_price_base, min_stock || 0, id);
+    db.prepare('UPDATE m_products SET name = ?, category = ?, cost_price_base = ?, min_stock = ? WHERE id = ?')
+      .run(name, category || 'Umum', cost_price_base, min_stock || 0, id);
     
     // Hapus unit lama
     db.prepare('DELETE FROM m_product_units WHERE product_id = ?').run(id);
@@ -377,10 +478,10 @@ app.post('/api/products/adjust-stock', authenticate, (req, res) => {
 
 
 // ==========================================
-// 2. ENDPOINT CHECKOUT PENJUALAN (SALES)
+// 2. ENDPOINT CHECKOUT PENJUALAN & RIWAYAT (SALES)
 // ==========================================
 app.post('/api/sales/checkout', authenticate, (req, res) => {
-  const { customer_id, payment_type, cash_amount, due_date, items } = req.body;
+  const { customer_id, payment_type, cash_amount, discount_amount, due_date, items } = req.body;
 
   if (!payment_type || !items || !items.length) {
     return res.status(400).json({ success: false, message: 'Keranjang belanja kosong atau data tidak lengkap' });
@@ -388,7 +489,7 @@ app.post('/api/sales/checkout', authenticate, (req, res) => {
 
   const checkoutTx = db.transaction(() => {
     const invoiceNo = generateInvoiceNumber();
-    let totalAmount = 0;
+    let subtotalAmount = 0;
     let totalProfit = 0;
     const detailLines = [];
 
@@ -412,7 +513,7 @@ app.post('/api/sales/checkout', authenticate, (req, res) => {
       const costOfItem = totalQtyBase * product.cost_price_base;
       const profit = subtotal - costOfItem;
 
-      totalAmount += subtotal;
+      subtotalAmount += subtotal;
       totalProfit += profit;
 
       detailLines.push({
@@ -428,6 +529,10 @@ app.post('/api/sales/checkout', authenticate, (req, res) => {
       });
     }
 
+    const discountVal = parseFloat(discount_amount || 0);
+    const totalAmount = Math.max(0, subtotalAmount - discountVal);
+    totalProfit = Math.max(0, totalProfit - discountVal);
+
     let finalCash = parseFloat(cash_amount || 0);
     let changeAmount = 0;
     let debtBalance = 0;
@@ -438,6 +543,11 @@ app.post('/api/sales/checkout', authenticate, (req, res) => {
         throw new Error(`Pembayaran tunai kurang! Total belanja: Rp ${totalAmount}, Uang bayar: Rp ${finalCash}`);
       }
       changeAmount = finalCash - totalAmount;
+    } else if (payment_type === 'QRIS') {
+      paymentStatus = 'PAID';
+      finalCash = totalAmount;
+      changeAmount = 0;
+      debtBalance = 0;
     } else {
       if (finalCash >= totalAmount) {
         paymentStatus = 'PAID';
@@ -453,11 +563,14 @@ app.post('/api/sales/checkout', authenticate, (req, res) => {
 
     const insertSale = db.prepare(`
       INSERT INTO t_sales (
-        invoice_no, customer_id, total_amount, total_profit, payment_type, payment_status, due_date, cash_amount, change_amount, debt_balance
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        invoice_no, customer_id, user_id, cashier_name, discount_amount, total_amount, total_profit, payment_type, payment_status, due_date, cash_amount, change_amount, debt_balance
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       invoiceNo,
       customer_id || null,
+      req.user.id || null,
+      req.user.name || 'Kasir',
+      discountVal,
       totalAmount,
       totalProfit,
       payment_type,
@@ -510,14 +623,18 @@ app.post('/api/sales/checkout', authenticate, (req, res) => {
     }
 
     return {
+      id: saleId,
       saleId,
       invoice_no: invoiceNo,
+      subtotal_amount: subtotalAmount,
+      discount_amount: discountVal,
       total_amount: totalAmount,
       cash_amount: finalCash,
       change_amount: changeAmount,
       debt_balance: debtBalance,
       payment_type,
       payment_status: paymentStatus,
+      cashier_name: req.user.name || 'Kasir',
       due_date,
       sale_date: new Date().toISOString(),
       items: detailLines
@@ -527,6 +644,126 @@ app.post('/api/sales/checkout', authenticate, (req, res) => {
   try {
     const receiptData = checkoutTx();
     return res.json({ success: true, message: 'Transaksi berhasil diselesaikan', receipt: receiptData });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+// List Sales History with Date & Search Filters
+app.get('/api/sales', authenticate, (req, res) => {
+  const { startDate, endDate, search, payment_status, payment_type, limit } = req.query;
+  try {
+    let query = `
+      SELECT s.*, c.name as customer_name, c.phone as customer_phone
+      FROM t_sales s
+      LEFT JOIN m_customers c ON s.customer_id = c.id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (startDate) {
+      query += ` AND date(s.sale_date, 'localtime') >= date(?, 'localtime')`;
+      params.push(startDate);
+    }
+    if (endDate) {
+      query += ` AND date(s.sale_date, 'localtime') <= date(?, 'localtime')`;
+      params.push(endDate);
+    }
+    if (search) {
+      query += ` AND (s.invoice_no LIKE ? OR c.name LIKE ? OR s.cashier_name LIKE ? OR s.id IN (SELECT sale_id FROM t_sales_details WHERE product_id LIKE ?))`;
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    }
+    if (payment_status) {
+      query += ` AND s.payment_status = ?`;
+      params.push(payment_status);
+    }
+    if (payment_type) {
+      query += ` AND s.payment_type = ?`;
+      params.push(payment_type);
+    }
+
+    query += ` ORDER BY s.sale_date DESC`;
+    const maxLimit = parseInt(limit || 100);
+    query += ` LIMIT ?`;
+    params.push(maxLimit);
+
+    const sales = db.prepare(query).all(...params);
+    return res.json({ success: true, data: sales });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get Single Sale Full Info for Reprint / Audit
+app.get('/api/sales/:id', authenticate, (req, res) => {
+  const { id } = req.params;
+  try {
+    const sale = db.prepare(`
+      SELECT s.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address
+      FROM t_sales s
+      LEFT JOIN m_customers c ON s.customer_id = c.id
+      WHERE s.id = ? OR s.invoice_no = ?
+    `).get(id, id);
+
+    if (!sale) {
+      return res.status(404).json({ success: false, message: 'Transaksi tidak ditemukan' });
+    }
+
+    const items = db.prepare(`
+      SELECT d.*, p.name as product_name
+      FROM t_sales_details d
+      JOIN m_products p ON d.product_id = p.id
+      WHERE d.sale_id = ?
+    `).all(sale.id);
+
+    const payments = db.prepare(`
+      SELECT * FROM t_customer_debt_payments WHERE sale_id = ? ORDER BY payment_date DESC
+    `).all(sale.id);
+
+    return res.json({ success: true, data: { ...sale, items, payments } });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Void / Batalkan Transaksi Penjualan (Admin Only)
+app.delete('/api/sales/:id', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat membatalkan transaksi.' });
+  }
+  const { id } = req.params;
+
+  try {
+    const voidTx = db.transaction(() => {
+      const sale = db.prepare('SELECT * FROM t_sales WHERE id = ?').get(id);
+      if (!sale) throw new Error('Transaksi penjualan tidak ditemukan');
+      if (sale.payment_status === 'VOID') throw new Error('Transaksi ini sudah dibatalkan sebelumnya');
+
+      const items = db.prepare('SELECT * FROM t_sales_details WHERE sale_id = ?').all(id);
+
+      // Kembalikan stok untuk setiap item
+      const restoreStock = db.prepare('UPDATE m_products SET stock = stock + ? WHERE id = ?');
+      const insertStockLog = db.prepare(`
+        INSERT INTO t_stock_logs (product_id, qty_change, type, reference_id) 
+        VALUES (?, ?, 'ADJUSTMENT', ?)
+      `);
+
+      for (const item of items) {
+        const qtyBase = item.qty * item.conversion_factor;
+        restoreStock.run(qtyBase, item.product_id);
+        insertStockLog.run(item.product_id, qtyBase, `VOID: ${sale.invoice_no}`);
+      }
+
+      // Tandai status penjualan menjadi VOID dan bersihkan sisa piutang jika ada
+      db.prepare(`
+        UPDATE t_sales 
+        SET payment_status = 'VOID', debt_balance = 0, total_profit = 0
+        WHERE id = ?
+      `).run(id);
+    });
+
+    voidTx();
+    return res.json({ success: true, message: 'Transaksi berhasil dibatalkan dan stok produk telah dikembalikan' });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }

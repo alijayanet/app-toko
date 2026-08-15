@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Debug Pencarian POS</title>
+<style>
+body { font-family: monospace; padding: 20px; background: #0f172a; color: #e2e8f0; }
+input { width: 400px; padding: 10px; font-size: 16px; border-radius: 8px; border: 2px solid #4ade80; background: #1e293b; color: white; }
+button { margin: 5px; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; }
+.ok { background: #16a34a; color: white; }
+.err { background: #dc2626; color: white; }
+.info { background: #2563eb; color: white; }
+pre { background: #1e293b; padding: 16px; border-radius: 8px; font-size: 12px; max-height: 400px; overflow-y: auto; }
+.result { background: #164e63; border: 1px solid #0e7490; padding: 10px; margin: 5px 0; border-radius: 8px; }
+</style>
+</head>
+<body>
+<h2 style="color:#4ade80">🔍 Debug Pencarian POS</h2>
+
+<div style="margin-bottom:16px">
+  <button class="info" onclick="testLogin()">1. Login & Cek Token</button>
+  <button class="info" onclick="testProducts()">2. Load Products</button>
+  <button class="info" onclick="testSearch()">3. Filter 'susu'</button>
+  <button class="info" onclick="testDOM()">4. Cek DOM Elements</button>
+  <button class="ok" onclick="testAll()">🚀 Test Semua</button>
+</div>
+
+<div>
+  <input id="manual-search" type="text" placeholder="Ketik untuk test filter lokal..." oninput="localFilter(this.value)">
+</div>
+
+<div id="log" style="margin-top:16px"></div>
+
+<script>
+let token = localStorage.getItem('pos_token');
+let products = [];
+
+function log(msg, type='info') {
+  const d = document.createElement('div');
+  d.className = 'result';
+  d.style.borderColor = type === 'error' ? '#dc2626' : type === 'ok' ? '#16a34a' : '#0e7490';
+  d.innerHTML = `<b style="color:${type==='error'?'#f87171':type==='ok'?'#4ade80':'#67e8f9'}">${type.toUpperCase()}</b> ${msg}`;
+  document.getElementById('log').prepend(d);
+}
+
+async function testLogin() {
+  token = localStorage.getItem('pos_token');
+  if (token) {
+    log(`Token sudah ada: ${token.substr(0,30)}...`, 'ok');
+    return token;
+  }
+  try {
+    const r = await fetch('/api/auth/login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username:'kasir1', password:'kasir123'})
+    });
+    const j = await r.json();
+    if (j.success) {
+      token = j.data.token;
+      log(`Login berhasil! Token: ${token.substr(0,30)}...`, 'ok');
+    } else {
+      log('Login gagal: ' + j.message, 'error');
+    }
+  } catch(e) {
+    log('Login error: ' + e.message, 'error');
+  }
+}
+
+async function testProducts() {
+  if (!token) await testLogin();
+  try {
+    const r = await fetch('/api/products', {headers:{Authorization:`Bearer ${token}`}});
+    const j = await r.json();
+    if (j.success) {
+      products = j.data;
+      log(`Products loaded: <b>${products.length} produk</b><br>${products.map(p=>`• ${p.name} (stok:${p.stock}, units:${p.units?.length})`).join('<br>')}`, 'ok');
+    } else {
+      log('Gagal load products: ' + JSON.stringify(j), 'error');
+    }
+  } catch(e) {
+    log('Products error: ' + e.message, 'error');
+  }
+}
+
+function testSearch() {
+  const q = 'susu';
+  const matches = products.filter(p =>
+    (p.name||'').toLowerCase().includes(q) ||
+    (p.id||'').toLowerCase().includes(q) ||
+    (p.category||'').toLowerCase().includes(q)
+  );
+  log(`Filter "${q}" dari ${products.length} produk → <b>${matches.length} hasil</b><br>${matches.map(p=>`• ${p.name}`).join('<br>')}`, matches.length > 0 ? 'ok' : 'error');
+}
+
+function testDOM() {
+  const panel = document.getElementById('barcode-live-results');
+  const list = document.getElementById('barcode-live-results-list');
+  const input = document.getElementById('barcode-input');
+  
+  // Test dari halaman utama POS
+  log(`
+    barcode-live-results: ${panel ? '✅ ditemukan' : '❌ TIDAK ADA!'}<br>
+    barcode-live-results-list: ${list ? '✅ ditemukan' : '❌ TIDAK ADA!'}<br>
+    barcode-input: ${input ? '✅ ditemukan' : '❌ TIDAK ADA!'}<br>
+    <br>
+    <i>Catatan: Elements di atas hanya ada di halaman POS utama (port 3000/), bukan di halaman debug ini.</i>
+  `, 'info');
+}
+
+function localFilter(val) {
+  if (!val) return;
+  const q = val.toLowerCase();
+  const matches = products.filter(p =>
+    (p.name||'').toLowerCase().includes(q) ||
+    (p.id||'').toLowerCase().includes(q)
+  );
+  log(`[LIVE] "${val}" → ${matches.length} hasil: ${matches.map(p=>p.name).join(', ')}`, matches.length > 0 ? 'ok' : 'error');
+}
+
+async function testAll() {
+  document.getElementById('log').innerHTML = '';
+  await testLogin();
+  await testProducts();
+  testSearch();
+  
+  // Test API search endpoint
+  try {
+    const r = await fetch('/api/products/search?q=susu', {headers:{Authorization:`Bearer ${token}`}});
+    const j = await r.json();
+    log(`API Search /api/products/search?q=susu → ${j.data?.length} hasil`, j.data?.length > 0 ? 'ok' : 'error');
+  } catch(e) {
+    log('API search error: ' + e.message, 'error');
+  }
+  
+  // Check main app window
+  try {
+    const mainWin = window.opener || window.parent;
+    if (mainWin && mainWin !== window && mainWin.products) {
+      log(`Main window products array: ${mainWin.products.length} produk`, mainWin.products.length > 0 ? 'ok' : 'error');
+    }
+  } catch(_) {}
+  
+  log('✅ Semua test selesai. Lihat hasil di atas.', 'ok');
+}
+
+// Auto-run
+testAll();
+</script>
+</body>
+</html>

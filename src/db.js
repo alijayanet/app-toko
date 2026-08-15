@@ -17,6 +17,7 @@ function initDatabase() {
     CREATE TABLE IF NOT EXISTS m_products (
       id TEXT PRIMARY KEY, -- SKU / Barcode
       name TEXT NOT NULL,
+      category TEXT DEFAULT 'Umum',
       cost_price_base REAL NOT NULL DEFAULT 0.0, -- Harga modal per base unit
       stock INTEGER NOT NULL DEFAULT 0, -- Total stok dalam base unit
       min_stock INTEGER NOT NULL DEFAULT 0
@@ -67,20 +68,25 @@ function initDatabase() {
       invoice_no TEXT UNIQUE NOT NULL,
       sale_date DATETIME DEFAULT CURRENT_TIMESTAMP,
       customer_id INTEGER,
+      user_id INTEGER,
+      cashier_name TEXT,
+      discount_amount REAL NOT NULL DEFAULT 0.0,
       total_amount REAL NOT NULL DEFAULT 0.0,
       total_profit REAL NOT NULL DEFAULT 0.0,
-      payment_type TEXT NOT NULL CHECK(payment_type IN ('CASH', 'CREDIT')),
-      payment_status TEXT NOT NULL CHECK(payment_status IN ('PAID', 'UNPAID', 'PARTIAL')),
+      payment_type TEXT NOT NULL CHECK(payment_type IN ('CASH', 'CREDIT', 'QRIS')),
+      payment_status TEXT NOT NULL CHECK(payment_status IN ('PAID', 'UNPAID', 'PARTIAL', 'VOID')),
       due_date DATETIME,
       cash_amount REAL NOT NULL DEFAULT 0.0,
       change_amount REAL NOT NULL DEFAULT 0.0,
       debt_balance REAL NOT NULL DEFAULT 0.0, -- Sisa piutang pelanggan
-      FOREIGN KEY (customer_id) REFERENCES m_customers(id) ON DELETE SET NULL
+      FOREIGN KEY (customer_id) REFERENCES m_customers(id) ON DELETE SET NULL,
+      FOREIGN KEY (user_id) REFERENCES m_users(id) ON DELETE SET NULL
     )
   `).run();
 
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_invoice ON t_sales(invoice_no)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_customer ON t_sales(customer_id)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_date ON t_sales(sale_date)`).run();
 
   // 6. Tabel Detail Penjualan (Sales Details)
   db.prepare(`
@@ -172,7 +178,7 @@ function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_id TEXT NOT NULL,
       qty_change INTEGER NOT NULL, -- Positif untuk penambahan, Negatif untuk pengurangan
-      type TEXT NOT NULL CHECK(type IN ('SALE', 'PURCHASE', 'ADJUSTMENT')),
+      type TEXT NOT NULL CHECK(type IN ('SALE', 'PURCHASE', 'ADJUSTMENT', 'VOID_RESTORE')),
       reference_id TEXT, -- Invoice No, Purchase ID, atau Catatan Koreksi
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (product_id) REFERENCES m_products(id) ON DELETE CASCADE
@@ -211,9 +217,81 @@ function initDatabase() {
       value TEXT NOT NULL
     )
   `).run();
+
+  // Migrasi otomatis kolom baru untuk database yang sudah berjalan
+  autoMigrateColumns();
+}
+
+// Fungsi bantu migrasi kolom baru jika database lama belum memilikinya
+function autoMigrateColumns() {
+  const tryAddColumn = (table, columnDef) => {
+    try {
+      db.prepare(`ALTER TABLE ${table} ADD COLUMN ${columnDef}`).run();
+    } catch (e) {
+      // Kolom sudah ada, abaikan error
+    }
+  };
+
+  tryAddColumn('m_products', 'category TEXT DEFAULT "Umum"');
+  tryAddColumn('t_sales', 'user_id INTEGER');
+  tryAddColumn('t_sales', 'cashier_name TEXT');
+  tryAddColumn('t_sales', 'discount_amount REAL NOT NULL DEFAULT 0.0');
+
+  // Migrasi skema t_sales jika database lama belum memiliki CHECK constraint 'QRIS' atau 'VOID'
+  try {
+    const tableSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='t_sales'").get()?.sql || '';
+    if (tableSql && (!tableSql.includes("'VOID'") || !tableSql.includes("'QRIS'"))) {
+      db.pragma('foreign_keys = OFF');
+      db.prepare(`
+        CREATE TABLE t_sales_migration (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          invoice_no TEXT UNIQUE NOT NULL,
+          sale_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+          customer_id INTEGER,
+          user_id INTEGER,
+          cashier_name TEXT,
+          discount_amount REAL NOT NULL DEFAULT 0.0,
+          total_amount REAL NOT NULL DEFAULT 0.0,
+          total_profit REAL NOT NULL DEFAULT 0.0,
+          payment_type TEXT NOT NULL CHECK(payment_type IN ('CASH', 'CREDIT', 'QRIS')),
+          payment_status TEXT NOT NULL CHECK(payment_status IN ('PAID', 'UNPAID', 'PARTIAL', 'VOID')),
+          due_date DATETIME,
+          cash_amount REAL NOT NULL DEFAULT 0.0,
+          change_amount REAL NOT NULL DEFAULT 0.0,
+          debt_balance REAL NOT NULL DEFAULT 0.0,
+          FOREIGN KEY (customer_id) REFERENCES m_customers(id)
+        )
+      `).run();
+      
+      db.prepare(`
+        INSERT INTO t_sales_migration (id, invoice_no, sale_date, customer_id, user_id, cashier_name, discount_amount, total_amount, total_profit, payment_type, payment_status, due_date, cash_amount, change_amount, debt_balance)
+        SELECT id, invoice_no, sale_date, customer_id, user_id, cashier_name, COALESCE(discount_amount, 0), total_amount, total_profit, payment_type, payment_status, due_date, cash_amount, change_amount, debt_balance FROM t_sales
+      `).run();
+
+      db.prepare(`DROP TABLE t_sales`).run();
+      db.prepare(`ALTER TABLE t_sales_migration RENAME TO t_sales`).run();
+      db.pragma('foreign_keys = ON');
+    }
+  } catch (e) {
+    console.error("Migration error for t_sales QRIS constraint:", e);
+    try { db.pragma('foreign_keys = ON'); } catch (_) {}
+  }
+
+  // Seed default pengaturan QRIS Statis Toko jika belum ada
+  try {
+    const existingQris = db.prepare("SELECT value FROM m_settings WHERE key = 'qris_static_payload'").get();
+    if (!existingQris) {
+      db.prepare("INSERT OR REPLACE INTO m_settings (key, value) VALUES ('qris_static_payload', ?)").run(
+        '00020101021126570011ID.DANA.WWW011893600915346519740402094651974040303UMI51440014ID.CO.QRIS.WWW0215ID10232708012520303UMI5204549953033605802ID5907ALIJAYA6014Kab. Indramayu6105452576304E962'
+      );
+    }
+  } catch (e) {
+    console.error("Default QRIS payload seed error:", e);
+  }
 }
 
 // Jalankan inisialisasi basis data secara otomatis saat file dimuat
 initDatabase();
 
 module.exports = db;
+
