@@ -3159,13 +3159,13 @@
             
             <div class="flex items-center gap-2.5 justify-between sm:justify-end flex-wrap sm:flex-nowrap pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
               <select id="search-unit-${p.id}" class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-200 flex-1 sm:flex-initial sm:w-32">
-                ${p.units.map(u => `<option value="${u.id}">${u.unit_name} (${formatRupiah(u.price_retail)})</option>`).join('')}
+                ${p.units.map(u => `<option value="${u.id}">${u.unit_name} - ${formatRupiah(u.price_retail)}</option>`).join('')}
               </select>
               
               <!-- Kontrol Jumlah (+ / -) Berukuran Besar Nyaman di HP -->
               <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
                 <button type="button" onclick="adjustSearchQty('${p.id}', -1)" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 active:scale-90 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm font-black shadow-sm transition-transform">-</button>
-                <input type="number" id="search-qty-${p.id}" value="1" min="1" class="w-11 text-center bg-transparent border-none text-xs font-bold py-1 text-slate-800 dark:text-slate-100">
+                <input type="number" id="search-qty-${p.id}" value="1" min="0.001" step="any" class="w-11 text-center bg-transparent border-none text-xs font-bold py-1 text-slate-800 dark:text-slate-100">
                 <button type="button" onclick="adjustSearchQty('${p.id}', 1)" class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-90 text-white flex items-center justify-center text-sm font-black shadow-sm transition-transform">+</button>
               </div>
 
@@ -3182,9 +3182,9 @@
       if (navigator.vibrate) navigator.vibrate(15);
       const input = document.getElementById(`search-qty-${productId}`);
       if (input) {
-        let val = parseInt(input.value) || 1;
-        val += offset;
-        if (val < 1) val = 1;
+        let val = parseFloat(input.value) || 1;
+        val = Math.round((val + offset) * 1000) / 1000;
+        if (val <= 0) val = 0.5;
         input.value = val;
       }
     }
@@ -3193,7 +3193,7 @@
       const prod = products.find(p => p.id === productId);
       if (prod) {
         const unitId = parseInt(document.getElementById(`search-unit-${productId}`).value);
-        const qty = parseInt(document.getElementById(`search-qty-${productId}`).value) || 1;
+        const qty = parseFloat(document.getElementById(`search-qty-${productId}`).value) || 1;
         
         playBeep('beep');
         addToCart(prod, unitId, qty);
@@ -3287,14 +3287,14 @@
           </td>
           <td class="px-3 sm:px-6 py-3.5">
             <select onchange="changeCartItemUnit(${index}, this.value)" class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-700 dark:text-slate-200">
-              ${item.units.map(u => `<option value="${u.id}" ${u.id === item.unit_id ? 'selected' : ''}>${u.unit_name} (1:${u.conversion_factor})</option>`).join('')}
+              ${item.units.map(u => `<option value="${u.id}" ${u.id === item.unit_id ? 'selected' : ''}>${u.unit_name}${u.conversion_factor !== 1 ? ' (1:'+u.conversion_factor+')' : ''}</option>`).join('')}
             </select>
           </td>
           <td class="px-3 sm:px-6 py-3.5">
             <!-- Kontrol Jumlah Ergonomis Layar HP & Desktop -->
             <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700 w-fit">
               <button type="button" onclick="changeCartItemQty(${index}, -1)" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 active:scale-90 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm font-black shadow-sm transition-transform" title="Kurangi">-</button>
-              <input type="number" onchange="setCartItemQty(${index}, this.value)" value="${item.qty}" min="1" class="w-10 sm:w-12 text-center bg-transparent border-none text-xs sm:text-sm font-black py-1 text-slate-800 dark:text-slate-100">
+              <input type="number" onchange="setCartItemQty(${index}, this.value)" value="${item.qty}" min="0.001" step="any" class="w-10 sm:w-12 text-center bg-transparent border-none text-xs sm:text-sm font-black py-1 text-slate-800 dark:text-slate-100">
               <button type="button" onclick="changeCartItemQty(${index}, 1)" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-90 text-white flex items-center justify-center text-sm font-black shadow-sm transition-transform" title="Tambah">+</button>
             </div>
           </td>
@@ -3343,7 +3343,11 @@
 
     function changeCartItemQty(index, offset) {
       if (navigator.vibrate) navigator.vibrate(20);
-      const newQty = cart[index].qty + offset;
+      const selectedUnit = cart[index].units.find(u => u.id === cart[index].unit_id) || cart[index].units[0];
+      // Untuk satuan Kg/Gram/Liter gunakan step 0.5, untuk Pcs/lainnya step 1
+      const unitName = (selectedUnit?.unit_name || '').toLowerCase();
+      const step = (unitName === 'kg' || unitName === 'gram' || unitName === 'liter' || unitName === 'ltr' || unitName === 'ml') ? 0.5 : 1;
+      const newQty = Math.round((cart[index].qty + (offset * step)) * 1000) / 1000;
       if (newQty > 0) {
         cart[index].qty = newQty;
       }
