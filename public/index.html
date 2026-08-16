@@ -1251,68 +1251,122 @@
 
   <!-- Modal Stok Masuk Dari Supplier -->
   <div id="modal-purchase-stock" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-thin">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-outfit font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-truck-ramp-box text-emerald-500"></i> Catat Pembelian Stok Supplier</h3>
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-thin space-y-4">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-widest text-emerald-500 font-bold">INCOMING INVENTORY</span>
+          <h3 class="font-outfit font-bold text-lg flex items-center gap-2 text-slate-800 dark:text-slate-100">
+            <i class="fa-solid fa-truck-ramp-box text-emerald-500"></i> Catat Pembelian Stok Supplier
+          </h3>
+        </div>
         <button onclick="closeModal('modal-purchase-stock')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
+
       <form onsubmit="handlePurchaseSubmit(event)" class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-1">Pilih Supplier <span class="text-rose-500">*</span></label>
-            <select id="purchase-supplier" required class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+            <div class="flex justify-between items-center mb-1">
+              <label class="block text-xs font-semibold text-slate-500">Pilih Supplier</label>
+              <button type="button" onclick="openContactForm('supplier')" class="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
+                + Supplier Baru
+              </button>
+            </div>
+            <select id="purchase-supplier" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-medium">
               <!-- Dinamis -->
             </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-1">Metode Bayar Supplier</label>
-            <select id="purchase-payment-type" onchange="togglePurchaseDueDate()" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+            <select id="purchase-payment-type" onchange="togglePurchaseDueDate()" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-medium">
               <option value="CASH">Tunai / Transfer Lunas</option>
               <option value="CREDIT">Tempo / Hutang Dagang</option>
             </select>
           </div>
         </div>
-        <div id="purchase-due-date-section" class="grid grid-cols-2 gap-4 hidden">
+
+        <div id="purchase-due-date-section" class="grid grid-cols-2 gap-4 hidden p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl">
           <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-1">Uang Muka (DP)</label>
-            <input type="number" id="purchase-dp" value="0" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Uang Muka / DP (Rp)</label>
+            <input type="number" id="purchase-dp" value="0" min="0" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-bold font-mono">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-1">Jatuh Tempo Hutang</label>
-            <input type="date" id="purchase-due-date" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jatuh Tempo Hutang</label>
+            <input type="date" id="purchase-due-date" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs">
           </div>
         </div>
-        <div class="border-t border-slate-100 dark:border-slate-800 pt-3">
-          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Item Pembelian</h4>
-          <div class="flex gap-2 mb-3">
-            <select id="purchase-item-product" class="flex-1 px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs">
-              <!-- Dinamis -->
-            </select>
-            <input type="text" id="purchase-item-unit" placeholder="Satuan" class="w-24 px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs">
-            <input type="number" id="purchase-item-factor" placeholder="Faktor" class="w-24 px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs">
-            <input type="number" id="purchase-item-qty" placeholder="Qty" class="w-16 px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs">
-            <input type="number" id="purchase-item-cost" placeholder="Harga Beli" class="w-28 px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs">
-            <button type="button" onclick="addPurchaseItemToList()" class="bg-indigo-600 text-white px-3 rounded-xl text-xs"><i class="fa-solid fa-plus"></i></button>
+
+        <!-- Box Input Item Pembelian -->
+        <div class="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-slate-50 dark:bg-slate-800/50 space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            <i class="fa-solid fa-cart-flatbed"></i> Tambah Item Barang Masuk:
+          </h4>
+
+          <div class="space-y-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500 mb-1">Pilih Produk:</label>
+              <select id="purchase-item-product" onchange="handlePurchaseProductSelected()" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-medium">
+                <!-- Dinamis -->
+              </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+              <div class="sm:col-span-4">
+                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Satuan:</label>
+                <select id="purchase-item-unit-select" onchange="handlePurchaseUnitSelected()" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-medium">
+                  <option value="">Pilih Satuan...</option>
+                </select>
+              </div>
+              <div class="sm:col-span-3">
+                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Jumlah (Qty):</label>
+                <input type="number" id="purchase-item-qty" min="1" value="1" placeholder="Qty" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-bold text-center">
+              </div>
+              <div class="sm:col-span-3">
+                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Harga Beli/Modal (Rp):</label>
+                <input type="number" id="purchase-item-cost" min="0" placeholder="Rp" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-mono font-bold">
+              </div>
+              <div class="sm:col-span-2">
+                <button type="button" onclick="addPurchaseItemToList()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 shadow-sm transition-transform">
+                  <i class="fa-solid fa-plus"></i> Tambah
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 max-h-40 overflow-y-auto scrollbar-thin">
+        </div>
+
+        <!-- Tabel Item Yang Sudah Ditambahkan -->
+        <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+          <div class="max-h-48 overflow-y-auto scrollbar-thin">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
-                <tr class="text-slate-400 font-semibold border-b pb-1">
-                  <th>Produk</th>
-                  <th>Satuan</th>
-                  <th class="text-center">Qty</th>
-                  <th class="text-right">Harga Beli</th>
-                  <th class="text-right">Subtotal</th>
-                  <th class="text-center w-8">Hapus</th>
+                <tr class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold border-b">
+                  <th class="px-3 py-2">Produk</th>
+                  <th class="px-3 py-2">Satuan</th>
+                  <th class="px-3 py-2 text-center">Qty</th>
+                  <th class="px-3 py-2 text-right">Harga Beli</th>
+                  <th class="px-3 py-2 text-right">Subtotal</th>
+                  <th class="px-3 py-2 text-center w-10">Aksi</th>
                 </tr>
               </thead>
-              <tbody id="purchase-items-list-tbody">
-                <!-- Dinamis -->
+              <tbody id="purchase-items-list-tbody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr>
+                  <td colspan="6" class="py-4 text-center text-slate-400 text-xs">
+                    Belum ada item yang ditambahkan. Pilih produk dan klik "Tambah" di atas.
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
+
+          <!-- Total Footer -->
+          <div class="p-3 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
+            <span class="text-xs font-semibold text-slate-500">Total Belanja Stok:</span>
+            <span id="purchase-total-amount-label" class="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400">Rp 0</span>
+          </div>
         </div>
-        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-sm">SIMPAN TRANSAKSI BELANJA</button>
+
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-500/20 transition-transform">
+          <i class="fa-solid fa-circle-check mr-1.5"></i> SIMPAN PEMBELIAN STOK
+        </button>
       </form>
     </div>
   </div>
@@ -4721,57 +4775,132 @@
     // ==========================================
 
     function togglePurchaseDueDate() {
-      const type = document.getElementById('purchase-payment-type').value;
+      const type = document.getElementById('purchase-payment-type')?.value;
+      const dueSection = document.getElementById('purchase-due-date-section');
       if (type === 'CREDIT') {
-        document.getElementById('purchase-due-date-section').classList.remove('hidden');
+        if (dueSection) dueSection.classList.remove('hidden');
       } else {
-        document.getElementById('purchase-due-date-section').classList.add('hidden');
+        if (dueSection) dueSection.classList.add('hidden');
+      }
+    }
+
+    function handlePurchaseProductSelected() {
+      const prodId = document.getElementById('purchase-item-product')?.value;
+      const unitSelect = document.getElementById('purchase-item-unit-select');
+      const costInput = document.getElementById('purchase-item-cost');
+
+      if (!prodId) {
+        if (unitSelect) unitSelect.innerHTML = '<option value="">Pilih Satuan...</option>';
+        if (costInput) costInput.value = '';
+        return;
+      }
+
+      const prod = products.find(p => p.id === prodId);
+      if (!prod) return;
+
+      const units = (prod.units && prod.units.length > 0) ? prod.units : [
+        { unit_name: 'Pcs', conversion_factor: 1, price_retail: 0 }
+      ];
+
+      if (unitSelect) {
+        unitSelect.innerHTML = units.map(u => `
+          <option value="${escapeHtml(u.unit_name)}" data-factor="${u.conversion_factor}">${escapeHtml(u.unit_name)} (Isi ${u.conversion_factor})</option>
+        `).join('');
+      }
+
+      handlePurchaseUnitSelected();
+    }
+
+    function handlePurchaseUnitSelected() {
+      const prodId = document.getElementById('purchase-item-product')?.value;
+      const unitSelect = document.getElementById('purchase-item-unit-select');
+      const costInput = document.getElementById('purchase-item-cost');
+      const prod = products.find(p => p.id === prodId);
+      if (!prod) return;
+
+      const selectedOpt = unitSelect?.options[unitSelect.selectedIndex];
+      const factor = selectedOpt ? parseInt(selectedOpt.getAttribute('data-factor') || 1) : 1;
+      const baseCost = prod.cost_price_base || 0;
+
+      if (costInput) {
+        costInput.value = Math.round(baseCost * factor);
       }
     }
 
     function addPurchaseItemToList() {
       const prodSelect = document.getElementById('purchase-item-product');
-      const product_id = prodSelect.value;
-      const productName = prodSelect.options[prodSelect.selectedIndex].text;
-      const unit_name = document.getElementById('purchase-item-unit').value.trim();
-      const conversion_factor = parseInt(document.getElementById('purchase-item-factor').value);
-      const qty = parseInt(document.getElementById('purchase-item-qty').value);
-      const cost_price = parseFloat(document.getElementById('purchase-item-cost').value);
+      const product_id = prodSelect?.value;
+      if (!product_id) {
+        alert("Pilih produk terlebih dahulu!");
+        return;
+      }
 
-      if (!product_id || !unit_name || !conversion_factor || !qty || !cost_price) {
-        alert("Harap lengkapi detail item!");
+      const prod = products.find(p => p.id === product_id);
+      const productName = prod ? prod.name : prodSelect.options[prodSelect.selectedIndex].text;
+      const unitSelect = document.getElementById('purchase-item-unit-select');
+      const selectedOpt = unitSelect ? unitSelect.options[unitSelect.selectedIndex] : null;
+      const unit_name = selectedOpt ? selectedOpt.value : 'Pcs';
+      const conversion_factor = selectedOpt ? parseInt(selectedOpt.getAttribute('data-factor') || 1) : 1;
+      const qty = parseInt(document.getElementById('purchase-item-qty')?.value) || 0;
+      const cost_price = parseFloat(document.getElementById('purchase-item-cost')?.value) || 0;
+
+      if (qty <= 0) {
+        alert("Jumlah (Qty) pembelian harus minimal 1!");
+        return;
+      }
+
+      if (cost_price < 0) {
+        alert("Harga beli tidak boleh negatif!");
         return;
       }
 
       purchaseItems.push({ product_id, productName, unit_name, conversion_factor, qty, cost_price });
       renderPurchaseItemsList();
 
-      document.getElementById('purchase-item-unit').value = '';
-      document.getElementById('purchase-item-factor').value = '';
-      document.getElementById('purchase-item-qty').value = '';
-      document.getElementById('purchase-item-cost').value = '';
+      // Reset input qty
+      const qtyInput = document.getElementById('purchase-item-qty');
+      if (qtyInput) qtyInput.value = '1';
     }
 
     function renderPurchaseItemsList() {
       const tbody = document.getElementById('purchase-items-list-tbody');
+      const totalLabel = document.getElementById('purchase-total-amount-label');
+      if (!tbody) return;
       tbody.innerHTML = '';
+
+      let totalPurchase = 0;
+
+      if (purchaseItems.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-4 text-center text-slate-400 text-xs">
+              Belum ada item yang ditambahkan. Pilih produk dan klik "Tambah" di atas.
+            </td>
+          </tr>
+        `;
+        if (totalLabel) totalLabel.textContent = 'Rp 0';
+        return;
+      }
 
       purchaseItems.forEach((item, index) => {
         const subtotal = item.qty * item.cost_price;
+        totalPurchase += subtotal;
         const tr = document.createElement('tr');
-        tr.className = "border-b text-xs";
+        tr.className = "border-b text-xs hover:bg-slate-50 dark:hover:bg-slate-800";
         tr.innerHTML = `
-          <td class="py-2">${item.productName}</td>
-          <td class="py-2">${item.unit_name} (1:${item.conversion_factor})</td>
-          <td class="py-2 text-center">${item.qty}</td>
-          <td class="py-2 text-right">${formatRupiah(item.cost_price)}</td>
-          <td class="py-2 text-right font-semibold">${formatRupiah(subtotal)}</td>
-          <td class="py-2 text-center">
-            <button type="button" onclick="removePurchaseItem(${index})" class="text-rose-500"><i class="fa-solid fa-xmark"></i></button>
+          <td class="px-3 py-2.5 font-semibold">${escapeHtml(item.productName)}</td>
+          <td class="px-3 py-2.5"><span class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-[11px] font-mono">${escapeHtml(item.unit_name)} (1:${item.conversion_factor})</span></td>
+          <td class="px-3 py-2.5 text-center font-bold font-mono">${item.qty}</td>
+          <td class="px-3 py-2.5 text-right font-mono">${formatRupiah(item.cost_price)}</td>
+          <td class="px-3 py-2.5 text-right font-bold font-mono text-emerald-600 dark:text-emerald-400">${formatRupiah(subtotal)}</td>
+          <td class="px-3 py-2.5 text-center">
+            <button type="button" onclick="removePurchaseItem(${index})" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
           </td>
         `;
         tbody.appendChild(tr);
       });
+
+      if (totalLabel) totalLabel.textContent = formatRupiah(totalPurchase);
     }
 
     function removePurchaseItem(index) {
@@ -4781,18 +4910,34 @@
 
     async function handlePurchaseSubmit(e) {
       e.preventDefault();
+
+      // Jika user belum menekan tombol "+ Tambah", tapi sudah memilih produk di form:
+      // Otomatis tambahkan produk tersebut ke daftar pembelian!
       if (purchaseItems.length === 0) {
-        alert("Item pembelian masih kosong!");
+        const prodSelect = document.getElementById('purchase-item-product');
+        const product_id = prodSelect?.value;
+        if (product_id) {
+          addPurchaseItemToList();
+        }
+      }
+
+      if (purchaseItems.length === 0) {
+        alert("Silakan pilih produk dan tentukan jumlah barang masuk terlebih dahulu!");
         return;
       }
 
-      const supplier_id = parseInt(document.getElementById('purchase-supplier').value);
-      const payment_type = document.getElementById('purchase-payment-type').value;
-      const cash_paid = parseFloat(document.getElementById('purchase-dp').value || 0);
-      const due_date = document.getElementById('purchase-due-date').value;
+      const supplier_id = parseInt(document.getElementById('purchase-supplier')?.value) || null;
+      const payment_type = document.getElementById('purchase-payment-type')?.value || 'CASH';
+      const cash_paid = parseFloat(document.getElementById('purchase-dp')?.value || 0);
+      const due_date = document.getElementById('purchase-due-date')?.value;
+
+      if (payment_type === 'CREDIT' && !supplier_id) {
+        alert("Untuk pembelian Tempo (Hutang Dagang), wajib memilih Supplier!");
+        return;
+      }
 
       const payload = {
-        supplier_id: supplier_id || null,
+        supplier_id,
         payment_type,
         cash_paid,
         due_date: payment_type === 'CREDIT' ? due_date : null,
@@ -4806,19 +4951,22 @@
         });
         const json = await res.json();
         if (json.success) {
-          alert("Pembelian stok berhasil disimpan!");
+          playBeep('success');
+          alert("Pembelian stok berhasil dicatat ke sistem!");
           closeModal('modal-purchase-stock');
           purchaseItems = [];
           renderPurchaseItemsList();
           e.target.reset();
-          document.getElementById('purchase-due-date-section').classList.add('hidden');
+          document.getElementById('purchase-due-date-section')?.classList.add('hidden');
           
           fetchProducts();
           updateDashboardReport();
         } else {
-          alert("Gagal mencatat pembelian: " + json.message);
+          playBeep('error');
+          alert("Gagal mencatat pembelian: " + (json.message || json.error));
         }
       } catch (error) {
+        playBeep('error');
         alert(error.message);
       }
     }
@@ -5331,17 +5479,22 @@
 
     function populateSupplierDropdown() {
       const select = document.getElementById('purchase-supplier');
-      select.innerHTML = '<option value="" disabled selected>Pilih Supplier...</option>' + 
-        suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- Supplier Umum / Tanpa Supplier (Tunai) --</option>' + 
+        suppliers.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
     }
 
     function populateProductSelects() {
       const adjustSelect = document.getElementById('adjust-prod-select');
-      adjustSelect.innerHTML = products.map(p => `<option value="${p.id}">${p.name} (${p.id})</option>`).join('');
+      if (adjustSelect) {
+        adjustSelect.innerHTML = products.map(p => `<option value="${p.id}">${escapeHtml(p.name)} (${p.id})</option>`).join('');
+      }
 
       const purSelect = document.getElementById('purchase-item-product');
-      purSelect.innerHTML = '<option value="" disabled selected>Pilih Produk...</option>' + 
-        products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+      if (purSelect) {
+        purSelect.innerHTML = '<option value="">-- Pilih Produk --</option>' + 
+          products.map(p => `<option value="${p.id}">${escapeHtml(p.name)} (${p.id})</option>`).join('');
+      }
     }
 
     function renderQuickProducts() {
@@ -5411,7 +5564,21 @@
     }
 
     function openModal(id) {
-      document.getElementById(id).classList.remove('hidden');
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('hidden');
+
+      if (id === 'modal-purchase-stock') {
+        populateProductSelects();
+        populateSupplierDropdown();
+        const purSelect = document.getElementById('purchase-item-product');
+        if (purSelect && purSelect.options.length > 1) {
+          if (!purSelect.value) {
+            purSelect.selectedIndex = 1;
+          }
+          handlePurchaseProductSelected();
+        }
+      }
     }
 
     function closeModal(id) {
