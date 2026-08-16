@@ -131,13 +131,25 @@ npm run seed
     ```bash
     npm start
     ```
-*   **Mode Produksi (Ubuntu Server)**:
+*   **Mode Produksi (Ubuntu Server dengan PM2)**:
     Sangat disarankan menggunakan **PM2 Process Manager** agar aplikasi berjalan stabil di latar belakang dan otomatis menyala kembali jika server restart.
     
-    Jalankan dengan PM2 menggunakan konfigurasi default (`ecosystem.config.js`):
-    ```bash
-    npm run prod
-    ```
+    1. Pastikan PM2 sudah terpasang secara global di server:
+       ```bash
+       sudo npm install -g pm2
+       ```
+    2. Jalankan aplikasi menggunakan konfigurasi PM2 (`ecosystem.config.js`):
+       ```bash
+       npm run prod
+       ```
+    3. Perintah manajemen PM2 lainnya:
+       ```bash
+       npm run prod:logs     # Melihat log live
+       npm run prod:restart  # Restart server
+       npm run prod:stop     # Menghentikan server
+       pm2 startup           # Otomatis nyala saat server reboot
+       pm2 save              # Simpan status proses saat ini
+       ```
 
 ---
 
