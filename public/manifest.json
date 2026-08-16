@@ -1,0 +1,58 @@
+{
+  "name": "POS Kasir Pintar UMKM",
+  "short_name": "POS Kasir",
+  "description": "Aplikasi Kasir Point of Sale Pintar, Cepat, Offline-Ready & Modern untuk UMKM dan Toko Ritel",
+  "start_url": "/",
+  "id": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#059669",
+  "lang": "id",
+  "dir": "ltr",
+  "categories": ["business", "finance", "productivity", "shopping"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Kasir Belanja",
+      "short_name": "Kasir",
+      "description": "Buka layar kasir transaksi",
+      "url": "/#tab-pos",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Riwayat Transaksi",
+      "short_name": "Riwayat",
+      "description": "Lihat riwayat penjualan dan cetak ulang",
+      "url": "/#tab-history",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Manajemen Stok",
+      "short_name": "Stok",
+      "description": "Kelola katalog produk dan inventori",
+      "url": "/#tab-inventory",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

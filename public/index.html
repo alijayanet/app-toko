@@ -2,8 +2,18 @@
 <html lang="id" class="h-full bg-slate-50 dark:bg-slate-900">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>POS Toko Kelontong & Grosir - Centralized Self-Hosted</title>
+  
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#059669">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="POS Kasir">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/png" href="/favicon.png">
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -51,6 +61,12 @@
   </script>
 </head>
 <body class="h-full overflow-hidden text-slate-800 dark:text-slate-100 font-sans">
+
+  <!-- Offline Network Status Alert Banner -->
+  <div id="offline-indicator-banner" class="hidden bg-amber-500 text-slate-950 font-bold px-4 py-2 text-center text-xs flex items-center justify-center gap-2 shadow-md z-[9999] transition-all">
+    <i class="fa-solid fa-wifi-slash text-sm"></i>
+    <span>Mode Offline: Anda tidak terhubung ke server/jaringan. Fitur offline aktif.</span>
+  </div>
 
   <!-- ==========================================
        LOGIN SCREEN (OVERLAY)
@@ -217,6 +233,11 @@
               <option value="80" selected>Thermal 80mm</option>
             </select>
           </div>
+
+          <!-- PWA Install Button -->
+          <button id="pwa-install-btn" onclick="triggerPwaInstall()" class="hidden items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition-transform active:scale-95">
+            <i class="fa-solid fa-cloud-arrow-down"></i> <span class="hidden sm:inline">Install App</span>
+          </button>
 
           <!-- Dark mode toggle -->
           <button onclick="toggleDarkMode()" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg">
@@ -5770,7 +5791,7 @@
             <!-- Tombol Tambah & Kurang (+ / -) Ukuran Besar Khusus HP -->
             <div class="flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
               <button type="button" onclick="changeCartItemQty(${index}, -1)" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-90 text-slate-800 dark:text-slate-100 font-black text-base flex items-center justify-center shadow-xs transition-transform" title="Kurangi">-</button>
-              <input type="number" onchange="setCartItemQty(${index}, this.value)" value="${item.qty}" min="1" class="w-11 text-center bg-transparent border-none font-black text-sm text-slate-800 dark:text-slate-100 py-1">
+              <input type="number" onchange="setCartItemQty(${index}, this.value)" value="${item.qty}" min="0.001" step="any" class="w-11 text-center bg-transparent border-none font-black text-sm text-slate-800 dark:text-slate-100 py-1">
               <button type="button" onclick="changeCartItemQty(${index}, 1)" class="w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-90 text-white font-black text-base flex items-center justify-center shadow-sm transition-transform" title="Tambah">+</button>
             </div>
           </div>
@@ -5783,6 +5804,76 @@
         container.appendChild(div);
       });
     }
+
+    // ==========================================
+    // PWA & SERVICE WORKER REGISTRATION
+    // ==========================================
+    let deferredPwaPrompt = null;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => {
+            console.log('[PWA] Service Worker registered with scope:', reg.scope);
+          })
+          .catch((err) => {
+            console.warn('[PWA] Service Worker registration failed:', err);
+          });
+      });
+    }
+
+    // Capture install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      const installBtn = document.getElementById('pwa-install-btn');
+      if (installBtn) {
+        installBtn.classList.remove('hidden');
+        installBtn.classList.add('flex');
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      console.log('[PWA] Aplikasi POS berhasil diinstall ke perangkat!');
+      deferredPwaPrompt = null;
+      const installBtn = document.getElementById('pwa-install-btn');
+      if (installBtn) {
+        installBtn.classList.add('hidden');
+        installBtn.classList.remove('flex');
+      }
+    });
+
+    function triggerPwaInstall() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('[PWA] User menerima instalasi aplikasi');
+          } else {
+            console.log('[PWA] User menolak instalasi aplikasi');
+          }
+          deferredPwaPrompt = null;
+        });
+      } else {
+        alert("Aplikasi POS siap diinstall! Di browser Chrome/Edge, klik ikon 'Install' di address bar atau menu titik tiga -> 'Install POS Kasir / Tambahkan ke Layar Utama'.");
+      }
+    }
+
+    // Offline / Online Status Detection
+    function updateOnlineStatus() {
+      const banner = document.getElementById('offline-indicator-banner');
+      if (!banner) return;
+      if (!navigator.onLine) {
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    // Initial check
+    updateOnlineStatus();
 
   </script>
 
