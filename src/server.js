@@ -289,12 +289,13 @@ app.get('/api/system/version', (req, res) => {
   try {
     const versionInfo = updater.getLocalVersionInfo();
     const storeSetting = db.prepare("SELECT value FROM m_settings WHERE key = 'github_repo_url'").get();
+    const repo = storeSetting?.value || 'alijayanet/app-toko';
     return res.json({
       success: true,
       data: {
         version: versionInfo.version,
         changelog: versionInfo.changelog,
-        github_repo: storeSetting ? storeSetting.value : ''
+        github_repo: repo
       }
     });
   } catch (error) {
@@ -308,18 +309,7 @@ app.get('/api/system/check-update', authenticate, async (req, res) => {
     let repoUrl = req.query.repo;
     if (!repoUrl) {
       const storeSetting = db.prepare("SELECT value FROM m_settings WHERE key = 'github_repo_url'").get();
-      repoUrl = storeSetting ? storeSetting.value : '';
-    }
-
-    if (!repoUrl) {
-      const versionInfo = updater.getLocalVersionInfo();
-      return res.json({
-        success: true,
-        current_version: versionInfo.version,
-        has_update: false,
-        no_repo_configured: true,
-        message: 'URL Repositori GitHub belum diatur. Silakan masukkan nama repositori GitHub Anda (misal: username/pos-app).'
-      });
+      repoUrl = storeSetting?.value || 'alijayanet/app-toko';
     }
 
     const branch = req.query.branch || 'main';
@@ -341,11 +331,7 @@ app.post('/api/system/apply-update', authenticate, async (req, res) => {
     let { repo, branch } = req.body || {};
     if (!repo) {
       const storeSetting = db.prepare("SELECT value FROM m_settings WHERE key = 'github_repo_url'").get();
-      repo = storeSetting ? storeSetting.value : '';
-    }
-
-    if (!repo) {
-      return res.status(400).json({ success: false, message: 'URL Repositori GitHub tidak ditemukan.' });
+      repo = storeSetting?.value || 'alijayanet/app-toko';
     }
 
     const result = await updater.applyGitHubUpdate(repo, branch || 'main');
