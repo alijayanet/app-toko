@@ -1,4 +1,4 @@
-1.1.0
+1.2.0
 - Fitur Backup & Restore Database SQLite Hot-Reload
 - Direct RawBT Android & Bluetooth Thermal Printing (58mm & 80mm)
 - Native Mobile Bottom Navigation Bar (Kasir, Riwayat, Stok, Printer, Menu)
