@@ -348,8 +348,37 @@
 
               <!-- Quick List Produk -->
               <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                <h4 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Produk Cepat</h4>
-                <div id="quick-products-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-40 overflow-y-auto scrollbar-thin">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <div class="flex items-center gap-2">
+                    <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                      <i class="fa-solid fa-bolt text-amber-500"></i> Produk Cepat
+                    </h4>
+                    <span id="quick-mode-indicator" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300">
+                      🔥 Terlaris
+                    </span>
+                  </div>
+
+                  <!-- Quick Mode Selector & Settings Button -->
+                  <div class="flex items-center gap-1.5">
+                    <div class="inline-flex rounded-lg p-0.5 bg-slate-200 dark:bg-slate-800 text-[11px] font-semibold">
+                      <button type="button" onclick="setQuickProductsMode('top_selling')" id="btn-quick-mode-top" class="px-2.5 py-1 rounded-md transition-colors font-bold text-xs bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs" title="Urutkan otomatis dari produk paling laris terjual">
+                        🔥 Terlaris
+                      </button>
+                      <button type="button" onclick="setQuickProductsMode('pinned')" id="btn-quick-mode-pinned" class="px-2.5 py-1 rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-indigo-600 text-xs" title="Tampilkan produk pilihan kustom / favorit kasir">
+                        ⭐ Favorit
+                      </button>
+                      <button type="button" onclick="setQuickProductsMode('alphabetical')" id="btn-quick-mode-alpha" class="px-2.5 py-1 rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-indigo-600 text-xs" title="Tampilkan semua produk sesuai kategori">
+                        🔤 A-Z
+                      </button>
+                    </div>
+
+                    <button type="button" onclick="openManageQuickProductsModal()" class="p-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 bg-slate-200/80 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 rounded-lg transition-colors text-xs" title="Atur & Pilih Produk Cepat (Pin Favorites)">
+                      <i class="fa-solid fa-sliders"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div id="quick-products-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-48 overflow-y-auto scrollbar-thin">
                   <!-- Dinamis -->
                 </div>
               </div>
@@ -1231,6 +1260,76 @@
         </button>
         <button type="button" id="btn-execute-restore" onclick="executeDatabaseRestore()" class="flex-1 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-transform">
           <i class="fa-solid fa-rotate-left"></i> <span>Ya, Pulihkan Sekarang</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Atur Produk Cepat (Pin Favorites & Sort Mode) -->
+  <div id="modal-manage-quick-products" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] flex flex-col space-y-4">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-widest text-indigo-500 font-bold">PENGATURAN KASIR</span>
+          <h3 class="font-outfit font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <i class="fa-solid fa-bolt text-amber-500"></i> Atur Daftar Produk Cepat
+          </h3>
+        </div>
+        <button onclick="closeModal('modal-manage-quick-products')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <!-- Pilihan Metode Default -->
+      <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Metode Tampilan Utama:</label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="flex flex-col p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer hover:border-indigo-500 transition-colors">
+            <div class="flex items-center gap-2 mb-1">
+              <input type="radio" name="quick_mode_radio" value="top_selling" onchange="setQuickProductsModeFromModal('top_selling')" class="text-indigo-600 focus:ring-indigo-500">
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-100">🔥 Terlaris</span>
+            </div>
+            <p class="text-[10px] text-slate-400">Otomatis urutkan barang yang paling banyak dibeli.</p>
+          </label>
+
+          <label class="flex flex-col p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer hover:border-indigo-500 transition-colors">
+            <div class="flex items-center gap-2 mb-1">
+              <input type="radio" name="quick_mode_radio" value="pinned" onchange="setQuickProductsModeFromModal('pinned')" class="text-indigo-600 focus:ring-indigo-500">
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-100">⭐ Favorit</span>
+            </div>
+            <p class="text-[10px] text-slate-400">Pilih & centang barang manual di bawah.</p>
+          </label>
+
+          <label class="flex flex-col p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer hover:border-indigo-500 transition-colors">
+            <div class="flex items-center gap-2 mb-1">
+              <input type="radio" name="quick_mode_radio" value="alphabetical" onchange="setQuickProductsModeFromModal('alphabetical')" class="text-indigo-600 focus:ring-indigo-500">
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-100">🔤 A - Z</span>
+            </div>
+            <p class="text-[10px] text-slate-400">Tampilkan semua barang sesuai abjad.</p>
+          </label>
+        </div>
+      </div>
+
+      <!-- Search & Checklist Pinned Items -->
+      <div class="flex-1 flex flex-col min-h-0 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-700 dark:text-slate-200">
+            <i class="fa-solid fa-star text-amber-500 mr-1"></i> Pilih Produk Favorit (<span id="pinned-count-label">0</span> terpilih):
+          </span>
+          <button type="button" onclick="clearAllPinnedProducts()" class="text-[11px] text-rose-500 hover:underline font-semibold">Hapus Semua Pilihan</button>
+        </div>
+
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="quick-prod-search-input" oninput="filterManageQuickProductsList()" placeholder="Cari nama atau barcode barang..." class="w-full pl-8 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div id="manage-quick-products-list" class="flex-1 overflow-y-auto max-h-60 divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-1 scrollbar-thin">
+          <!-- Dinamis Produk List with Checkbox / Star -->
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+        <button type="button" onclick="closeModal('modal-manage-quick-products')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white py-2.5 rounded-xl font-bold text-xs transition shadow-md">
+          <i class="fa-solid fa-check mr-1"></i> Selesai & Simpan Tampilan
         </button>
       </div>
     </div>
@@ -2966,6 +3065,20 @@
           if (document.getElementById('setting-github-repo-input')) {
             document.getElementById('setting-github-repo-input').value = storeSettings.github_repo_url || '';
           }
+
+          if (storeSettings.quick_products_mode) {
+            quickProductsMode = storeSettings.quick_products_mode;
+          }
+          if (storeSettings.quick_products_pinned_ids) {
+            try {
+              quickProductsPinnedIds = typeof storeSettings.quick_products_pinned_ids === 'string'
+                ? JSON.parse(storeSettings.quick_products_pinned_ids)
+                : storeSettings.quick_products_pinned_ids;
+            } catch (e) {
+              quickProductsPinnedIds = [];
+            }
+          }
+          updateQuickModeUI();
         }
       } catch (e) {
         console.error("Gagal mengambil pengaturan toko", e);
@@ -3226,14 +3339,26 @@
 
     async function fetchProducts() {
       try {
-        const res = await fetchAPI('/api/products');
-        const json = await res.json();
+        const [prodRes, topRes] = await Promise.all([
+          fetchAPI('/api/products'),
+          fetchAPI('/api/products/top-selling?limit=30')
+        ]);
+        
+        const json = await prodRes.json();
         if (json.success) {
           products = json.data;
           renderStockTable();
-          renderQuickProducts();
           populateProductSelects();
         }
+
+        try {
+          const topJson = await topRes.json();
+          if (topJson.success) {
+            topSellingProducts = topJson.data;
+          }
+        } catch (e) {}
+
+        renderQuickProducts();
       } catch (e) {
         console.error("Gagal memuat produk", e);
       }
@@ -6684,30 +6809,240 @@
       }
     }
 
-    function renderQuickProducts() {
-      const grid = document.getElementById('quick-products-grid');
-      if (!grid) return;
-      
-      const filtered = (selectedCategory === 'Semua')
-        ? products
-        : products.filter(p => (p.category || 'Umum') === selectedCategory);
+    // ==========================================
+    // QUICK PRODUCTS MANAGEMENT (TOP SELLING & PINNED)
+    // ==========================================
+    let quickProductsMode = 'top_selling'; // 'top_selling' | 'pinned' | 'alphabetical'
+    let quickProductsPinnedIds = [];
+    let topSellingProducts = [];
+
+    function updateQuickModeUI() {
+      const topBtn = document.getElementById('btn-quick-mode-top');
+      const pinnedBtn = document.getElementById('btn-quick-mode-pinned');
+      const alphaBtn = document.getElementById('btn-quick-mode-alpha');
+      const indicator = document.getElementById('quick-mode-indicator');
+
+      const activeClass = 'px-2.5 py-1 rounded-md transition-colors font-bold text-xs bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs';
+      const inactiveClass = 'px-2.5 py-1 rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-indigo-600 text-xs';
+
+      if (topBtn) topBtn.className = (quickProductsMode === 'top_selling') ? activeClass : inactiveClass;
+      if (pinnedBtn) pinnedBtn.className = (quickProductsMode === 'pinned') ? activeClass : inactiveClass;
+      if (alphaBtn) alphaBtn.className = (quickProductsMode === 'alphabetical') ? activeClass : inactiveClass;
+
+      if (indicator) {
+        if (quickProductsMode === 'top_selling') {
+          indicator.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300';
+          indicator.innerHTML = '🔥 Terlaris';
+        } else if (quickProductsMode === 'pinned') {
+          indicator.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300';
+          indicator.innerHTML = `⭐ Favorit (${quickProductsPinnedIds.length})`;
+        } else {
+          indicator.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300';
+          indicator.innerHTML = '🔤 Nama A-Z';
+        }
+      }
+    }
+
+    async function setQuickProductsMode(mode, save = true) {
+      quickProductsMode = mode;
+      updateQuickModeUI();
+      renderQuickProducts();
+
+      if (save && currentUser && currentUser.role === 'ADMIN') {
+        try {
+          await fetchAPI('/api/settings', {
+            method: 'POST',
+            body: JSON.stringify({
+              store_name: storeSettings.store_name || 'KASIRKU',
+              quick_products_mode: mode
+            })
+          });
+        } catch (e) {}
+      }
+    }
+
+    function setQuickProductsModeFromModal(mode) {
+      setQuickProductsMode(mode, true);
+    }
+
+    function openManageQuickProductsModal() {
+      // Set radio button checked
+      const radios = document.getElementsByName('quick_mode_radio');
+      radios.forEach(r => {
+        if (r.value === quickProductsMode) r.checked = true;
+      });
+
+      renderManageQuickProductsList();
+      openModal('modal-manage-quick-products');
+    }
+
+    function renderManageQuickProductsList(searchFilter = '') {
+      const listContainer = document.getElementById('manage-quick-products-list');
+      const countLabel = document.getElementById('pinned-count-label');
+      if (!listContainer) return;
+
+      if (countLabel) {
+        countLabel.textContent = quickProductsPinnedIds.length;
+      }
+
+      const q = searchFilter.toLowerCase().trim();
+      const filtered = products.filter(p => {
+        if (!q) return true;
+        return p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q);
+      });
 
       if (filtered.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full py-6 text-center text-slate-400 text-xs">
-            <i class="fa-solid fa-box-open text-2xl mb-1 block"></i>
-            Tidak ada produk di kategori "${escapeHtml(selectedCategory)}"
+        listContainer.innerHTML = `
+          <div class="py-8 text-center text-slate-400 text-xs">
+            <i class="fa-solid fa-magnifying-glass text-xl mb-1 block"></i>
+            Tidak ada produk yang cocok dengan pencarian.
           </div>
         `;
         return;
       }
 
-      grid.innerHTML = filtered.slice(0, 8).map(p => {
+      listContainer.innerHTML = filtered.map(p => {
+        const isPinned = quickProductsPinnedIds.includes(p.id);
         const basePrice = p.units && p.units.length ? p.units[0].price_retail : 0;
+
         return `
-          <button type="button" onclick="addToCartByProduct('${p.id}')" class="p-3 text-left bg-slate-50 hover:bg-emerald-50 dark:bg-slate-800/90 dark:hover:bg-emerald-950/60 rounded-2xl transition duration-150 border border-slate-200/80 dark:border-slate-700/80 flex flex-col justify-between active:scale-95 shadow-xs group">
+          <div class="flex items-center justify-between p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-xl transition cursor-pointer" onclick="togglePinProduct('${p.id}')">
+            <div class="flex items-center gap-3 min-w-0">
+              <button type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-transform active:scale-90 ${isPinned ? 'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'}">
+                <i class="${isPinned ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+              </button>
+              <div class="truncate">
+                <strong class="text-xs text-slate-800 dark:text-slate-100 block truncate ${isPinned ? 'text-indigo-600 font-bold' : ''}">${escapeHtml(p.name)}</strong>
+                <span class="text-[11px] text-slate-400 font-mono">${escapeHtml(p.id)} • ${formatRupiah(basePrice)}</span>
+              </div>
+            </div>
+            <div class="shrink-0 pl-2">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${isPinned ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}">
+                ${isPinned ? '⭐ Terpilih' : '+ Pilih'}
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterManageQuickProductsList() {
+      const q = document.getElementById('quick-prod-search-input')?.value || '';
+      renderManageQuickProductsList(q);
+    }
+
+    async function togglePinProduct(productId) {
+      if (quickProductsPinnedIds.includes(productId)) {
+        quickProductsPinnedIds = quickProductsPinnedIds.filter(id => id !== productId);
+      } else {
+        quickProductsPinnedIds.push(productId);
+      }
+
+      // Switch to pinned mode if cashier selected items
+      if (quickProductsPinnedIds.length > 0 && quickProductsMode !== 'pinned') {
+        quickProductsMode = 'pinned';
+        const radios = document.getElementsByName('quick_mode_radio');
+        radios.forEach(r => {
+          if (r.value === 'pinned') r.checked = true;
+        });
+      }
+
+      updateQuickModeUI();
+      renderManageQuickProductsList(document.getElementById('quick-prod-search-input')?.value || '');
+      renderQuickProducts();
+
+      // Save to database
+      if (currentUser && currentUser.role === 'ADMIN') {
+        try {
+          await fetchAPI('/api/settings', {
+            method: 'POST',
+            body: JSON.stringify({
+              store_name: storeSettings.store_name || 'KASIRKU',
+              quick_products_mode: quickProductsMode,
+              quick_products_pinned_ids: quickProductsPinnedIds
+            })
+          });
+        } catch (e) {}
+      }
+    }
+
+    async function clearAllPinnedProducts() {
+      quickProductsPinnedIds = [];
+      updateQuickModeUI();
+      renderManageQuickProductsList();
+      renderQuickProducts();
+
+      if (currentUser && currentUser.role === 'ADMIN') {
+        try {
+          await fetchAPI('/api/settings', {
+            method: 'POST',
+            body: JSON.stringify({
+              store_name: storeSettings.store_name || 'KASIRKU',
+              quick_products_pinned_ids: []
+            })
+          });
+        } catch (e) {}
+      }
+    }
+
+    function renderQuickProducts() {
+      const grid = document.getElementById('quick-products-grid');
+      if (!grid) return;
+      
+      let candidateList = [];
+
+      if (quickProductsMode === 'pinned') {
+        // Mode 1: Pinned Favorites
+        if (quickProductsPinnedIds.length > 0) {
+          candidateList = quickProductsPinnedIds
+            .map(id => products.find(p => p.id === id))
+            .filter(Boolean);
+        } else {
+          // If no pinned products yet, prompt user or fallback
+          candidateList = products;
+        }
+      } else if (quickProductsMode === 'top_selling') {
+        // Mode 2: Top Selling Auto-Rank
+        if (topSellingProducts.length > 0) {
+          // Re-hydrate topSelling with current live products data
+          candidateList = topSellingProducts.map(tp => {
+            const live = products.find(p => p.id === tp.id);
+            return live ? { ...live, total_sold_qty: tp.total_sold_qty } : tp;
+          });
+        } else {
+          candidateList = products;
+        }
+      } else {
+        // Mode 3: Alphabetical (A-Z)
+        candidateList = [...products].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      }
+
+      // Filter by Category if selected
+      const filtered = (selectedCategory === 'Semua')
+        ? candidateList
+        : candidateList.filter(p => (p.category || 'Umum') === selectedCategory);
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-6 text-center text-slate-400 text-xs">
+            <i class="fa-solid fa-box-open text-2xl mb-1 block"></i>
+            ${quickProductsMode === 'pinned' && quickProductsPinnedIds.length === 0 ? 'Belum ada produk favorit yang dipilih. Klik tombol ⚙️ untuk memilih produk.' : `Tidak ada produk di kategori "${escapeHtml(selectedCategory)}"`}
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.slice(0, 12).map(p => {
+        const basePrice = p.units && p.units.length ? p.units[0].price_retail : 0;
+        const isTop = quickProductsMode === 'top_selling' && p.total_sold_qty > 0;
+
+        return `
+          <button type="button" onclick="addToCartByProduct('${p.id}')" class="p-3 text-left bg-slate-50 hover:bg-emerald-50 dark:bg-slate-800/90 dark:hover:bg-emerald-950/60 rounded-2xl transition duration-150 border border-slate-200/80 dark:border-slate-700/80 flex flex-col justify-between active:scale-95 shadow-xs group relative">
             <div>
-              <strong class="text-xs font-bold text-slate-800 dark:text-slate-100 block line-clamp-2 group-hover:text-emerald-600 transition-colors">${escapeHtml(p.name)}</strong>
+              <div class="flex items-start justify-between gap-1">
+                <strong class="text-xs font-bold text-slate-800 dark:text-slate-100 block line-clamp-2 group-hover:text-emerald-600 transition-colors">${escapeHtml(p.name)}</strong>
+                ${isTop ? `<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/90 text-amber-700 dark:text-amber-300 shrink-0"><i class="fa-solid fa-fire text-amber-500"></i> ${p.total_sold_qty}</span>` : ''}
+              </div>
               <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 font-mono mt-0.5 block">${formatRupiah(basePrice)}</span>
             </div>
             <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-200/50 dark:border-slate-700/50 text-[10px] text-slate-400">

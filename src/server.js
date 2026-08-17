@@ -176,7 +176,7 @@ app.post('/api/settings', authenticate, (req, res) => {
     return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengubah pengaturan.' });
   }
 
-  const { store_name, store_address, store_phone, receipt_footer, qris_static_payload, github_repo_url } = req.body;
+  const { store_name, store_address, store_phone, receipt_footer, qris_static_payload, github_repo_url, quick_products_mode, quick_products_pinned_ids } = req.body;
   if (!store_name) {
     return res.status(400).json({ success: false, message: 'Nama toko wajib diisi.' });
   }
@@ -192,6 +192,13 @@ app.post('/api/settings', authenticate, (req, res) => {
     }
     if (github_repo_url !== undefined) {
       upsert.run('github_repo_url', github_repo_url.trim());
+    }
+    if (quick_products_mode !== undefined) {
+      upsert.run('quick_products_mode', String(quick_products_mode).trim());
+    }
+    if (quick_products_pinned_ids !== undefined) {
+      const pinnedStr = typeof quick_products_pinned_ids === 'string' ? quick_products_pinned_ids : JSON.stringify(quick_products_pinned_ids);
+      upsert.run('quick_products_pinned_ids', pinnedStr);
     }
   });
 
@@ -439,13 +446,53 @@ app.get('/api/products/search', authenticate, (req, res) => {
 });
 
 // List Produk beserta Satuan dan Stok
-app.get('/api/products', authenticate, (req, res) => {
+app.get('/api/products', (req, res) => {
   try {
     const products = db.prepare('SELECT * FROM m_products').all();
     const result = products.map(p => {
       const units = db.prepare('SELECT * FROM m_product_units WHERE product_id = ?').all(p.id);
       return { ...p, units };
     });
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get Top Selling Products (Produk Terlaris)
+app.get('/api/products/top-selling', (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 24;
+    const category = req.query.category || '';
+
+    let sql = `
+      SELECT 
+        p.*, 
+        COALESCE(SUM(sd.qty * sd.conversion_factor), 0) as total_sold_qty,
+        COALESCE(COUNT(sd.id), 0) as total_transaction_count
+      FROM m_products p
+      LEFT JOIN t_sales_details sd ON p.id = sd.product_id
+    `;
+    const params = [];
+
+    if (category && category !== 'Semua') {
+      sql += ` WHERE p.category = ? `;
+      params.push(category);
+    }
+
+    sql += `
+      GROUP BY p.id
+      ORDER BY total_sold_qty DESC, total_transaction_count DESC, p.name ASC
+      LIMIT ?
+    `;
+    params.push(limit);
+
+    const products = db.prepare(sql).all(...params);
+    const result = products.map(p => {
+      const units = db.prepare('SELECT * FROM m_product_units WHERE product_id = ?').all(p.id);
+      return { ...p, units };
+    });
+
     return res.json({ success: true, data: result });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
