@@ -135,7 +135,7 @@
   <!-- ==========================================
        MAIN APP LAYOUT
        ========================================== -->
-  <div id="main-app" class="flex h-screen overflow-hidden hidden">
+  <div id="main-app" class="flex h-screen h-[100dvh] overflow-hidden hidden">
     
     <!-- Mobile Sidebar Overlay -->
     <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
@@ -206,63 +206,54 @@
     <!-- MAIN CONTENT CONTAINER -->
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-100 dark:bg-slate-950">
       
-      <!-- Top header -->
-      <header class="flex items-center justify-between px-4 md:px-6 h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-10 gap-3">
-        <div class="flex items-center gap-2 md:hidden">
-          <button onclick="toggleMobileSidebar()" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 p-2 rounded-lg" title="Menu">
-            <i class="fa-solid fa-bars text-lg"></i>
+      <!-- Top header (Clean & Native Style) -->
+      <header class="sticky top-0 shrink-0 flex items-center justify-between px-3.5 md:px-6 h-14 md:h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-30 gap-2">
+        <div class="flex items-center gap-2">
+          <button onclick="toggleMobileSidebar()" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 p-1.5 rounded-lg md:hidden" title="Menu">
+            <i class="fa-solid fa-bars text-base"></i>
           </button>
-          <span id="app-title-store-name-mobile" class="font-outfit font-bold text-sm tracking-wider truncate max-w-[100px]">KASIRKU</span>
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-cash-register text-emerald-500 text-base md:hidden"></i>
+            <span id="app-title-store-name-mobile" class="font-outfit font-bold text-sm tracking-wider truncate max-w-[130px] md:hidden">KASIRKU</span>
+          </div>
         </div>
-        
-
 
         <div class="hidden md:flex items-center gap-2 text-xs bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg text-slate-500 dark:text-slate-400">
           <i class="fa-solid fa-circle-info text-emerald-500"></i>
           <span>Tekan <kbd class="px-1 bg-white border dark:bg-slate-700 dark:border-slate-600 rounded">F1</kbd> Checkout cepat, <kbd class="px-1 bg-white border dark:bg-slate-700 dark:border-slate-600 rounded">F2</kbd> Mengosongkan Keranjang</span>
         </div>
 
-        <div class="flex items-center gap-2 md:gap-4 ml-auto">
-          <!-- Mobile profile options -->
-          <div class="md:hidden flex items-center gap-1">
-            <button onclick="openProfileModal()" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg"><i class="fa-solid fa-user-pen text-sm"></i></button>
-            <button onclick="handleLogout()" class="p-2 text-rose-500 hover:text-rose-700 rounded-lg"><i class="fa-solid fa-right-from-bracket text-sm"></i></button>
-          </div>
-
-          <!-- Quick Printer & Bluetooth Settings Button (Mobile & Desktop) -->
-          <button type="button" onclick="openPrinterSettingsModal()" class="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/80 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow-xs transition-transform active:scale-95" title="Pengaturan Printer Thermal & Bluetooth">
+        <div class="flex items-center gap-1.5 md:gap-3 ml-auto">
+          <!-- Quick Printer Settings Button -->
+          <button type="button" onclick="openPrinterSettingsModal()" class="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/80 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow-xs transition-transform active:scale-95" title="Pengaturan Printer">
             <i class="fa-solid fa-print text-sm"></i>
             <span class="hidden sm:inline">Printer</span>
-            <i class="fa-brands fa-bluetooth-b text-[10px] text-indigo-500"></i>
           </button>
-
-          <!-- Printer Paper Selector -->
-          <div class="hidden md:flex items-center gap-1">
-            <span class="text-xs text-slate-400"><i class="fa-solid fa-print"></i> Kertas:</span>
-            <select id="receipt-paper-size" onchange="savePaperSizePreference(this.value)" class="text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-emerald-500 font-medium">
-              <option value="58">Thermal 58mm</option>
-              <option value="80" selected>Thermal 80mm</option>
-            </select>
-          </div>
 
           <!-- PWA Install Button -->
-          <button id="pwa-install-btn" onclick="triggerPwaInstall()" class="hidden items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition-transform active:scale-95">
-            <i class="fa-solid fa-cloud-arrow-down"></i> <span class="hidden sm:inline">Install App</span>
+          <button id="pwa-install-btn" onclick="triggerPwaInstall()" class="hidden items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-transform active:scale-95">
+            <i class="fa-solid fa-cloud-arrow-down"></i> <span class="hidden sm:inline">Install</span>
           </button>
 
+          <!-- Profile modal trigger -->
+          <button onclick="openProfileModal()" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg" title="Edit Profil"><i class="fa-solid fa-user-pen text-sm"></i></button>
+
           <!-- Dark mode toggle -->
-          <button onclick="toggleDarkMode()" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg">
-            <i class="fa-solid fa-moon dark:hidden text-lg"></i>
-            <i class="fa-solid fa-sun hidden dark:block text-lg text-amber-400"></i>
+          <button onclick="toggleDarkMode()" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg">
+            <i class="fa-solid fa-moon dark:hidden text-base"></i>
+            <i class="fa-solid fa-sun hidden dark:block text-base text-amber-400"></i>
           </button>
+
+          <!-- Logout -->
+          <button onclick="handleLogout()" class="p-1.5 text-rose-500 hover:text-rose-700 rounded-lg" title="Logout"><i class="fa-solid fa-right-from-bracket text-sm"></i></button>
         </div>
       </header>
 
       <!-- Content Area -->
-      <div class="flex-1 overflow-y-auto p-4 md:p-6 pb-48 sm:pb-52 md:pb-6 relative">
+      <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-28 md:pb-6 relative">
 
         <!-- TAB 1: KASIR (POS) -->
-        <section id="tab-kasir" class="tab-content h-full pb-36 lg:pb-0">
+        <section id="tab-kasir" class="tab-content h-full">
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
             
             <!-- Panel Kiri -->
@@ -315,6 +306,17 @@
                 <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin text-xs" id="category-pills-container">
                   <!-- Dinamis -->
                 </div>
+
+                <!-- Ringkasan Cepat & Tombol Bayar Langsung di Atas Layar HP -->
+                <div class="md:hidden bg-slate-900 text-white p-3 rounded-2xl flex items-center justify-between gap-3 shadow-md border border-slate-800">
+                  <div class="min-w-0">
+                    <span class="text-[10px] text-emerald-400 block font-medium uppercase tracking-wider">Total (<span id="mobile-top-cart-qty">0</span> Item)</span>
+                    <strong id="mobile-top-cart-total" class="text-base font-bold font-outfit text-emerald-400 tracking-tight truncate block">Rp 0</strong>
+                  </div>
+                  <button type="button" onclick="focusPaymentPanel()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/30 whitespace-nowrap">
+                    <i class="fa-solid fa-circle-check"></i> <span>Bayar Sekarang</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Tabel Keranjang Belanja -->
@@ -354,15 +356,18 @@
             </div>
 
             <!-- Panel Kanan -->
-            <div class="lg:col-span-4 flex flex-col gap-6 pb-44 lg:pb-0">
+            <div class="lg:col-span-4 flex flex-col gap-6 pb-6">
               
               <!-- Tombol Aksi Tambah Barang (Mobile Only, Di Atas Summary Belanja) -->
-              <div class="md:hidden grid grid-cols-2 gap-3">
-                <button onclick="openProductSearchModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-md">
-                  <i class="fa-solid fa-magnifying-glass text-xs"></i> Cari Barang
+              <div class="md:hidden grid grid-cols-3 gap-2">
+                <button onclick="openProductSearchModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                  <i class="fa-solid fa-magnifying-glass text-xs"></i> Cari
                 </button>
-                <button onclick="openCameraScanner()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-md">
-                  <i class="fa-solid fa-camera text-xs"></i> Scan Kamera
+                <button onclick="openCameraScanner()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                  <i class="fa-solid fa-camera text-xs"></i> Kamera
+                </button>
+                <button onclick="toggleMobileCartDrawer()" class="bg-slate-800 hover:bg-slate-700 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                  <i class="fa-solid fa-basket-shopping text-xs text-amber-400"></i> Keranjang
                 </button>
               </div>
 
@@ -380,8 +385,13 @@
                 </div>
               </div>
 
+              <!-- Tombol Bayar Cepat Mobile (Tepat di Bawah Ringkasan Total) -->
+              <button onclick="focusPaymentPanel()" class="md:hidden w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform">
+                <i class="fa-solid fa-circle-check text-base"></i> Isi Pembayaran & Checkout <i class="fa-solid fa-arrow-down text-xs"></i>
+              </button>
+
               <!-- Form Pembayaran -->
-              <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 mb-16 lg:mb-0">
+              <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
                 <div>
                   <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Metode Pembayaran</label>
                   <div class="grid grid-cols-3 gap-2">
@@ -474,31 +484,13 @@
                 </div>
 
                 <!-- Tombol Bayar -->
-                <button onclick="processCheckout()" id="btn-process-checkout" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3.5 px-4 rounded-2xl font-bold tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-transform text-sm sm:text-base">
+                <button onclick="processCheckout()" id="btn-process-checkout" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3.5 px-4 rounded-xl font-bold tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform text-sm sm:text-base">
                   <i class="fa-solid fa-circle-check text-lg"></i> PROSES CHECKOUT (F1)
                 </button>
               </div>
 
             </div>
 
-          </div>
-
-          <!-- Floating Checkout Bar di Layar HP (Mobile Only) -->
-          <div id="mobile-floating-checkout-bar" style="padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0.85rem));" class="lg:hidden fixed bottom-0 left-0 right-0 px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-30 flex items-center justify-between gap-3 shadow-[0_-8px_30px_rgba(0,0,0,0.15)] transition-transform duration-300">
-            <div class="flex items-center gap-2.5">
-              <button type="button" onclick="toggleMobileCartDrawer()" class="relative p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200" title="Buka Keranjang">
-                <i class="fa-solid fa-cart-shopping text-base text-emerald-500"></i>
-                <span id="mobile-floating-cart-badge" class="absolute -top-1 -right-1 bg-emerald-500 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center">0</span>
-              </button>
-              <div>
-                <span class="text-[10px] text-slate-400 block font-medium">Total Belanja</span>
-                <strong id="mobile-floating-cart-total" class="text-base font-bold font-outfit text-emerald-500 leading-none">Rp 0</strong>
-              </div>
-            </div>
-
-            <button type="button" onclick="handleMobileFloatingCheckoutClick()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition-transform">
-              <span>Proses Bayar (F1)</span> <i class="fa-solid fa-arrow-right"></i>
-            </button>
           </div>
         </section>
 
@@ -1046,18 +1038,44 @@
               </table>
             </div>
           </div>
-        </section>
-
       </div>
-    </main>
-  </div>
 
-  <!-- FLOATING CART ACTION (MOBILE) -->
-  <div class="md:hidden fixed bottom-6 right-6 z-20">
-    <button onclick="toggleMobileCartDrawer()" class="w-14 h-14 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-2xl relative">
-      <i class="fa-solid fa-cart-shopping text-xl"></i>
-      <span id="mobile-cart-badge" class="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-rose-500 border-2 border-white flex items-center justify-center text-[10px] font-bold">0</span>
-    </button>
+      <!-- NATIVE MOBILE BOTTOM NAVIGATION BAR -->
+      <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 z-40 flex items-center justify-around px-1 shadow-[0_-4px_25px_rgba(0,0,0,0.08)]">
+        <!-- 1. Tab Kasir -->
+        <button type="button" onclick="switchTab('kasir')" id="bnav-kasir" class="mobile-bnav-btn flex-1 py-1 flex flex-col items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold transition-all relative">
+          <div class="relative">
+            <i class="fa-solid fa-receipt text-lg"></i>
+            <span id="mobile-bottom-cart-badge" class="hidden absolute -top-1.5 -right-2.5 bg-rose-500 text-white font-bold text-[9px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+          </div>
+          <span class="text-[10px] tracking-tight">Kasir</span>
+        </button>
+
+        <!-- 2. Tab Riwayat Penjualan -->
+        <button type="button" onclick="switchTab('history')" id="bnav-history" class="mobile-bnav-btn flex-1 py-1 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium transition-all">
+          <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+          <span class="text-[10px] tracking-tight">Riwayat</span>
+        </button>
+
+        <!-- 3. Tab Stok Barang -->
+        <button type="button" onclick="switchTab('stok')" id="bnav-stok" class="mobile-bnav-btn flex-1 py-1 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium transition-all">
+          <i class="fa-solid fa-boxes-stacked text-lg"></i>
+          <span class="text-[10px] tracking-tight">Stok</span>
+        </button>
+
+        <!-- 4. Pengaturan Printer -->
+        <button type="button" onclick="openPrinterSettingsModal()" id="bnav-printer" class="mobile-bnav-btn flex-1 py-1 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium transition-all">
+          <i class="fa-solid fa-print text-lg text-indigo-400"></i>
+          <span class="text-[10px] tracking-tight">Printer</span>
+        </button>
+
+        <!-- 5. Menu Lainnya / Drawer Sidebar -->
+        <button type="button" onclick="toggleMobileSidebar()" id="bnav-menu" class="mobile-bnav-btn flex-1 py-1 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium transition-all">
+          <i class="fa-solid fa-bars text-lg"></i>
+          <span class="text-[10px] tracking-tight">Menu</span>
+        </button>
+      </nav>
+    </main>
   </div>
 
   <!-- MOBILE CART DRAWER -->
@@ -3092,20 +3110,21 @@
         activeBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-lg', 'shadow-emerald-950/20');
       }
 
+      // Update active state pada Native Mobile Bottom Nav Bar
+      document.querySelectorAll('.mobile-bnav-btn').forEach(btn => {
+        btn.classList.remove('text-emerald-600', 'dark:text-emerald-400', 'font-bold');
+        btn.classList.add('text-slate-400', 'hover:text-slate-600', 'dark:hover:text-slate-200', 'font-medium');
+      });
+      const activeBnav = document.getElementById(`bnav-${tabName}`);
+      if (activeBnav) {
+        activeBnav.classList.remove('text-slate-400', 'hover:text-slate-600', 'dark:hover:text-slate-200', 'font-medium');
+        activeBnav.classList.add('text-emerald-600', 'dark:text-emerald-400', 'font-bold');
+      }
+
       // Close mobile sidebar if open
       const sidebar = document.getElementById('app-sidebar');
       if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
         toggleMobileSidebar();
-      }
-
-      // Tampilkan floating checkout bar hanya saat di tab kasir
-      const floatingBar = document.getElementById('mobile-floating-checkout-bar');
-      if (floatingBar) {
-        if (tabName === 'kasir') {
-          floatingBar.classList.remove('hidden');
-        } else {
-          floatingBar.classList.add('hidden');
-        }
       }
 
       if (tabName === 'kasir') {
@@ -3576,13 +3595,17 @@
         `;
         document.getElementById('checkout-total').textContent = 'Rp 0';
         document.getElementById('checkout-qty-count').textContent = '0';
-        document.getElementById('mobile-cart-badge').textContent = '0';
         document.getElementById('mobile-cart-total').textContent = 'Rp 0';
-        if (document.getElementById('mobile-floating-cart-badge')) {
-          document.getElementById('mobile-floating-cart-badge').textContent = '0';
+        if (document.getElementById('mobile-top-cart-total')) {
+          document.getElementById('mobile-top-cart-total').textContent = 'Rp 0';
         }
-        if (document.getElementById('mobile-floating-cart-total')) {
-          document.getElementById('mobile-floating-cart-total').textContent = 'Rp 0';
+        if (document.getElementById('mobile-top-cart-qty')) {
+          document.getElementById('mobile-top-cart-qty').textContent = '0';
+        }
+        const bnavBadge = document.getElementById('mobile-bottom-cart-badge');
+        if (bnavBadge) {
+          bnavBadge.textContent = '0';
+          bnavBadge.classList.add('hidden');
         }
         const discBadge = document.getElementById('checkout-discount-badge');
         if (discBadge) discBadge.classList.add('hidden');
@@ -3648,13 +3671,22 @@
 
       document.getElementById('checkout-total').textContent = formatRupiah(grandTotal);
       document.getElementById('checkout-qty-count').textContent = totalItems;
-      document.getElementById('mobile-cart-badge').textContent = totalItems;
       document.getElementById('mobile-cart-total').textContent = formatRupiah(grandTotal);
-      if (document.getElementById('mobile-floating-cart-badge')) {
-        document.getElementById('mobile-floating-cart-badge').textContent = totalItems;
+      if (document.getElementById('mobile-top-cart-total')) {
+        document.getElementById('mobile-top-cart-total').textContent = formatRupiah(grandTotal);
       }
-      if (document.getElementById('mobile-floating-cart-total')) {
-        document.getElementById('mobile-floating-cart-total').textContent = formatRupiah(grandTotal);
+      if (document.getElementById('mobile-top-cart-qty')) {
+        document.getElementById('mobile-top-cart-qty').textContent = totalItems;
+      }
+      const bnavBadge = document.getElementById('mobile-bottom-cart-badge');
+      if (bnavBadge) {
+        if (totalItems > 0) {
+          bnavBadge.textContent = totalItems;
+          bnavBadge.classList.remove('hidden');
+        } else {
+          bnavBadge.textContent = '0';
+          bnavBadge.classList.add('hidden');
+        }
       }
       
       calculateChange();
@@ -3931,12 +3963,12 @@
         if (paymentType === 'CASH' && cashInput) {
           cashInput.focus();
         }
-      }, 300);
+      }, 350);
     }
 
-    function handleMobileFloatingCheckoutClick() {
+    function handleMobileQuickPayClick() {
       if (cart.length === 0) {
-        alert("Keranjang belanja masih kosong!");
+        alert("Keranjang belanja masih kosong! Silakan pilih atau scan barang terlebih dahulu.");
         return;
       }
       
@@ -3946,10 +3978,10 @@
       const totalVal = parseFloat(totalText.replace(/[^0-9]/g, '')) || 0;
 
       if (paymentType === 'CASH' && (!cashInput?.value || cashVal < totalVal)) {
-        // Jika uang tunai belum diisi / kurang, arahkan ke input tunai & uang pas
+        // Jika uang tunai belum dimasukkan / kurang, gulirkan dan fokuskan input pembayaran
         focusPaymentPanel();
       } else {
-        // Jika sudah diisi uangnya atau non-tunai (QRIS/Tempo), langsung checkout!
+        // Jika uang sudah dimasukkan / QRIS / Tempo, langsung selesaikan transaksi
         processCheckout();
       }
     }
