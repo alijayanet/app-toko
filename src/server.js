@@ -289,9 +289,35 @@ app.get('/api/products/categories', authenticate, (req, res) => {
       WHERE category IS NOT NULL AND category != '' 
       ORDER BY category ASC
     `).all();
-    const categories = rows.map(r => r.category);
-    if (!categories.includes('Umum')) categories.unshift('Umum');
-    return res.json({ success: true, data: categories });
+    const existing = rows.map(r => r.category);
+    
+    // Preset Kategori Standar UMKM Lengkap (Loyang, Bahan Kue, Sembako, dll)
+    const presets = [
+      'Umum',
+      'Loyang & Cetakan',
+      'Bahan Kue & Bakery',
+      'Sembako',
+      'Makanan & Kuliner',
+      'Minuman & Kopi',
+      'Snack & Camilan',
+      'Plastik & Kemasan',
+      'Bumbu & Dapur',
+      'Sayur & Buah',
+      'Frozen Food',
+      'Rokok & Tembakau',
+      'ATK & Fotokopi',
+      'Fashion & Pakaian',
+      'Kosmetik & Perawatan',
+      'Obat & Farmasi',
+      'Elektronik & Pulsa',
+      'Peralatan Rumah',
+      'Bangunan & Perkakas',
+      'Jasa & Layanan'
+    ];
+
+    // Gabungkan kategori dari database produk dan preset tanpa duplikat
+    const merged = Array.from(new Set([...existing, ...presets]));
+    return res.json({ success: true, data: merged });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }

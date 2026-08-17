@@ -1381,7 +1381,76 @@
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Kategori Produk</label>
-            <input type="text" id="add-prod-category" placeholder="Contoh: Sembako, Minuman..." class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500">
+            <input type="text" id="add-prod-category" list="category-suggestions" placeholder="Pilih / ketik kategori..." class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <!-- Quick Preset Kategori UMKM (Loyang, Bahan Kue, Sembako, dll) -->
+        <div class="p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+          <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1.5">
+            <i class="fa-solid fa-tags text-indigo-500 mr-1"></i> Pilihan Kategori Cepat UMKM:
+          </span>
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+            <button type="button" onclick="setProductCategoryInput('Loyang & Cetakan')" class="px-2.5 py-1 bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 hover:bg-amber-600 hover:text-white rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors border border-amber-300 dark:border-amber-800">
+              🍳 Loyang & Cetakan
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Bahan Kue & Bakery')" class="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors border border-indigo-200 dark:border-indigo-800">
+              🎂 Bahan Kue & Bakery
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Sembako')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              🌾 Sembako
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Makanan & Kuliner')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              🍛 Makanan & Kuliner
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Minuman & Kopi')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              ☕ Minuman & Kopi
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Snack & Camilan')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              🍿 Snack & Camilan
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Plastik & Kemasan')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              🛍️ Plastik & Kemasan
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Bumbu & Dapur')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              🧂 Bumbu & Dapur
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Sayur & Buah')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              🥦 Sayur & Buah
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Frozen Food')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              🧊 Frozen Food
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Rokok & Tembakau')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              🚬 Rokok
+            </button>
+            <button type="button" onclick="setProductCategoryInput('ATK & Fotokopi')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              ✏️ ATK & Fotokopi
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Fashion & Pakaian')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              👕 Fashion
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Kosmetik & Perawatan')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              💄 Kosmetik
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Obat & Farmasi')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              💊 Obat & Farmasi
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Elektronik & Pulsa')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              ⚡ Pulsa & Elektronik
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Peralatan Rumah')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              🏠 Peralatan Rumah
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Bangunan & Perkakas')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              🔨 Perkakas
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Jasa & Layanan')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              🛠️ Jasa / Servis
+            </button>
+            <button type="button" onclick="setProductCategoryInput('Umum')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-600">
+              📦 Umum
+            </button>
           </div>
         </div>
 
@@ -1480,7 +1549,27 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-1">Kategori Produk</label>
-            <input type="text" id="edit-prod-category" placeholder="Contoh: Sembako, Minuman..." class="w-full px-3 py-2 border rounded-xl text-sm bg-white dark:bg-slate-800">
+            <input type="text" id="edit-prod-category" list="category-suggestions" placeholder="Pilih / ketik kategori..." class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-800">
+          </div>
+        </div>
+
+        <!-- Quick Preset Kategori UMKM (Edit Mode) -->
+        <div class="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <span class="text-[10px] font-bold text-slate-400 block mb-1">Pilih Kategori Cepat:</span>
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+            <button type="button" onclick="setProductCategoryInput('Loyang & Cetakan', true)" class="px-2 py-0.5 bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 hover:bg-amber-600 hover:text-white rounded-md text-[10px] font-bold whitespace-nowrap">🍳 Loyang & Cetakan</button>
+            <button type="button" onclick="setProductCategoryInput('Bahan Kue & Bakery', true)" class="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold whitespace-nowrap">🎂 Bahan Kue & Bakery</button>
+            <button type="button" onclick="setProductCategoryInput('Sembako', true)" class="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">🌾 Sembako</button>
+            <button type="button" onclick="setProductCategoryInput('Makanan & Kuliner', true)" class="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">🍛 Makanan</button>
+            <button type="button" onclick="setProductCategoryInput('Minuman & Kopi', true)" class="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">☕ Minuman</button>
+            <button type="button" onclick="setProductCategoryInput('Plastik & Kemasan', true)" class="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">🛍️ Plastik</button>
+            <button type="button" onclick="setProductCategoryInput('Bumbu & Dapur', true)" class="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">🧂 Bumbu</button>
+            <button type="button" onclick="setProductCategoryInput('Frozen Food', true)" class="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">🧊 Frozen Food</button>
+            <button type="button" onclick="setProductCategoryInput('ATK & Fotokopi', true)" class="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">✏️ ATK</button>
+            <button type="button" onclick="setProductCategoryInput('Fashion & Pakaian', true)" class="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">👕 Fashion</button>
+            <button type="button" onclick="setProductCategoryInput('Kosmetik & Perawatan', true)" class="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">💄 Kosmetik</button>
+            <button type="button" onclick="setProductCategoryInput('Obat & Farmasi', true)" class="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">💊 Obat</button>
+            <button type="button" onclick="setProductCategoryInput('Umum', true)" class="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">📦 Umum</button>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
@@ -1506,6 +1595,30 @@
       </form>
     </div>
   </div>
+
+  <!-- Datalist Autocomplete Kategori Produk UMKM -->
+  <datalist id="category-suggestions">
+    <option value="Loyang & Cetakan">
+    <option value="Bahan Kue & Bakery">
+    <option value="Sembako">
+    <option value="Makanan & Kuliner">
+    <option value="Minuman & Kopi">
+    <option value="Snack & Camilan">
+    <option value="Plastik & Kemasan">
+    <option value="Bumbu & Dapur">
+    <option value="Sayur & Buah">
+    <option value="Frozen Food">
+    <option value="Rokok & Tembakau">
+    <option value="ATK & Fotokopi">
+    <option value="Fashion & Pakaian">
+    <option value="Kosmetik & Perawatan">
+    <option value="Obat & Farmasi">
+    <option value="Elektronik & Pulsa">
+    <option value="Peralatan Rumah">
+    <option value="Bangunan & Perkakas">
+    <option value="Jasa & Layanan">
+    <option value="Umum">
+  </datalist>
 
   <!-- Modal Stock Opname -->
   <div id="modal-adjust-stock" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
@@ -5363,6 +5476,15 @@
         </div>
       `;
       container.appendChild(div);
+    }
+
+    function setProductCategoryInput(categoryName, isEdit = false) {
+      const targetId = isEdit ? 'edit-prod-category' : 'add-prod-category';
+      const input = document.getElementById(targetId);
+      if (input) {
+        input.value = categoryName;
+        input.focus();
+      }
     }
 
     async function handleAddProductSubmit(e) {
