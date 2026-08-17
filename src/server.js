@@ -11,7 +11,8 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.raw({ type: ['application/octet-stream', 'application/x-sqlite3'], limit: '100mb' }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Hash Password Helper (PBKDF2)
@@ -243,6 +244,36 @@ app.get('/api/settings/backup', authenticate, (req, res) => {
       }
     }
   });
+});
+
+// Restore Database (Admin Only)
+app.post('/api/settings/restore', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat memulihkan database.' });
+  }
+
+  try {
+    let fileBuffer;
+    if (Buffer.isBuffer(req.body)) {
+      fileBuffer = req.body;
+    } else if (req.body && req.body.fileBase64) {
+      fileBuffer = Buffer.from(req.body.fileBase64, 'base64');
+    } else {
+      return res.status(400).json({ success: false, message: 'Data berkas database tidak ditemukan.' });
+    }
+
+    const result = db.restoreDatabaseFromBuffer(fileBuffer);
+    return res.json({
+      success: true,
+      message: result.message || 'Database berhasil dipulihkan!'
+    });
+  } catch (error) {
+    console.error('Error during database restore:', error);
+    return res.status(400).json({
+      success: false,
+      message: error.message || 'Terjadi kesalahan saat memulihkan database.'
+    });
+  }
 });
 
 
@@ -493,15 +524,15 @@ app.post('/api/products/import-batch', authenticate, (req, res) => {
 
       const category = String(item.category || item.kategori || 'Umum').trim();
       const cost_price_base = Math.max(0, parseFloat(item.cost_price_base ?? item.harga_modal ?? item.harga_beli ?? 0) || 0);
-      const stock = Math.max(0, parseInt(item.stock ?? item.stok ?? 0) || 0);
-      const min_stock = Math.max(0, parseInt(item.min_stock ?? item.min_stok ?? 0) || 0);
+      const stock = Math.max(0, parseFloat(item.stock ?? item.stok ?? 0) || 0);
+      const min_stock = Math.max(0, parseFloat(item.min_stock ?? item.min_stok ?? 0) || 0);
       const units = Array.isArray(item.units) && item.units.length > 0 ? item.units : [
         {
           unit_name: item.unit_name || item.satuan || 'Pcs',
           conversion_factor: 1,
           price_retail: Math.max(0, parseFloat(item.price_retail ?? item.harga_jual ?? item.harga_eceran ?? item.eceran ?? 0) || 0),
           price_wholesale: Math.max(0, parseFloat(item.price_wholesale ?? item.harga_grosir ?? item.grosir ?? 0) || 0),
-          wholesale_min_qty: Math.max(0, parseInt(item.wholesale_min_qty ?? item.min_grosir ?? 0) || 0)
+          wholesale_min_qty: Math.max(0, parseFloat(item.wholesale_min_qty ?? item.min_grosir ?? 0) || 0)
         }
       ];
 
@@ -516,14 +547,14 @@ app.post('/api/products/import-batch', authenticate, (req, res) => {
         updateProduct.run(name, category, cost_price_base, stock, min_stock, id);
         deleteUnits.run(id);
         for (const u of units) {
-          insertUnit.run(id, u.unit_name || 'Pcs', u.conversion_factor || 1, u.price_retail || 0, u.price_wholesale || 0, u.wholesale_min_qty || 0);
+          insertUnit.run(id, u.unit_name || 'Pcs', parseFloat(u.conversion_factor) || 1, u.price_retail || 0, u.price_wholesale || 0, u.wholesale_min_qty || 0);
         }
         updated++;
       } else {
         // Insert new product
         insertProduct.run(id, name, category, cost_price_base, stock, min_stock);
         for (const u of units) {
-          insertUnit.run(id, u.unit_name || 'Pcs', u.conversion_factor || 1, u.price_retail || 0, u.price_wholesale || 0, u.wholesale_min_qty || 0);
+          insertUnit.run(id, u.unit_name || 'Pcs', parseFloat(u.conversion_factor) || 1, u.price_retail || 0, u.price_wholesale || 0, u.wholesale_min_qty || 0);
         }
         if (stock > 0) {
           insertStockLog.run(id, stock);
@@ -558,7 +589,7 @@ app.post('/api/products/adjust-stock', authenticate, (req, res) => {
     const product = db.prepare('SELECT stock FROM m_products WHERE id = ?').get(product_id);
     if (!product) throw new Error('Produk tidak ditemukan');
 
-    const newStock = product.stock + parseInt(qty_change);
+    const newStock = product.stock + parseFloat(qty_change);
     if (newStock < 0) throw new Error('Penyesuaian stok akan menghasilkan stok negatif!');
 
     db.prepare('UPDATE m_products SET stock = ? WHERE id = ?').run(newStock, product_id);

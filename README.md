@@ -48,14 +48,16 @@ Sistem POS ini dikembangkan dengan fokus pada kemudahan operasional kasir di lap
 *   **Hutang Toko ke Supplier**: Pencatatan belanja stok toko secara tempo ke supplier, log uang muka (DP), dan pelunasan bertahap.
 *   **Rincian Transaksi Lengkap**: Tombol **Detail** pada setiap baris piutang/hutang untuk menampilkan daftar barang yang dibeli serta histori cicilan pembayaran yang lengkap dengan catatan/memo.
 
-### 5. 🔒 Keamanan, Login Modern & Backup Database
+### 5. 🔒 Keamanan, Login Modern & Backup-Restore Database
 *   **Halaman Login Glassmorphism**: Desain antarmuka login yang modern dan elegan dengan chip akun demo instan, toggle lihat sandi, serta penguncian sesi otomatis.
 *   **Role CASHIER**: Terbatas hanya untuk melakukan transaksi kasir dan melihat daftar piutang pelanggan. Menu administrator otomatis disembunyikan.
 *   **Role ADMIN**: Akses penuh ke dasbor laporan laba rugi, penyesuaian stok opname, input pembelian supplier, pendaftaran produk baru, audit kasir, dan konfigurasi toko.
 *   **Backup Database 1-Klik**: Tombol unduh cadangan SQLite database (`.db`) langsung dari menu pengaturan untuk perlindungan data toko.
+*   **Restore Database Aman**: Fitur pemulihan database dari file cadangan lama dengan validasi integritas SQLite, verifikasi akun admin, dialog konfirmasi peringatan, dan pembuatan *safety backup* otomatis sebelum data ditimpa.
 *   **Edit Profil Mandiri**: Setiap user (kasir/admin) dapat mengganti nama lengkap, username, dan password mereka sendiri secara mandiri tanpa memerlukan bantuan basis data.
 
-### 6. 🖨️ Cetak Struk Thermal & Label Barcode Produk
+### 6. 🖨️ Cetak Struk Thermal (USB & Bluetooth) & Label Barcode
+*   **Direct Web Bluetooth Thermal Printing (Android/HP)**: Cetak struk langsung dari smartphone/tablet kasir ke printer thermal portabel (58mm/80mm) via Bluetooth tanpa perantara aplikasi tambahan.
 *   **Struk Thermal 58mm / 80mm**: Format struk kasir bersih, tajam, dan monospace dengan penyimpanan preferensi otomatis.
 *   **Generator & Cetak Label Barcode Produk (CODE128)**: Fitur cetak stiker barcode produk langsung dari database untuk ditempel di rak atau kemasan barang.
 *   **Kompatibel Berbagai Ukuran Label**: Mendukung printer label barcode (Xprinter, Panda, Iware, Zebra, dll.) dengan ukuran **Roll 40x30 mm**, **Roll 50x30 mm**, **Roll 33x15 mm (3 kolom)**, serta **Lembaran Kertas A4 / Stiker Tom & Jerry**.
@@ -127,29 +129,52 @@ npm run seed
 ```
 
 ### Langkah 5: Jalankan Aplikasi
-*   **Mode Development/Pengujian**:
-    ```bash
-    npm start
-    ```
-*   **Mode Produksi (Ubuntu Server dengan PM2)**:
-    Sangat disarankan menggunakan **PM2 Process Manager** agar aplikasi berjalan stabil di latar belakang dan otomatis menyala kembali jika server restart.
-    
-    1. Pastikan PM2 sudah terpasang secara global di server:
-       ```bash
-       sudo npm install -g pm2
-       ```
-    2. Jalankan aplikasi menggunakan konfigurasi PM2 (`ecosystem.config.js`):
-       ```bash
-       npm run prod
-       ```
-    3. Perintah manajemen PM2 lainnya:
-       ```bash
-       npm run prod:logs     # Melihat log live
-       npm run prod:restart  # Restart server
-       npm run prod:stop     # Menghentikan server
-       pm2 startup           # Otomatis nyala saat server reboot
-       pm2 save              # Simpan status proses saat ini
-       ```
+
+#### Pilihan A: Mode Desktop Windows (.exe)
+Jika Anda menggunakan komputer/laptop Windows di toko:
+1. **Cara Cepat (1-Klik):** Dobel-klik file `Start-POS-Desktop.bat` di folder aplikasi.
+2. **Cara Manual via Terminal:**
+   ```bash
+   npm run desktop
+   ```
+3. **Build File Installer Windows (.exe):**
+   Untuk mengompilasi menjadi file setup installer `.exe` mandiri:
+   ```bash
+   npm run build:win
+   ```
+   File installer `POS-Kasir-Pintar-Setup-1.0.0.exe` akan tersimpan di dalam folder `dist/`.
+
+#### Pilihan B: Mode Server Linux / Ubuntu (PM2)
+Sangat disarankan menggunakan **PM2 Process Manager** agar aplikasi berjalan stabil 24/7 di server dan otomatis menyala kembali jika server reboot:
+1. Pastikan PM2 sudah terpasang secara global di server:
+   ```bash
+   sudo npm install -g pm2
+   ```
+2. Jalankan aplikasi menggunakan konfigurasi PM2 (`ecosystem.config.js`):
+   ```bash
+   npm run prod
+   ```
+3. Perintah manajemen PM2 lainnya:
+   ```bash
+   npm run prod:logs     # Melihat log live
+   npm run prod:restart  # Restart server
+   npm run prod:stop     # Menghentikan server
+   pm2 startup           # Aktifkan auto-start saat OS boot
+   pm2 save              # Simpan status proses
+   ```
+
+#### Pilihan C: Mode Standar Node.js
+```bash
+npm start
+```
+
+---
+
+## 📱 Fitur Progressive Web App (PWA)
+Aplikasi ini sudah mendukung **PWA Standalone**:
+- **Di Google Chrome / Microsoft Edge (PC/Laptop):** Buka `http://localhost:3000`, lalu klik tombol **`Install App`** di sudut kanan atas header untuk menginstall aplikasi ke Windows Desktop/Start Menu.
+- **Di HP Android (Chrome):** Buka alamat IP server di browser Chrome, buka menu titik tiga ➔ Pilih **"Tambahkan ke Layar Utama" / "Install Aplikasi"**.
+- **Di iPhone / iPad (Safari):** Buka alamat IP server di Safari, tekan tombol Share ➔ Pilih **"Add to Home Screen"**.
 
 ---
 

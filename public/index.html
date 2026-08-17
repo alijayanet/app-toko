@@ -168,6 +168,10 @@
           <i class="fa-solid fa-address-book text-lg w-5"></i>
           <span>Kontak & Relasi</span>
         </button>
+        <button onclick="openPrinterSettingsModal()" id="nav-printer-settings" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200">
+          <i class="fa-solid fa-print text-lg w-5 text-indigo-400"></i>
+          <span>Pengaturan Printer</span>
+        </button>
         <button onclick="switchTab('users')" id="nav-users" class="nav-btn-admin w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200">
           <i class="fa-solid fa-users text-lg w-5"></i>
           <span>Manajemen User</span>
@@ -225,9 +229,16 @@
             <button onclick="handleLogout()" class="p-2 text-rose-500 hover:text-rose-700 rounded-lg"><i class="fa-solid fa-right-from-bracket text-sm"></i></button>
           </div>
 
+          <!-- Quick Printer & Bluetooth Settings Button (Mobile & Desktop) -->
+          <button type="button" onclick="openPrinterSettingsModal()" class="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/80 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow-xs transition-transform active:scale-95" title="Pengaturan Printer Thermal & Bluetooth">
+            <i class="fa-solid fa-print text-sm"></i>
+            <span class="hidden sm:inline">Printer</span>
+            <i class="fa-brands fa-bluetooth-b text-[10px] text-indigo-500"></i>
+          </button>
+
           <!-- Printer Paper Selector -->
-          <div class="flex items-center gap-1">
-            <span class="text-xs text-slate-400 hidden sm:inline"><i class="fa-solid fa-print"></i> Kertas:</span>
+          <div class="hidden md:flex items-center gap-1">
+            <span class="text-xs text-slate-400"><i class="fa-solid fa-print"></i> Kertas:</span>
             <select id="receipt-paper-size" onchange="savePaperSizePreference(this.value)" class="text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-emerald-500 font-medium">
               <option value="58">Thermal 58mm</option>
               <option value="80" selected>Thermal 80mm</option>
@@ -491,34 +502,52 @@
             </div>
           </div>
 
-          <!-- Filter Bar -->
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
-            <div class="flex flex-wrap gap-2 items-center w-full md:w-auto">
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-400">Dari:</span>
-                <input type="date" id="history-start-date" class="px-3 py-1.5 border rounded-xl bg-white dark:bg-slate-800 text-xs border-slate-200 dark:border-slate-700">
+          <!-- Filter Bar Responsive -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 rounded-2xl shadow-sm space-y-3">
+            <!-- Baris 1: Rentang Tanggal & Preset Cepat -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <!-- Tanggal Mulai & Akhir -->
+              <div class="grid grid-cols-2 sm:flex sm:items-center gap-2">
+                <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span class="text-[11px] text-slate-400 font-medium">Dari:</span>
+                  <input type="date" id="history-start-date" class="bg-transparent text-xs text-slate-700 dark:text-slate-200 focus:outline-none w-full">
+                </div>
+                <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span class="text-[11px] text-slate-400 font-medium">Sampai:</span>
+                  <input type="date" id="history-end-date" class="bg-transparent text-xs text-slate-700 dark:text-slate-200 focus:outline-none w-full">
+                </div>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-400">Sampai:</span>
-                <input type="date" id="history-end-date" class="px-3 py-1.5 border rounded-xl bg-white dark:bg-slate-800 text-xs border-slate-200 dark:border-slate-700">
-              </div>
-              <div class="flex gap-1">
-                <button type="button" onclick="setHistoryDateFilter('today')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">Hari Ini</button>
-                <button type="button" onclick="setHistoryDateFilter('week')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">7 Hari</button>
-                <button type="button" onclick="setHistoryDateFilter('month')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">Bulan Ini</button>
+
+              <!-- Tombol Cepat (Hari Ini, 7 Hari, Bulan Ini) -->
+              <div class="grid grid-cols-3 sm:flex gap-1.5">
+                <button type="button" onclick="setHistoryDateFilter('today')" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-center transition">Hari Ini</button>
+                <button type="button" onclick="setHistoryDateFilter('week')" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-center transition">7 Hari</button>
+                <button type="button" onclick="setHistoryDateFilter('month')" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-center transition">Bulan Ini</button>
               </div>
             </div>
 
-            <div class="flex gap-2 w-full md:w-auto">
-              <input type="text" id="history-search-input" onkeyup="if(event.key==='Enter') fetchSalesHistory()" placeholder="Cari nota, pelanggan, kasir..." class="px-3 py-1.5 border rounded-xl bg-white dark:bg-slate-800 text-xs border-slate-200 dark:border-slate-700 flex-1 md:w-48">
-              <select id="history-status-select" onchange="fetchSalesHistory()" class="px-3 py-1.5 border rounded-xl bg-white dark:bg-slate-800 text-xs border-slate-200 dark:border-slate-700">
-                <option value="">Semua Status</option>
-                <option value="PAID">Lunas (PAID)</option>
-                <option value="PARTIAL">Cicilan (PARTIAL)</option>
-                <option value="UNPAID">Tempo (UNPAID)</option>
-                <option value="VOID">Dibatalkan (VOID)</option>
-              </select>
-              <button onclick="fetchSalesHistory()" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">Filter</button>
+            <!-- Baris 2: Pencarian & Filter Status -->
+            <div class="flex flex-col sm:flex-row gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div class="relative flex-1">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                  <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="history-search-input" onkeyup="if(event.key==='Enter') fetchSalesHistory()" placeholder="Cari no nota, pelanggan, kasir..." class="w-full pl-9 pr-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500">
+              </div>
+              
+              <div class="flex gap-2">
+                <select id="history-status-select" onchange="fetchSalesHistory()" class="flex-1 sm:flex-initial px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium">
+                  <option value="">Semua Status</option>
+                  <option value="PAID">Lunas (PAID)</option>
+                  <option value="PARTIAL">Cicilan (PARTIAL)</option>
+                  <option value="UNPAID">Tempo (UNPAID)</option>
+                  <option value="VOID">Dibatalkan (VOID)</option>
+                </select>
+                
+                <button onclick="fetchSalesHistory()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-transform">
+                  <i class="fa-solid fa-filter"></i> <span>Filter</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -904,16 +933,65 @@
             </form>
           </div>
 
-          <!-- Backup Database Section -->
+          <!-- Bluetooth Thermal Printer Section -->
           <div class="max-w-2xl bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
             <h3 class="text-lg font-bold font-outfit flex items-center gap-2 text-indigo-500">
-              <i class="fa-solid fa-database"></i> Backup & Keamanan Database
+              <i class="fa-brands fa-bluetooth-b text-indigo-500"></i> Printer Thermal Bluetooth (HP Android & Tablet)
             </h3>
-            <p class="text-xs text-slate-400">Unduh salinan berkas database SQLite (<code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">database.db</code>) untuk dicadangkan ke Google Drive, Flashdisk, atau komputer lokal pemilik toko.</p>
-            <div class="pt-2">
-              <button onclick="downloadDatabaseBackup()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-md">
-                <i class="fa-solid fa-cloud-arrow-down text-sm"></i> UNDUH CADANGAN DATABASE (.DB)
+            <p class="text-xs text-slate-400">Hubungkan HP / Tablet kasir Anda langsung ke printer thermal portabel (58mm/80mm) via Bluetooth tanpa perlu kabel.</p>
+            
+            <div class="pt-2 flex flex-wrap items-center gap-3">
+              <button type="button" onclick="testBluetoothPrinter()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-md transition-transform">
+                <i class="fa-solid fa-print"></i> <span>Sambungkan & Tes Cetak Bluetooth</span>
               </button>
+              <button type="button" onclick="disconnectBluetoothPrinter()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-xl font-medium text-xs flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-link-slash"></i> <span>Putus Koneksi</span>
+              </button>
+            </div>
+
+            <div id="bt-printer-status" class="text-xs font-mono text-slate-500 dark:text-slate-400 pt-1">
+              Status: <span id="bt-printer-name-label" class="font-bold text-slate-700 dark:text-slate-200">Belum terhubung</span>
+            </div>
+          </div>
+
+          <!-- Backup & Restore Database Section -->
+          <div class="max-w-3xl bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+            <div>
+              <h3 class="text-lg font-bold font-outfit flex items-center gap-2 text-emerald-500">
+                <i class="fa-solid fa-database"></i> Backup & Restore Database
+              </h3>
+              <p class="text-xs text-slate-400 mt-1">Amankan data toko Anda dengan mencadangkan secara rutin atau pulihkan database dari file cadangan sebelumnya.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Kolom 1: Unduh Backup -->
+              <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between space-y-3">
+                <div class="space-y-1">
+                  <div class="font-bold text-xs flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                    <i class="fa-solid fa-cloud-arrow-down text-emerald-500"></i> Unduh Cadangan (Backup)
+                  </div>
+                  <p class="text-[11px] text-slate-400">Unduh salinan berkas database aktif (<code class="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded text-[10px]">database.db</code>) untuk disimpan di Google Drive atau Flashdisk.</p>
+                </div>
+                <button onclick="downloadDatabaseBackup()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-transform">
+                  <i class="fa-solid fa-download"></i> <span>Unduh Database (.db)</span>
+                </button>
+              </div>
+
+              <!-- Kolom 2: Restore Database -->
+              <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between space-y-3">
+                <div class="space-y-1">
+                  <div class="font-bold text-xs flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                    <i class="fa-solid fa-cloud-arrow-up text-amber-500"></i> Pulihkan Data (Restore)
+                  </div>
+                  <p class="text-[11px] text-slate-400">Pilih berkas <code class="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded text-[10px]">.db</code> hasil backup untuk mengembalikan seluruh produk, transaksi, dan stok.</p>
+                </div>
+                <div>
+                  <input type="file" id="db-restore-file-input" accept=".db,application/octet-stream,application/x-sqlite3" class="hidden" onchange="handleDatabaseRestoreFileSelect(event)">
+                  <button onclick="document.getElementById('db-restore-file-input').click()" class="w-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-transform">
+                    <i class="fa-solid fa-rotate-left"></i> <span>Pilih File & Restore (.db)</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -1002,6 +1080,124 @@
        MODALS
        ========================================== -->
 
+  <!-- Modal Konfirmasi Restore Database -->
+  <div id="modal-confirm-restore" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3 text-rose-500">
+        <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950 flex items-center justify-center text-xl shrink-0">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <h3 class="font-outfit font-bold text-lg text-slate-800 dark:text-slate-100">Konfirmasi Restore Database</h3>
+          <p class="text-xs text-rose-500 font-semibold">Tindakan ini akan menimpa seluruh data toko!</p>
+        </div>
+      </div>
+
+      <div class="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl space-y-2 text-xs text-slate-700 dark:text-slate-300">
+        <p class="font-semibold">⚠️ Harap diperhatikan:</p>
+        <ul class="list-disc list-inside space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
+          <li>Seluruh data produk, riwayat transaksi kasir, stok, piutang, dan user saat ini akan <b>digantikan secara permanen</b> dengan isi file backup ini.</li>
+          <li>Sistem akan otomatis membuat cadangan pengaman (safety backup) sebelum proses dimulai.</li>
+          <li>Setelah restore selesai, Anda akan otomatis diarahkan ke halaman login.</li>
+        </ul>
+      </div>
+
+      <div class="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl space-y-1 text-xs">
+        <div class="flex justify-between">
+          <span class="text-slate-400">Nama File:</span>
+          <span id="restore-file-name-label" class="font-mono font-bold text-slate-700 dark:text-slate-200 truncate max-w-[200px]">-</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Ukuran File:</span>
+          <span id="restore-file-size-label" class="font-mono text-slate-700 dark:text-slate-200">-</span>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeModal('modal-confirm-restore')" class="flex-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2.5 rounded-xl font-semibold text-xs transition">
+          Batal
+        </button>
+        <button type="button" id="btn-execute-restore" onclick="executeDatabaseRestore()" class="flex-1 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-transform">
+          <i class="fa-solid fa-rotate-left"></i> <span>Ya, Pulihkan Sekarang</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pengaturan Printer & Bluetooth (Kasir & Admin) -->
+  <div id="modal-printer-settings" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+        <h3 class="font-outfit font-bold text-lg flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+          <i class="fa-solid fa-print"></i> Pengaturan Printer Thermal
+        </h3>
+        <button onclick="closeModal('modal-printer-settings')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <!-- Status Koneksi Bluetooth -->
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <i class="fa-brands fa-bluetooth-b text-indigo-500 text-sm"></i> Printer Bluetooth:
+            </span>
+            <span id="modal-bt-printer-status" class="px-2 py-0.5 rounded-md font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px]">Belum Terhubung</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Hubungkan HP/Tablet langsung ke printer thermal portabel 58mm/80mm.</p>
+
+          <div class="pt-2 flex flex-wrap gap-2">
+            <button type="button" onclick="testBluetoothPrinter()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white py-2 px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm transition-transform">
+              <i class="fa-solid fa-plug"></i> <span>Sambungkan & Tes Cetak</span>
+            </button>
+            <button type="button" onclick="disconnectBluetoothPrinter()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2 px-3 rounded-xl font-medium flex items-center justify-center gap-1 transition">
+              <i class="fa-solid fa-link-slash"></i> <span>Putus</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pilihan Ukuran Kertas -->
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ukuran Kertas Struk:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+              <input type="radio" name="paper-size-radio" value="58" onchange="setPaperSizeFromModal(this.value)" class="text-indigo-600 focus:ring-indigo-500">
+              <div>
+                <span class="font-bold block text-slate-800 dark:text-slate-100">Thermal 58mm</span>
+                <span class="text-[10px] text-slate-400">Printer HP / Mini Bluetooth</span>
+              </div>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+              <input type="radio" name="paper-size-radio" value="80" onchange="setPaperSizeFromModal(this.value)" class="text-indigo-600 focus:ring-indigo-500">
+              <div>
+                <span class="font-bold block text-slate-800 dark:text-slate-100">Thermal 80mm</span>
+                <span class="text-[10px] text-slate-400">Printer Kasir Standar / USB</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Pilihan Mode Cetak Kasir -->
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Metode Cetak Default Kasir:</label>
+          <select id="modal-print-mode-select" onchange="savePrintModePreference(this.value)" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-medium">
+            <option value="rawbt">🚀 Aplikasi RawBT Android (Sangat Rapi & Pas Ukuran Nota)</option>
+            <option value="bluetooth">🔵 Direct Web Bluetooth (Tanpa Aplikasi Tambahan)</option>
+            <option value="browser">🖥️ Dialog Browser (Standar Komputer / PC)</option>
+          </select>
+          <p class="text-[11px] text-slate-400 mt-1">
+            <i class="fa-solid fa-circle-info text-amber-500"></i> Jika di HP hasil cetak terlalu panjang (A4), pilih <b>Aplikasi RawBT</b> untuk hasil cetak pas sesuai panjang struk.
+          </p>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+        <button type="button" onclick="closeModal('modal-printer-settings')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl font-bold text-xs">
+          SELESAI
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Edit Profil Mandiri -->
   <div id="modal-edit-profile" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl">
@@ -1066,12 +1262,18 @@
         <!-- Dinamis -->
       </div>
       
-      <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex gap-2">
-        <button id="btn-reprint-modal" onclick="printCurrentModalReceipt()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2">
-          <i class="fa-solid fa-print"></i> Cetak Ulang Struk
+      <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-2">
+        <button id="btn-reprint-rawbt-modal" onclick="printCurrentModalRawBT()" class="bg-amber-600 hover:bg-amber-700 active:scale-95 text-white py-2.5 px-3.5 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm text-xs" title="Cetak via RawBT Android">
+          <i class="fa-solid fa-bolt"></i> <span>RawBT</span>
         </button>
-        <button id="btn-void-modal" onclick="voidCurrentModalSale()" class="admin-only bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2">
-          <i class="fa-solid fa-ban"></i> Void Nota
+        <button id="btn-reprint-bt-modal" onclick="printCurrentModalBluetooth()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white py-2.5 px-3.5 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm text-xs" title="Cetak langsung ke Printer Thermal Bluetooth">
+          <i class="fa-brands fa-bluetooth-b text-xs"></i> <span>Bluetooth</span>
+        </button>
+        <button id="btn-reprint-modal" onclick="printCurrentModalReceipt()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 text-xs">
+          <i class="fa-solid fa-print"></i> <span>Browser</span>
+        </button>
+        <button id="btn-void-modal" onclick="voidCurrentModalSale()" class="admin-only bg-rose-600 hover:bg-rose-700 active:scale-95 text-white px-3.5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 text-xs">
+          <i class="fa-solid fa-ban"></i> <span>Void</span>
         </button>
       </div>
     </div>
@@ -2231,6 +2433,72 @@
           alert("Backup database (.db) berhasil diunduh!");
         })
         .catch(err => alert(err.message));
+    }
+
+    let pendingRestoreFile = null;
+
+    function handleDatabaseRestoreFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.name.endsWith('.db') && !file.name.includes('backup')) {
+        alert("Peringatan: Berkas yang dipilih sebaiknya berekstensi .db (SQLite Database).");
+      }
+
+      pendingRestoreFile = file;
+      document.getElementById('restore-file-name-label').textContent = file.name;
+      document.getElementById('restore-file-size-label').textContent = (file.size / 1024).toFixed(1) + ' KB';
+      
+      // Reset input file value agar event change bisa dipicu lagi jika memilih file yang sama
+      event.target.value = '';
+      
+      document.getElementById('modal-confirm-restore').classList.remove('hidden');
+    }
+
+    async function executeDatabaseRestore() {
+      if (!pendingRestoreFile) {
+        alert("Tidak ada file database yang dipilih.");
+        return;
+      }
+
+      const btn = document.getElementById('btn-execute-restore');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memulihkan...`;
+
+      try {
+        const token = localStorage.getItem('pos_token');
+        const buffer = await pendingRestoreFile.arrayBuffer();
+
+        const res = await fetch('/api/settings/restore', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            'Authorization': `Bearer ${token}`
+          },
+          body: buffer
+        });
+
+        const json = await res.json();
+        if (json.success) {
+          closeModal('modal-confirm-restore');
+          playBeep('success');
+          alert("🎉 " + json.message + "\n\nSistem akan memuat ulang halaman sekarang.");
+          localStorage.removeItem('pos_token');
+          window.location.reload();
+        } else {
+          playBeep('error');
+          alert("❌ Gagal memulihkan database:\n" + json.message);
+        }
+      } catch (err) {
+        console.error('Database restore error:', err);
+        playBeep('error');
+        alert("❌ Terjadi kesalahan jaringan saat memulihkan database:\n" + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        pendingRestoreFile = null;
+      }
     }
 
     // ==========================================
@@ -3685,7 +3953,15 @@
           playBeep('success');
           closeModal('modal-qris-display');
           alert("Transaksi sukses!");
-          printReceipt(json.receipt);
+          
+          const defaultPrintMode = localStorage.getItem('pos_print_mode') || 'browser';
+          if (defaultPrintMode === 'rawbt') {
+            printReceiptRawBT(json.receipt);
+          } else if (defaultPrintMode === 'bluetooth') {
+            printReceiptBluetooth(json.receipt);
+          } else {
+            printReceipt(json.receipt);
+          }
           cart = [];
           document.getElementById('cash-amount-input').value = '';
           document.getElementById('credit-dp-input').value = '0';
@@ -3801,6 +4077,385 @@
       setTimeout(() => {
         window.print();
       }, 100);
+    }
+
+    // ==========================================
+    // ESC/POS BLUETOOTH THERMAL PRINTER ENGINE
+    // ==========================================
+    let bluetoothDevice = null;
+    let bluetoothCharacteristic = null;
+
+    // Helper: format string to fixed column width with padding
+    function formatEscPosTwoColumns(leftText, rightText, maxCols = 32) {
+      const left = String(leftText || '');
+      const right = String(rightText || '');
+      const totalLen = left.length + right.length;
+      if (totalLen >= maxCols) {
+        return left + ' ' + right;
+      }
+      const spaces = ' '.repeat(maxCols - totalLen);
+      return left + spaces + right;
+    }
+
+    // Generate ESC/POS Byte Array from receipt object
+    function generateEscPosBytes(receipt, paperSize = '58') {
+      const maxCols = paperSize === '80' ? 48 : 32;
+      const separator = '-'.repeat(maxCols) + '\n';
+      
+      const encoder = new TextEncoder();
+      const chunks = [];
+
+      function addRaw(str) {
+        chunks.push(encoder.encode(str));
+      }
+
+      function addCmd(cmdBytes) {
+        chunks.push(new Uint8Array(cmdBytes));
+      }
+
+      // ESC @ : Initialize printer
+      addCmd([0x1B, 0x40]);
+      
+      // Center & Bold Store Name
+      addCmd([0x1B, 0x61, 0x01]); // Align Center
+      addCmd([0x1B, 0x45, 0x01]); // Bold ON
+      addCmd([0x1D, 0x21, 0x01]); // Double height
+      addRaw((storeSettings.store_name || 'TOKO POS').toUpperCase() + '\n');
+      
+      addCmd([0x1D, 0x21, 0x00]); // Normal size
+      addCmd([0x1B, 0x45, 0x00]); // Bold OFF
+      if (storeSettings.store_address) {
+        addRaw(storeSettings.store_address + '\n');
+      }
+      if (storeSettings.store_phone) {
+        addRaw('Telp: ' + storeSettings.store_phone + '\n');
+      }
+
+      // Align Left for Receipt Details
+      addCmd([0x1B, 0x61, 0x00]); // Align Left
+      addRaw(separator);
+
+      const saleDateObj = receipt.sale_date ? parseDatabaseDate(receipt.sale_date) : new Date();
+      addRaw(formatEscPosTwoColumns('No Nota:', receipt.invoice_no || '-', maxCols) + '\n');
+      addRaw(formatEscPosTwoColumns('Tanggal:', saleDateObj.toLocaleString('id-ID'), maxCols) + '\n');
+      addRaw(formatEscPosTwoColumns('Kasir:', receipt.cashier_name || localStorage.getItem('pos_user_name') || 'Kasir', maxCols) + '\n');
+      
+      if (receipt.customer_name) {
+        addRaw(formatEscPosTwoColumns('Pelanggan:', receipt.customer_name, maxCols) + '\n');
+      }
+
+      addRaw(separator);
+
+      // Items
+      (receipt.items || []).forEach(item => {
+        addCmd([0x1B, 0x45, 0x01]); // Bold item name
+        addRaw(item.product_name + '\n');
+        addCmd([0x1B, 0x45, 0x00]); // Normal
+        
+        const qtyUnit = `${item.qty} ${item.unit_name || 'Pcs'} x ${formatNumber(item.price_used || 0)}`;
+        const subtotalStr = formatNumber(item.subtotal || 0);
+        addRaw(formatEscPosTwoColumns('  ' + qtyUnit, subtotalStr, maxCols) + '\n');
+      });
+
+      addRaw(separator);
+
+      // Totals
+      if (receipt.discount_amount > 0) {
+        addRaw(formatEscPosTwoColumns('Subtotal:', 'Rp ' + formatNumber((receipt.total_amount || 0) + (receipt.discount_amount || 0)), maxCols) + '\n');
+        addRaw(formatEscPosTwoColumns('Diskon:', '-Rp ' + formatNumber(receipt.discount_amount), maxCols) + '\n');
+      }
+
+      addCmd([0x1B, 0x45, 0x01]); // Bold
+      addRaw(formatEscPosTwoColumns('GRAND TOTAL:', 'Rp ' + formatNumber(receipt.total_amount || 0), maxCols) + '\n');
+      addCmd([0x1B, 0x45, 0x00]); // Normal
+
+      // Payment info
+      const paymentStatusStr = receipt.payment_status === 'VOID' ? 'VOID' : receipt.payment_type || 'CASH';
+      addRaw(formatEscPosTwoColumns('Metode Bayar:', paymentStatusStr, maxCols) + '\n');
+
+      if (receipt.payment_type === 'CASH') {
+        addRaw(formatEscPosTwoColumns('Tunai Bayar:', 'Rp ' + formatNumber(receipt.cash_amount || 0), maxCols) + '\n');
+        addRaw(formatEscPosTwoColumns('Kembalian:', 'Rp ' + formatNumber(receipt.change_amount || 0), maxCols) + '\n');
+      } else if (receipt.payment_type === 'QRIS') {
+        addRaw(formatEscPosTwoColumns('Status Bayar:', 'LUNAS (QRIS)', maxCols) + '\n');
+      } else {
+        addRaw(formatEscPosTwoColumns('Uang Muka (DP):', 'Rp ' + formatNumber(receipt.cash_amount || 0), maxCols) + '\n');
+        addRaw(formatEscPosTwoColumns('Sisa Piutang:', 'Rp ' + formatNumber(receipt.debt_balance || 0), maxCols) + '\n');
+      }
+
+      addRaw(separator);
+
+      // Footer
+      addCmd([0x1B, 0x61, 0x01]); // Center
+      const footerLines = (storeSettings.receipt_footer || 'TERIMA KASIH TELAH BERBELANJA')
+        .split('\n')
+        .map(l => l.trim())
+        .filter(Boolean);
+
+      footerLines.forEach(line => {
+        addRaw(line + '\n');
+      });
+
+      // Feed lines & cut (hanya feed 2 baris agar pas di batas sobekan kertas)
+      addRaw('\n\n');
+      if (paperSize === '80') {
+        addCmd([0x1D, 0x56, 0x00]); // GS V 0 (Standard Cut untuk printer 80mm dengan auto cutter)
+      }
+
+      // Combine all chunks into one Uint8Array
+      const totalLen = chunks.reduce((acc, c) => acc + c.length, 0);
+      const result = new Uint8Array(totalLen);
+      let offset = 0;
+      for (const chunk of chunks) {
+        result.set(chunk, offset);
+        offset += chunk.length;
+      }
+      return result;
+    }
+
+    // Connect & Print via Web Bluetooth
+    async function printReceiptBluetooth(receipt, isTest = false) {
+      if (!receipt && !isTest) {
+        alert("Data struk tidak ditemukan.");
+        return;
+      }
+
+      if (!navigator.bluetooth) {
+        // Fallback ke RawBT Android App jika Web Bluetooth tidak didukung browser
+        const paperSelect = document.getElementById('receipt-paper-size');
+        const paperSize = paperSelect ? paperSelect.value : '58';
+        const bytes = generateEscPosBytes(receipt || { invoice_no: 'TEST-001', total_amount: 0, items: [] }, paperSize);
+        
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+
+        const useRawBT = confirm("Browser Anda belum mendukung Web Bluetooth secara langsung.\n\nApakah Anda ingin mencetak via aplikasi RawBT Printer Android?");
+        if (useRawBT) {
+          window.location.href = "rawbt:data:base64," + base64;
+        }
+        return;
+      }
+
+      try {
+        const paperSelect = document.getElementById('receipt-paper-size');
+        const paperSize = paperSelect ? paperSelect.value : '58';
+        const dataBytes = generateEscPosBytes(receipt || {
+          invoice_no: 'TEST-BLUETOOTH',
+          sale_date: new Date().toISOString(),
+          cashier_name: localStorage.getItem('pos_user_name') || 'Admin',
+          total_amount: 50000,
+          payment_type: 'CASH',
+          cash_amount: 50000,
+          change_amount: 0,
+          items: [
+            { product_name: 'Tes Cetak Bluetooth 1', qty: 1, unit_name: 'Pcs', price_used: 25000, subtotal: 25000 },
+            { product_name: 'Tes Cetak Bluetooth 2', qty: 1, unit_name: 'Pcs', price_used: 25000, subtotal: 25000 }
+          ]
+        }, paperSize);
+
+        // Jika belum ada koneksi bluetooth aktif, minta user memilih device
+        if (!bluetoothCharacteristic || !bluetoothDevice || !bluetoothDevice.gatt.connected) {
+          console.log('[Bluetooth] Meminta izin perangkat Bluetooth...');
+          
+          bluetoothDevice = await navigator.bluetooth.requestDevice({
+            filters: [
+              { services: ['000018f0-0000-1000-8000-00805f9b34fb'] },
+              { services: ['e7810a06-736b-4969-86fc-7bb09b64de25'] },
+              { services: ['49535343-fe7d-4ae5-8fa9-9fafd205e455'] },
+              { namePrefix: 'RPP' },
+              { namePrefix: 'MPT' },
+              { namePrefix: 'POS' },
+              { namePrefix: 'Printer' },
+              { namePrefix: 'Bluetooth' },
+              { namePrefix: 'MTP' },
+              { namePrefix: 'XP' }
+            ],
+            optionalServices: [
+              '000018f0-0000-1000-8000-00805f9b34fb',
+              'e7810a06-736b-4969-86fc-7bb09b64de25',
+              '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+              '0000ff00-0000-1000-8000-00805f9b34fb',
+              '0000fee7-0000-1000-8000-00805f9b34fb'
+            ],
+            acceptAllDevices: false
+          }).catch(async () => {
+            // Fallback: jika filter tidak menemukan, izinkan pilih semua device
+            return await navigator.bluetooth.requestDevice({
+              acceptAllDevices: true,
+              optionalServices: [
+                '000018f0-0000-1000-8000-00805f9b34fb',
+                'e7810a06-736b-4969-86fc-7bb09b64de25',
+                '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+                '0000ff00-0000-1000-8000-00805f9b34fb',
+                '0000fee7-0000-1000-8000-00805f9b34fb'
+              ]
+            });
+          });
+
+          console.log('[Bluetooth] Terhubung ke perangkat:', bluetoothDevice.name);
+          const nameLabel = document.getElementById('bt-printer-name-label');
+          if (nameLabel) {
+            nameLabel.textContent = bluetoothDevice.name || 'Printer Bluetooth Terhubung';
+            nameLabel.className = "font-bold text-emerald-500";
+          }
+
+          bluetoothDevice.addEventListener('gattserverdisconnected', () => {
+            console.log('[Bluetooth] Perangkat terputus.');
+            bluetoothCharacteristic = null;
+            if (nameLabel) {
+              nameLabel.textContent = 'Terputus (Klik tes untuk sambung ulang)';
+              nameLabel.className = "font-bold text-amber-500";
+            }
+          });
+
+          const server = await bluetoothDevice.gatt.connect();
+          const services = await server.getPrimaryServices();
+          
+          for (const service of services) {
+            const characteristics = await service.getCharacteristics();
+            for (const char of characteristics) {
+              if (char.properties.write || char.properties.writeWithoutResponse) {
+                bluetoothCharacteristic = char;
+                break;
+              }
+            }
+            if (bluetoothCharacteristic) break;
+          }
+        }
+
+        if (!bluetoothCharacteristic) {
+          throw new Error("Tidak dapat menemukan characteristic write pada printer Bluetooth ini.");
+        }
+
+        // Kirim data dalam paket kecil (chunk) 100 byte agar buffer bluetooth stabil
+        const CHUNK_SIZE = 100;
+        for (let i = 0; i < dataBytes.length; i += CHUNK_SIZE) {
+          const chunk = dataBytes.slice(i, i + CHUNK_SIZE);
+          if (bluetoothCharacteristic.writeValueWithoutResponse) {
+            await bluetoothCharacteristic.writeValueWithoutResponse(chunk);
+          } else {
+            await bluetoothCharacteristic.writeValue(chunk);
+          }
+          await new Promise(r => setTimeout(r, 20));
+        }
+
+        playBeep('success');
+        if (isTest) {
+          alert(`Berhasil mencetak struk tes ke printer Bluetooth "${bluetoothDevice.name || 'Thermal'}"!`);
+        }
+      } catch (err) {
+        console.error('[Bluetooth Print Error]', err);
+        playBeep('error');
+        alert("Gagal mencetak Bluetooth: " + (err.message || err));
+      }
+    }
+
+    function testBluetoothPrinter() {
+      printReceiptBluetooth(null, true);
+    }
+
+    function disconnectBluetoothPrinter() {
+      if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+        bluetoothDevice.gatt.disconnect();
+        bluetoothDevice = null;
+        bluetoothCharacteristic = null;
+        updateBluetoothStatusUI();
+        alert("Koneksi printer Bluetooth berhasil diputuskan.");
+      } else {
+        alert("Tidak ada printer Bluetooth yang sedang terhubung.");
+      }
+    }
+
+    function printCurrentModalBluetooth() {
+      if (currentModalSale) {
+        printReceiptBluetooth(currentModalSale, false);
+      }
+    }
+
+    function printCurrentModalRawBT() {
+      if (currentModalSale) {
+        printReceiptRawBT(currentModalSale);
+      }
+    }
+
+    function printReceiptRawBT(receipt) {
+      const target = receipt || currentModalSale;
+      if (!target) {
+        alert("Data nota tidak ditemukan.");
+        return;
+      }
+      const paperSelect = document.getElementById('receipt-paper-size');
+      const paperSize = paperSelect ? paperSelect.value : '58';
+      const bytes = generateEscPosBytes(target, paperSize);
+      
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+      window.location.href = "rawbt:data:base64," + base64;
+    }
+
+    // Modal Printer Settings UI Functions
+    function openPrinterSettingsModal() {
+      loadPrinterSettingsUI();
+      document.getElementById('modal-printer-settings').classList.remove('hidden');
+    }
+
+    function loadPrinterSettingsUI() {
+      const savedPaper = localStorage.getItem('pos_receipt_paper_size') || '58';
+      const radios = document.querySelectorAll('input[name="paper-size-radio"]');
+      radios.forEach(r => {
+        r.checked = (r.value === savedPaper);
+      });
+
+      const modeSelect = document.getElementById('modal-print-mode-select');
+      if (modeSelect) {
+        modeSelect.value = localStorage.getItem('pos_print_mode') || 'browser';
+      }
+
+      updateBluetoothStatusUI();
+    }
+
+    function setPaperSizeFromModal(size) {
+      savePaperSizePreference(size);
+      if (document.getElementById('receipt-paper-size')) {
+        document.getElementById('receipt-paper-size').value = size;
+      }
+    }
+
+    function savePrintModePreference(mode) {
+      localStorage.setItem('pos_print_mode', mode);
+    }
+
+    function updateBluetoothStatusUI() {
+      const isConnected = bluetoothDevice && bluetoothDevice.gatt && bluetoothDevice.gatt.connected;
+      const devName = bluetoothDevice?.name || 'Printer Bluetooth';
+      
+      const modalStatus = document.getElementById('modal-bt-printer-status');
+      if (modalStatus) {
+        if (isConnected) {
+          modalStatus.textContent = devName + ' (Terhubung)';
+          modalStatus.className = "px-2 py-0.5 rounded-md font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[11px]";
+        } else {
+          modalStatus.textContent = 'Belum Terhubung';
+          modalStatus.className = "px-2 py-0.5 rounded-md font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px]";
+        }
+      }
+
+      const tabStatus = document.getElementById('bt-printer-name-label');
+      if (tabStatus) {
+        if (isConnected) {
+          tabStatus.textContent = devName;
+          tabStatus.className = "font-bold text-emerald-500";
+        } else {
+          tabStatus.textContent = 'Belum terhubung';
+          tabStatus.className = "font-bold text-slate-700 dark:text-slate-200";
+        }
+      }
     }
 
 

@@ -1,14 +1,136 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-// Lokasi database SQLite di root folder proyek
-const dbPath = path.resolve(__dirname, '../database.db');
-const db = new Database(dbPath);
+// Lokasi database SQLite di root folder proyek atau di samping .exe
+let dbPath = path.resolve(__dirname, '../database.db');
+if (process.versions && process.versions.electron && process.resourcesPath) {
+  const exeDir = path.dirname(process.execPath);
+  dbPath = path.join(exeDir, 'database.db');
+}
+
+let currentDb = new Database(dbPath);
 
 // Aktifkan WAL (Write-Ahead Logging) mode untuk konkurensi performa tinggi
 // Serta aktifkan support Foreign Key
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+currentDb.pragma('journal_mode = WAL');
+currentDb.pragma('foreign_keys = ON');
+
+function reopenDatabase() {
+  currentDb = new Database(dbPath);
+  currentDb.pragma('journal_mode = WAL');
+  currentDb.pragma('foreign_keys = ON');
+  initDatabase();
+}
+
+function restoreDatabaseFromBuffer(buffer) {
+  if (!buffer || buffer.length < 100) {
+    throw new Error('File database tidak valid atau kosong.');
+  }
+
+  // 1. Validasi SQLite Header Signature (16 bytes pertama)
+  const headerStr = buffer.slice(0, 16).toString('utf8');
+  if (!headerStr.startsWith('SQLite format 3')) {
+    throw new Error('File yang diunggah bukan berkas database SQLite valid (.db).');
+  }
+
+  const tempPath = path.join(path.dirname(dbPath), 'temp_restore_' + Date.now() + '.db');
+  fs.writeFileSync(tempPath, buffer);
+
+  // 2. Buka berkas sementara untuk pengujian integritas
+  let testDb;
+  try {
+    testDb = new Database(tempPath, { readonly: true, fileMustExist: true });
+    
+    // Periksa integritas fisik SQLite
+    const integrityCheck = testDb.pragma('integrity_check');
+    if (!integrityCheck || integrityCheck[0]?.integrity_check !== 'ok') {
+      throw new Error('Integritas berkas database rusak (corrupted).');
+    }
+
+    // Periksa keberadaan tabel wajib
+    const requiredTables = ['m_users', 'm_products', 't_sales'];
+    for (const tbl of requiredTables) {
+      const exists = testDb.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(tbl);
+      if (!exists) {
+        throw new Error(`File cadangan tidak memiliki tabel sistem penting (${tbl}).`);
+      }
+    }
+
+    // Periksa apakah ada setidaknya satu akun ADMIN
+    const adminCount = testDb.prepare("SELECT COUNT(*) as count FROM m_users WHERE role='ADMIN'").get();
+    if (!adminCount || adminCount.count < 1) {
+      throw new Error('File cadangan tidak memiliki akun pengguna dengan hak akses Administrator.');
+    }
+  } finally {
+    if (testDb) {
+      try { testDb.close(); } catch (_) {}
+    }
+  }
+
+  // 3. Buat cadangan pengaman (safety backup) dari database aktif saat ini
+  const autoBakPath = dbPath + '.bak_auto';
+  try {
+    currentDb.pragma('wal_checkpoint(TRUNCATE)');
+    fs.copyFileSync(dbPath, autoBakPath);
+  } catch (err) {
+    console.warn('[Safety Backup Warning]', err.message);
+  }
+
+  // 4. Tutup koneksi database aktif saat ini
+  try {
+    currentDb.close();
+  } catch (err) {
+    console.error('[DB Close Error]', err.message);
+  }
+
+  // 5. Bersihkan file WAL & SHM lama jika ada
+  try {
+    if (fs.existsSync(dbPath + '-wal')) fs.unlinkSync(dbPath + '-wal');
+    if (fs.existsSync(dbPath + '-shm')) fs.unlinkSync(dbPath + '-shm');
+  } catch (_) {}
+
+  // 6. Ganti file database aktif dengan berkas yang baru
+  try {
+    fs.copyFileSync(tempPath, dbPath);
+    if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+  } catch (err) {
+    // Jika gagal menimpa, kembalikan dari safety backup
+    if (fs.existsSync(autoBakPath)) {
+      fs.copyFileSync(autoBakPath, dbPath);
+    }
+    // Buka ulang koneksi
+    reopenDatabase();
+    throw new Error('Gagal mengganti berkas database: ' + err.message);
+  }
+
+  // 7. Buka kembali koneksi database
+  reopenDatabase();
+
+  return {
+    success: true,
+    message: 'Database berhasil dipulihkan secara penuh!'
+  };
+}
+
+const db = new Proxy({}, {
+  get(target, prop) {
+    if (prop === 'restoreDatabaseFromBuffer') {
+      return restoreDatabaseFromBuffer;
+    }
+    if (prop === 'reopenDatabase') {
+      return reopenDatabase;
+    }
+    if (prop === 'getDbPath') {
+      return () => dbPath;
+    }
+    const val = currentDb[prop];
+    if (typeof val === 'function') {
+      return val.bind(currentDb);
+    }
+    return val;
+  }
+});
 
 // Fungsi inisialisasi tabel basis data
 function initDatabase() {
