@@ -54,9 +54,11 @@ Sistem POS ini dikembangkan dengan fokus pada kemudahan operasional kasir di lap
 *   **Role ADMIN**: Akses penuh ke dasbor laporan laba rugi, penyesuaian stok opname, input pembelian supplier, pendaftaran produk baru, audit kasir, dan konfigurasi toko.
 *   **Backup Database 1-Klik**: Tombol unduh cadangan SQLite database (`.db`) langsung dari menu pengaturan untuk perlindungan data toko.
 *   **Restore Database Aman**: Fitur pemulihan database dari file cadangan lama dengan validasi integritas SQLite, verifikasi akun admin, dialog konfirmasi peringatan, dan pembuatan *safety backup* otomatis sebelum data ditimpa.
+*   **GitHub In-App Auto Updater (Terhubung ke GitHub)**: Cek dan perbarui source code langsung dari repositori GitHub berdasarkan berkas `version.txt`. Proses update **100% aman** karena **database (`database.db`), konfigurasi port (`.env`), dan pengaturan toko tidak akan pernah ditimpa atau hilang**.
 *   **Edit Profil Mandiri**: Setiap user (kasir/admin) dapat mengganti nama lengkap, username, dan password mereka sendiri secara mandiri tanpa memerlukan bantuan basis data.
 
-### 6. 🖨️ Cetak Struk Thermal (USB & Bluetooth) & Label Barcode
+### 6. 🖨️ Cetak Struk Thermal (USB, RawBT & Bluetooth) & Label Barcode
+*   **Direct RawBT Android Printing**: Cetak struk kasir kilat via protokol RawBT Android tanpa perlu dialog browser.
 *   **Direct Web Bluetooth Thermal Printing (Android/HP)**: Cetak struk langsung dari smartphone/tablet kasir ke printer thermal portabel (58mm/80mm) via Bluetooth tanpa perantara aplikasi tambahan.
 *   **Struk Thermal 58mm / 80mm**: Format struk kasir bersih, tajam, dan monospace dengan penyimpanan preferensi otomatis.
 *   **Generator & Cetak Label Barcode Produk (CODE128)**: Fitur cetak stiker barcode produk langsung dari database untuk ditempel di rak atau kemasan barang.

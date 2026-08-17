@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const db = require('./db');
 const qrisUtil = require('./qrisUtil');
+const updater = require('./updater');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -175,7 +176,7 @@ app.post('/api/settings', authenticate, (req, res) => {
     return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengubah pengaturan.' });
   }
 
-  const { store_name, store_address, store_phone, receipt_footer, qris_static_payload } = req.body;
+  const { store_name, store_address, store_phone, receipt_footer, qris_static_payload, github_repo_url } = req.body;
   if (!store_name) {
     return res.status(400).json({ success: false, message: 'Nama toko wajib diisi.' });
   }
@@ -188,6 +189,9 @@ app.post('/api/settings', authenticate, (req, res) => {
     upsert.run('receipt_footer', receipt_footer || '');
     if (qris_static_payload !== undefined) {
       upsert.run('qris_static_payload', qris_static_payload.trim());
+    }
+    if (github_repo_url !== undefined) {
+      upsert.run('github_repo_url', github_repo_url.trim());
     }
   });
 
@@ -273,6 +277,82 @@ app.post('/api/settings/restore', authenticate, (req, res) => {
       success: false,
       message: error.message || 'Terjadi kesalahan saat memulihkan database.'
     });
+  }
+});
+
+// ==========================================
+// SYSTEM VERSION & GITHUB IN-APP UPDATER
+// ==========================================
+
+// Get Local Version Info
+app.get('/api/system/version', (req, res) => {
+  try {
+    const versionInfo = updater.getLocalVersionInfo();
+    const storeSetting = db.prepare("SELECT value FROM m_settings WHERE key = 'github_repo_url'").get();
+    return res.json({
+      success: true,
+      data: {
+        version: versionInfo.version,
+        changelog: versionInfo.changelog,
+        github_repo: storeSetting ? storeSetting.value : ''
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Check Update against GitHub (Admin Only / Cashier Allowed Read)
+app.get('/api/system/check-update', authenticate, async (req, res) => {
+  try {
+    let repoUrl = req.query.repo;
+    if (!repoUrl) {
+      const storeSetting = db.prepare("SELECT value FROM m_settings WHERE key = 'github_repo_url'").get();
+      repoUrl = storeSetting ? storeSetting.value : '';
+    }
+
+    if (!repoUrl) {
+      const versionInfo = updater.getLocalVersionInfo();
+      return res.json({
+        success: true,
+        current_version: versionInfo.version,
+        has_update: false,
+        no_repo_configured: true,
+        message: 'URL Repositori GitHub belum diatur. Silakan masukkan nama repositori GitHub Anda (misal: username/pos-app).'
+      });
+    }
+
+    const branch = req.query.branch || 'main';
+    const result = await updater.checkGitHubUpdate(repoUrl, branch);
+    return res.json(result);
+  } catch (error) {
+    console.error('Error checking GitHub update:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Apply Update from GitHub (Admin Only)
+app.post('/api/system/apply-update', authenticate, async (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang berwenang menerapkan pembaruan sistem.' });
+  }
+
+  try {
+    let { repo, branch } = req.body || {};
+    if (!repo) {
+      const storeSetting = db.prepare("SELECT value FROM m_settings WHERE key = 'github_repo_url'").get();
+      repo = storeSetting ? storeSetting.value : '';
+    }
+
+    if (!repo) {
+      return res.status(400).json({ success: false, message: 'URL Repositori GitHub tidak ditemukan.' });
+    }
+
+    const result = await updater.applyGitHubUpdate(repo, branch || 'main');
+    return res.json(result);
+  } catch (error) {
+    console.error('Error applying GitHub update:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Gagal menerapkan pembaruan sistem.' });
   }
 });
 

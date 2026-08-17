@@ -1004,6 +1004,82 @@
               </div>
             </div>
           </div>
+
+          <!-- GitHub In-App Updater Section -->
+          <div class="max-w-3xl bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 class="text-lg font-bold font-outfit flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                  <i class="fa-brands fa-github text-xl"></i> Pembaruan Sistem (GitHub In-App Updater)
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">Perbarui source code aplikasi langsung dari GitHub tanpa menghapus database, port, dan pengaturan admin.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-lg font-bold font-mono border border-indigo-200 dark:border-indigo-800" id="current-system-version-badge">
+                  v1.1.0
+                </span>
+              </div>
+            </div>
+
+            <!-- Input Repositori GitHub -->
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Nama / URL Repositori GitHub <span class="text-slate-400 font-normal">(Contoh: <code class="text-indigo-500">username/pos-app</code> atau <code class="text-indigo-500">https://github.com/username/pos-app</code>)</span>
+                </label>
+                <div class="flex gap-2">
+                  <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                      <i class="fa-brands fa-github text-sm"></i>
+                    </span>
+                    <input type="text" id="setting-github-repo-input" placeholder="username/pos-kasir-umkm" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none text-slate-800 dark:text-slate-100 shadow-sm">
+                  </div>
+                  <button type="button" onclick="checkSystemUpdate(true)" id="btn-check-update" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition-transform whitespace-nowrap">
+                    <i class="fa-solid fa-arrows-rotate"></i> <span>Cek Pembaruan</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Status & Kotak Informasi Hasil Cek Update -->
+              <div id="update-status-box" class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-slate-700 dark:text-slate-300" id="update-status-title">
+                    <i class="fa-solid fa-circle-info text-indigo-500 mr-1"></i> Status Pembaruan:
+                  </span>
+                  <span id="update-status-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                    Siap Dicek
+                  </span>
+                </div>
+                
+                <p id="update-status-desc" class="text-xs text-slate-500 dark:text-slate-400">
+                  Klik tombol <strong>"Cek Pembaruan"</strong> untuk memeriksa apakah ada versi yang lebih tinggi di GitHub.
+                </p>
+
+                <!-- Panel Detail Rilis & Changelog (Muncul saat ada versi baru) -->
+                <div id="update-available-details" class="hidden space-y-3 pt-2 border-t border-slate-200 dark:border-slate-700">
+                  <div class="bg-indigo-50/70 dark:bg-indigo-950/40 p-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800/80">
+                    <div class="flex items-center justify-between mb-2">
+                      <strong class="text-xs text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-sparkles text-amber-500"></i> Versi Baru Tersedia: <span id="latest-version-label" class="font-mono bg-indigo-600 text-white px-2 py-0.5 rounded text-[11px]">v1.2.0</span>
+                      </strong>
+                    </div>
+                    <div class="text-[11px] text-slate-600 dark:text-slate-300 font-mono whitespace-pre-wrap max-h-36 overflow-y-auto scrollbar-thin p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700" id="latest-version-changelog">
+                      - Perbaikan bug dan fitur baru
+                    </div>
+                  </div>
+
+                  <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start gap-2.5">
+                    <i class="fa-solid fa-shield-halved text-base mt-0.5 text-emerald-500 shrink-0"></i>
+                    <span><strong>100% Aman & Terlindungi:</strong> File database (<code class="font-mono bg-emerald-100 dark:bg-emerald-900 px-1 py-0.5 rounded text-[10px]">database.db</code>), konfigurasi port (<code class="font-mono bg-emerald-100 dark:bg-emerald-900 px-1 py-0.5 rounded text-[10px]">.env</code>), dan seluruh data toko/kasir Anda <strong>TIDAK AKAN HILANG ATAU DITIMPA</strong> saat pembaruan berlangsung.</span>
+                  </div>
+
+                  <button type="button" onclick="confirmApplyUpdate()" id="btn-apply-update" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform">
+                    <i class="fa-solid fa-cloud-arrow-down text-sm"></i> <span>⚡ UPDATE SEKARANG KE VERSI TERBARU</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- TAB 7: MANAJEMEN USER (ADMIN ONLY) -->
@@ -2887,10 +2963,26 @@
           if (document.getElementById('set-qris-payload')) {
             document.getElementById('set-qris-payload').value = storeSettings.qris_static_payload || '';
           }
+          if (document.getElementById('setting-github-repo-input')) {
+            document.getElementById('setting-github-repo-input').value = storeSettings.github_repo_url || '';
+          }
         }
       } catch (e) {
         console.error("Gagal mengambil pengaturan toko", e);
       }
+
+      // Ambil juga info versi sistem lokal
+      try {
+        const vRes = await fetch(`${API_URL}/api/system/version`);
+        const vJson = await vRes.json();
+        if (vJson.success && vJson.data) {
+          const badge = document.getElementById('current-system-version-badge');
+          if (badge) badge.textContent = `v${vJson.data.version}`;
+          if (vJson.data.github_repo && document.getElementById('setting-github-repo-input') && !document.getElementById('setting-github-repo-input').value) {
+            document.getElementById('setting-github-repo-input').value = vJson.data.github_repo;
+          }
+        }
+      } catch (e) {}
     }
 
     async function handleQrisImageUpload(event) {
@@ -2956,16 +3048,17 @@
       const store_address = document.getElementById('set-store-address').value.trim();
       const receipt_footer = document.getElementById('set-receipt-footer').value.trim();
       const qris_static_payload = document.getElementById('set-qris-payload')?.value.trim() || '';
+      const github_repo_url = document.getElementById('setting-github-repo-input')?.value.trim() || '';
 
       try {
         const res = await fetchAPI('/api/settings', {
           method: 'POST',
-          body: JSON.stringify({ store_name, store_phone, store_address, receipt_footer, qris_static_payload })
+          body: JSON.stringify({ store_name, store_phone, store_address, receipt_footer, qris_static_payload, github_repo_url })
         });
         const json = await res.json();
         if (json.success) {
           playBeep('success');
-          alert("Pengaturan Toko berhasil disimpan!");
+          alert("Pengaturan Toko & Repositori GitHub berhasil disimpan!");
           fetchSettings(); // Tarik pengaturan baru ke memori frontend
         } else {
           playBeep('error');
@@ -2974,6 +3067,155 @@
       } catch (error) {
         playBeep('error');
         alert(error.message);
+      }
+    }
+
+    // ==========================================
+    // GITHUB IN-APP UPDATER HANDLERS
+    // ==========================================
+    let cachedLatestUpdateInfo = null;
+
+    async function checkSystemUpdate(manual = true) {
+      const btn = document.getElementById('btn-check-update');
+      const statusTitle = document.getElementById('update-status-title');
+      const statusBadge = document.getElementById('update-status-badge');
+      const statusDesc = document.getElementById('update-status-desc');
+      const detailsBox = document.getElementById('update-available-details');
+      const repoInput = document.getElementById('setting-github-repo-input');
+      const repoVal = repoInput ? repoInput.value.trim() : '';
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Memeriksa...</span>';
+      }
+      if (statusBadge) {
+        statusBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 animate-pulse';
+        statusBadge.textContent = 'Memeriksa GitHub...';
+      }
+
+      try {
+        const queryParam = repoVal ? `?repo=${encodeURIComponent(repoVal)}` : '';
+        const res = await fetchAPI(`/api/system/check-update${queryParam}`);
+        const json = await res.json();
+
+        if (json.success) {
+          cachedLatestUpdateInfo = json;
+          if (json.has_update) {
+            // Ada versi baru!
+            if (statusBadge) {
+              statusBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+              statusBadge.textContent = `Versi Baru: v${json.latest_version}`;
+            }
+            if (statusDesc) {
+              statusDesc.innerHTML = `Tersedia pembaruan versi <strong>v${json.latest_version}</strong> dari GitHub (Versi Anda saat ini: <strong>v${json.current_version}</strong>).`;
+            }
+            if (document.getElementById('latest-version-label')) {
+              document.getElementById('latest-version-label').textContent = `v${json.latest_version}`;
+            }
+            if (document.getElementById('latest-version-changelog')) {
+              document.getElementById('latest-version-changelog').textContent = json.changelog;
+            }
+            if (detailsBox) detailsBox.classList.remove('hidden');
+            playBeep('beep');
+            if (manual) alert(`Pembaruan Ditemukan! Versi v${json.latest_version} siap diinstal.`);
+          } else {
+            // Sistem sudah up-to-date
+            if (statusBadge) {
+              statusBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+              statusBadge.textContent = `v${json.current_version} (Terbaru)`;
+            }
+            if (statusDesc) {
+              statusDesc.textContent = `Aplikasi Anda sudah menggunakan versi paling mutakhir (v${json.current_version}). Tidak ada pembaruan baru.`;
+            }
+            if (detailsBox) detailsBox.classList.add('hidden');
+            if (manual) alert(`Aplikasi sudah versi terbaru (v${json.current_version}).`);
+          }
+        } else {
+          if (statusBadge) {
+            statusBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300';
+            statusBadge.textContent = 'Gagal Cek';
+          }
+          if (statusDesc) {
+            statusDesc.textContent = json.message || 'Gagal terhubung ke repositori GitHub.';
+          }
+          if (detailsBox) detailsBox.classList.add('hidden');
+          if (manual) alert(json.message || 'Gagal memeriksa pembaruan di GitHub.');
+        }
+      } catch (err) {
+        if (statusBadge) {
+          statusBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300';
+          statusBadge.textContent = 'Error';
+        }
+        if (statusDesc) {
+          statusDesc.textContent = 'Koneksi internet bermasalah atau server tidak dapat dihubungi.';
+        }
+        if (manual) alert('Terjadi kesalahan saat memeriksa update: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> <span>Cek Pembaruan</span>';
+        }
+      }
+    }
+
+    function confirmApplyUpdate() {
+      if (!cachedLatestUpdateInfo || !cachedLatestUpdateInfo.has_update) {
+        alert("Tidak ada pembaruan yang siap diinstal.");
+        return;
+      }
+      const label = document.getElementById('modal-update-target-version');
+      if (label) {
+        label.textContent = `v${cachedLatestUpdateInfo.latest_version}`;
+      }
+      openModal('modal-confirm-update');
+    }
+
+    async function executeSystemUpdate() {
+      const btn = document.getElementById('btn-modal-execute-update');
+      const applyBtn = document.getElementById('btn-apply-update');
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Mengunduh & Memperbarui...</span>';
+      }
+      if (applyBtn) {
+        applyBtn.disabled = true;
+        applyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sedang Memperbarui Kode...</span>';
+      }
+
+      try {
+        const repoVal = document.getElementById('setting-github-repo-input')?.value.trim() || '';
+        const branchVal = cachedLatestUpdateInfo?.branch || 'main';
+
+        const res = await fetchAPI('/api/system/apply-update', {
+          method: 'POST',
+          body: JSON.stringify({ repo: repoVal, branch: branchVal })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          closeModal('modal-confirm-update');
+          playBeep('success');
+          alert(json.message || "Pembaruan berhasil diterapkan! Halaman akan dimuat ulang dengan versi baru.");
+          setTimeout(() => {
+            window.location.reload();
+          }, 800);
+        } else {
+          playBeep('error');
+          alert("Gagal menerapkan update: " + (json.message || json.error));
+        }
+      } catch (err) {
+        playBeep('error');
+        alert("Terjadi kesalahan saat menerapkan update: " + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-bolt"></i> <span>Terapkan Pembaruan</span>';
+        }
+        if (applyBtn) {
+          applyBtn.disabled = false;
+          applyBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down text-sm"></i> <span>⚡ UPDATE SEKARANG KE VERSI TERBARU</span>';
+        }
       }
     }
 

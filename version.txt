@@ -1,0 +1,6 @@
+1.1.0
+- Fitur Backup & Restore Database SQLite Hot-Reload
+- Direct RawBT Android & Bluetooth Thermal Printing (58mm & 80mm)
+- Native Mobile Bottom Navigation Bar (Kasir, Riwayat, Stok, Printer, Menu)
+- Kategori Produk Lengkap UMKM (Loyang & Cetakan, Bahan Kue, Sembako, dll)
+- Standalone Windows 32-bit & 64-bit Ready
