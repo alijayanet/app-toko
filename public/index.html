@@ -259,10 +259,10 @@
       </header>
 
       <!-- Content Area -->
-      <div class="flex-1 overflow-y-auto p-4 md:p-6 relative">
+      <div class="flex-1 overflow-y-auto p-4 md:p-6 pb-48 sm:pb-52 md:pb-6 relative">
 
         <!-- TAB 1: KASIR (POS) -->
-        <section id="tab-kasir" class="tab-content h-full">
+        <section id="tab-kasir" class="tab-content h-full pb-36 lg:pb-0">
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
             
             <!-- Panel Kiri -->
@@ -354,7 +354,7 @@
             </div>
 
             <!-- Panel Kanan -->
-            <div class="lg:col-span-4 flex flex-col gap-6">
+            <div class="lg:col-span-4 flex flex-col gap-6 pb-44 lg:pb-0">
               
               <!-- Tombol Aksi Tambah Barang (Mobile Only, Di Atas Summary Belanja) -->
               <div class="md:hidden grid grid-cols-2 gap-3">
@@ -381,7 +381,7 @@
               </div>
 
               <!-- Form Pembayaran -->
-              <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 mb-16 lg:mb-0">
                 <div>
                   <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Metode Pembayaran</label>
                   <div class="grid grid-cols-3 gap-2">
@@ -474,13 +474,31 @@
                 </div>
 
                 <!-- Tombol Bayar -->
-                <button onclick="processCheckout()" id="btn-process-checkout" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
-                  <i class="fa-solid fa-circle-check"></i> PROSES CHECKOUT (F1)
+                <button onclick="processCheckout()" id="btn-process-checkout" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3.5 px-4 rounded-2xl font-bold tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-transform text-sm sm:text-base">
+                  <i class="fa-solid fa-circle-check text-lg"></i> PROSES CHECKOUT (F1)
                 </button>
               </div>
 
             </div>
 
+          </div>
+
+          <!-- Floating Checkout Bar di Layar HP (Mobile Only) -->
+          <div id="mobile-floating-checkout-bar" style="padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0.85rem));" class="lg:hidden fixed bottom-0 left-0 right-0 px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-30 flex items-center justify-between gap-3 shadow-[0_-8px_30px_rgba(0,0,0,0.15)] transition-transform duration-300">
+            <div class="flex items-center gap-2.5">
+              <button type="button" onclick="toggleMobileCartDrawer()" class="relative p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200" title="Buka Keranjang">
+                <i class="fa-solid fa-cart-shopping text-base text-emerald-500"></i>
+                <span id="mobile-floating-cart-badge" class="absolute -top-1 -right-1 bg-emerald-500 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center">0</span>
+              </button>
+              <div>
+                <span class="text-[10px] text-slate-400 block font-medium">Total Belanja</span>
+                <strong id="mobile-floating-cart-total" class="text-base font-bold font-outfit text-emerald-500 leading-none">Rp 0</strong>
+              </div>
+            </div>
+
+            <button type="button" onclick="handleMobileFloatingCheckoutClick()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition-transform">
+              <span>Proses Bayar (F1)</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
           </div>
         </section>
 
@@ -3080,6 +3098,16 @@
         toggleMobileSidebar();
       }
 
+      // Tampilkan floating checkout bar hanya saat di tab kasir
+      const floatingBar = document.getElementById('mobile-floating-checkout-bar');
+      if (floatingBar) {
+        if (tabName === 'kasir') {
+          floatingBar.classList.remove('hidden');
+        } else {
+          floatingBar.classList.add('hidden');
+        }
+      }
+
       if (tabName === 'kasir') {
         fetchCategories();
         fetchProducts();
@@ -3550,6 +3578,12 @@
         document.getElementById('checkout-qty-count').textContent = '0';
         document.getElementById('mobile-cart-badge').textContent = '0';
         document.getElementById('mobile-cart-total').textContent = 'Rp 0';
+        if (document.getElementById('mobile-floating-cart-badge')) {
+          document.getElementById('mobile-floating-cart-badge').textContent = '0';
+        }
+        if (document.getElementById('mobile-floating-cart-total')) {
+          document.getElementById('mobile-floating-cart-total').textContent = 'Rp 0';
+        }
         const discBadge = document.getElementById('checkout-discount-badge');
         if (discBadge) discBadge.classList.add('hidden');
         calculateChange();
@@ -3616,6 +3650,12 @@
       document.getElementById('checkout-qty-count').textContent = totalItems;
       document.getElementById('mobile-cart-badge').textContent = totalItems;
       document.getElementById('mobile-cart-total').textContent = formatRupiah(grandTotal);
+      if (document.getElementById('mobile-floating-cart-badge')) {
+        document.getElementById('mobile-floating-cart-badge').textContent = totalItems;
+      }
+      if (document.getElementById('mobile-floating-cart-total')) {
+        document.getElementById('mobile-floating-cart-total').textContent = formatRupiah(grandTotal);
+      }
       
       calculateChange();
       if (paymentType === 'QRIS') {
@@ -3882,8 +3922,36 @@
     }
 
     function focusPaymentPanel() {
-      const el = document.getElementById('cash-amount-input');
-      if (paymentType === 'CASH') el.focus();
+      const paymentSection = document.getElementById('section-cash-payment') || document.getElementById('btn-process-checkout');
+      if (paymentSection) {
+        paymentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setTimeout(() => {
+        const cashInput = document.getElementById('cash-amount-input');
+        if (paymentType === 'CASH' && cashInput) {
+          cashInput.focus();
+        }
+      }, 300);
+    }
+
+    function handleMobileFloatingCheckoutClick() {
+      if (cart.length === 0) {
+        alert("Keranjang belanja masih kosong!");
+        return;
+      }
+      
+      const cashInput = document.getElementById('cash-amount-input');
+      const cashVal = parseFloat(cashInput?.value || 0);
+      const totalText = document.getElementById('checkout-total')?.textContent || '0';
+      const totalVal = parseFloat(totalText.replace(/[^0-9]/g, '')) || 0;
+
+      if (paymentType === 'CASH' && (!cashInput?.value || cashVal < totalVal)) {
+        // Jika uang tunai belum diisi / kurang, arahkan ke input tunai & uang pas
+        focusPaymentPanel();
+      } else {
+        // Jika sudah diisi uangnya atau non-tunai (QRIS/Tempo), langsung checkout!
+        processCheckout();
+      }
     }
 
 
