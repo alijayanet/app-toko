@@ -148,9 +148,12 @@
       </div>
       
       <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto scrollbar-thin">
-        <button onclick="switchTab('kasir')" id="nav-kasir" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 bg-emerald-600 text-white shadow-lg shadow-emerald-950/20">
-          <i class="fa-solid fa-receipt text-lg w-5"></i>
-          <span>Kasir (F1/F2)</span>
+        <button onclick="switchTab('kasir')" id="nav-kasir" class="nav-btn w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-200 bg-emerald-600 text-white shadow-lg shadow-emerald-950/20">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-cart-shopping text-lg w-5"></i>
+            <span>Penjualan</span>
+          </div>
+          <span class="text-[10px] bg-emerald-700/90 text-emerald-100 px-1.5 py-0.5 rounded font-mono font-bold" title="Shortcut F1: Fokus Kolom Barcode / F2: Modal Bayar">F1</span>
         </button>
         <button onclick="switchTab('history')" id="nav-history" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200">
           <i class="fa-solid fa-clock-rotate-left text-lg w-5"></i>
@@ -384,8 +387,8 @@
               </div>
             </div>
 
-            <!-- Panel Kanan -->
-            <div class="lg:col-span-4 flex flex-col gap-6 pb-6">
+            <!-- Panel Kanan (Sticky Desktop, Fast Zero-Scroll Checkout) -->
+            <div class="lg:col-span-4 flex flex-col gap-3.5 pb-6 lg:sticky lg:top-2 lg:self-start">
               
               <!-- Tombol Aksi Tambah Barang (Mobile Only, Di Atas Summary Belanja) -->
               <div class="md:hidden grid grid-cols-3 gap-2">
@@ -400,16 +403,18 @@
                 </button>
               </div>
 
-              <!-- Total Ringkasan -->
-              <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-xl flex flex-col justify-between min-h-[140px] relative overflow-hidden">
+              <!-- Total Ringkasan (Compact & Punchy) -->
+              <div class="bg-slate-900 text-white p-4 sm:p-5 rounded-2xl shadow-xl flex flex-col justify-between relative overflow-hidden">
                 <div class="absolute -right-10 -top-10 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl"></div>
                 <div class="flex justify-between items-center">
-                  <p class="text-xs text-emerald-400 font-semibold tracking-widest uppercase">TOTAL BELANJA</p>
-                  <span id="checkout-discount-badge" class="text-[11px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full hidden">Diskon: <strong id="checkout-discount-label">Rp 0</strong></span>
+                  <p class="text-[11px] text-emerald-400 font-bold tracking-widest uppercase flex items-center gap-1.5">
+                    <i class="fa-solid fa-receipt"></i> TOTAL BELANJA
+                  </p>
+                  <span id="checkout-discount-badge" class="text-[11px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold hidden">Diskon: <strong id="checkout-discount-label">Rp 0</strong></span>
                 </div>
-                <h1 id="checkout-total" class="font-outfit font-bold text-4xl tracking-tight mt-2 text-emerald-400">Rp 0</h1>
-                <div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-800 text-xs text-slate-400">
-                  <span>Jumlah Item: <strong id="checkout-qty-count" class="text-white">0</strong></span>
+                <h1 id="checkout-total" class="font-outfit font-bold text-3xl sm:text-4xl tracking-tight my-1 text-emerald-400">Rp 0</h1>
+                <div class="flex justify-between items-center pt-2.5 border-t border-slate-800 text-xs text-slate-400">
+                  <span>Item: <strong id="checkout-qty-count" class="text-white font-bold">0</strong></span>
                   <span id="checkout-change-container">Kembalian: <strong id="checkout-change-preview" class="text-emerald-400 font-bold">Rp 0</strong></span>
                 </div>
               </div>
@@ -419,72 +424,73 @@
                 <i class="fa-solid fa-circle-check text-base"></i> Isi Pembayaran & Checkout <i class="fa-solid fa-arrow-down text-xs"></i>
               </button>
 
-              <!-- Form Pembayaran -->
-              <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <!-- Form Pembayaran (Zero-Scroll Compact Layout) -->
+              <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <!-- Metode Pembayaran -->
                 <div>
-                  <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Metode Pembayaran</label>
-                  <div class="grid grid-cols-3 gap-2">
-                    <button onclick="setPaymentType('CASH')" id="btn-pay-cash" class="py-2.5 rounded-xl font-medium border-2 border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1.5 text-xs">
+                  <div class="grid grid-cols-3 gap-1.5">
+                    <button onclick="setPaymentType('CASH')" id="btn-pay-cash" class="py-2 rounded-xl font-bold border-2 border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1.5 text-xs transition-all shadow-xs">
                       <i class="fa-solid fa-money-bill-wave"></i> Tunai
                     </button>
-                    <button onclick="setPaymentType('QRIS')" id="btn-pay-qris" class="py-2.5 rounded-xl font-medium border border-slate-200 dark:border-slate-700 hover:border-violet-500 text-slate-600 dark:text-slate-400 flex items-center justify-center gap-1.5 text-xs">
+                    <button onclick="setPaymentType('QRIS')" id="btn-pay-qris" class="py-2 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:border-violet-500 text-slate-600 dark:text-slate-400 flex items-center justify-center gap-1.5 text-xs transition-all">
                       <i class="fa-solid fa-qrcode text-violet-500"></i> QRIS
                     </button>
-                    <button onclick="setPaymentType('CREDIT')" id="btn-pay-credit" class="py-2.5 rounded-xl font-medium border border-slate-200 dark:border-slate-700 hover:border-indigo-500 text-slate-600 dark:text-slate-400 flex items-center justify-center gap-1.5 text-xs">
+                    <button onclick="setPaymentType('CREDIT')" id="btn-pay-credit" class="py-2 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:border-indigo-500 text-slate-600 dark:text-slate-400 flex items-center justify-center gap-1.5 text-xs transition-all">
                       <i class="fa-solid fa-calendar-days text-indigo-500"></i> Tempo
                     </button>
                   </div>
                 </div>
 
-                <!-- Diskon Transaksi -->
-                <div>
-                  <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Diskon / Potongan Transaksi (Rp)</label>
-                  <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-xs text-slate-400 font-bold">Rp</span>
-                    <input type="number" id="discount-amount-input" oninput="updateCartUI()" value="0" min="0" placeholder="0" class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
+                <!-- Input Tunai (Dengan Tombol Enter Auto-Checkout) -->
+                <div id="section-cash-payment" class="space-y-2.5">
+                  <div>
+                    <div class="flex justify-between items-center mb-1">
+                      <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Uang Bayar Tunai (Cash)</label>
+                      <span class="text-[10px] text-slate-400 font-mono">Tekan <b>Enter ↵</b> untuk bayar</span>
+                    </div>
+                    <input type="number" id="cash-amount-input" oninput="calculateChange()" onkeydown="if(event.key==='Enter'){event.preventDefault();processCheckout();}" placeholder="Masukkan nominal uang tunai..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-base sm:text-lg font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-slate-800 dark:text-slate-100 shadow-xs">
+                  </div>
+                  <!-- Smart Quick Cash Buttons -->
+                  <div class="grid grid-cols-3 gap-1.5">
+                    <button type="button" onclick="setQuickCash(0)" class="py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs">Uang Pas</button>
+                    <button type="button" onclick="setQuickCash(10000)" class="py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">10.000</button>
+                    <button type="button" onclick="setQuickCash(20000)" class="py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">20.000</button>
+                    <button type="button" onclick="setQuickCash(50000)" class="py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">50.000</button>
+                    <button type="button" onclick="setQuickCash(100000)" class="py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">100.000</button>
+                    <button type="button" onclick="setQuickCash(200000)" class="py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">200.000</button>
                   </div>
                 </div>
 
-                <!-- Input Tunai -->
-                <div id="section-cash-payment" class="space-y-3">
-                  <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Nominal Uang Bayar (Cash)</label>
-                    <input type="number" id="cash-amount-input" oninput="calculateChange()" placeholder="Masukkan uang tunai..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                  </div>
-                  <!-- Smart Quick Cash Buttons -->
-                  <div class="grid grid-cols-3 gap-2">
-                    <button type="button" onclick="setQuickCash(0)" class="py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow">Uang Pas</button>
-                    <button type="button" onclick="setQuickCash(10000)" class="py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">10.000</button>
-                    <button type="button" onclick="setQuickCash(20000)" class="py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">20.000</button>
-                    <button type="button" onclick="setQuickCash(50000)" class="py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">50.000</button>
-                    <button type="button" onclick="setQuickCash(100000)" class="py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">100.000</button>
-                    <button type="button" onclick="setQuickCash(200000)" class="py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">200.000</button>
+                <!-- Diskon Transaksi (Collapsible / Compact) -->
+                <div class="pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <div class="flex items-center justify-between gap-2">
+                    <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Potongan Diskon (Rp):</label>
+                    <div class="relative w-36">
+                      <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-[11px] text-slate-400 font-bold">Rp</span>
+                      <input type="number" id="discount-amount-input" oninput="updateCartUI()" value="0" min="0" placeholder="0" class="w-full pl-8 pr-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono text-slate-800 dark:text-slate-100">
+                    </div>
                   </div>
                 </div>
 
                 <!-- Section Pembayaran QRIS Dinamis -->
-                <div id="section-qris-payment" class="space-y-3 hidden">
-                  <div class="bg-gradient-to-br from-violet-900/40 to-slate-900 border border-violet-500/30 rounded-2xl p-4 text-center space-y-3">
-                    <div class="flex items-center justify-between border-b border-violet-500/20 pb-2">
-                      <span class="text-[11px] font-mono text-violet-400 font-bold uppercase tracking-wider"><i class="fa-solid fa-qrcode"></i> QRIS DINAMIS</span>
-                      <span id="qris-merchant-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 font-semibold truncate max-w-[140px]">ALIJAYA</span>
+                <div id="section-qris-payment" class="space-y-2.5 hidden">
+                  <div class="bg-gradient-to-br from-violet-900/40 to-slate-900 border border-violet-500/30 rounded-2xl p-3 text-center space-y-2">
+                    <div class="flex items-center justify-between border-b border-violet-500/20 pb-1.5">
+                      <span class="text-[10px] font-mono text-violet-400 font-bold uppercase tracking-wider"><i class="fa-solid fa-qrcode"></i> QRIS DINAMIS</span>
+                      <span id="qris-merchant-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 font-semibold truncate max-w-[140px]">ALIJAYA</span>
                     </div>
 
                     <!-- QR Code Container -->
-                    <div class="flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-inner mx-auto w-fit">
-                      <div id="qris-canvas-wrapper" class="flex items-center justify-center min-w-[170px] min-h-[170px]">
+                    <div class="flex flex-col items-center justify-center p-2.5 bg-white rounded-xl shadow-inner mx-auto w-fit">
+                      <div id="qris-canvas-wrapper" class="flex items-center justify-center min-w-[150px] min-h-[150px]">
                         <!-- Dynamic QR Code rendered here -->
                       </div>
                     </div>
 
                     <div>
-                      <span class="text-[11px] text-slate-400 block">Total Pembayaran QRIS:</span>
-                      <strong id="qris-total-amount-label" class="text-xl font-bold font-outfit text-emerald-400">Rp 0</strong>
+                      <span class="text-[10px] text-slate-400 block">Total Pembayaran QRIS:</span>
+                      <strong id="qris-total-amount-label" class="text-lg font-bold font-outfit text-emerald-400">Rp 0</strong>
                     </div>
-
-                    <p class="text-[10px] text-slate-400 leading-tight">
-                      Mendukung BCA, Mandiri, BRI, BNI, GoPay, OVO, DANA, ShopeePay, LinkAja, & semua E-Wallet QRIS.
-                    </p>
 
                     <button type="button" onclick="openQrisCustomerModal()" class="w-full bg-violet-600 hover:bg-violet-700 text-white py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shadow">
                       <i class="fa-solid fa-expand"></i> Tampilkan Layar Penuh ke Pembeli
@@ -493,28 +499,28 @@
                 </div>
 
                 <!-- Input Tempo -->
-                <div id="section-credit-payment" class="space-y-3 hidden">
+                <div id="section-credit-payment" class="space-y-2.5 hidden">
                   <div>
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Pilih Pelanggan <span class="text-rose-500">*</span></label>
-                    <select id="customer-select" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <select id="customer-select" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 text-xs">
                       <!-- Dinamis -->
                     </select>
                   </div>
-                  <div class="grid grid-cols-2 gap-3">
+                  <div class="grid grid-cols-2 gap-2">
                     <div>
                       <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Uang Muka (DP)</label>
-                      <input type="number" id="credit-dp-input" oninput="calculateChange()" value="0" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                      <input type="number" id="credit-dp-input" oninput="calculateChange()" value="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono">
                     </div>
                     <div>
                       <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Jatuh Tempo</label>
-                      <input type="date" id="credit-due-date" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                      <input type="date" id="credit-due-date" class="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs">
                     </div>
                   </div>
                 </div>
 
-                <!-- Tombol Bayar -->
-                <button onclick="processCheckout()" id="btn-process-checkout" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3.5 px-4 rounded-xl font-bold tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform text-sm sm:text-base">
-                  <i class="fa-solid fa-circle-check text-lg"></i> PROSES CHECKOUT (F1)
+                <!-- Tombol Bayar / Checkout Utama -->
+                <button onclick="processCheckout()" id="btn-process-checkout" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3 px-4 rounded-xl font-bold tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform text-sm sm:text-base cursor-pointer">
+                  <i class="fa-solid fa-circle-check text-lg"></i> <span>PROSES CHECKOUT (F2 / Enter)</span>
                 </button>
               </div>
 
@@ -919,192 +925,294 @@
 
         <!-- TAB 6: SETTINGS (ADMIN ONLY) -->
         <section id="tab-settings" class="tab-content hidden space-y-6">
-          <div class="max-w-2xl bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <h2 class="text-2xl font-bold font-outfit mb-2 flex items-center gap-2"><i class="fa-solid fa-gears text-emerald-500"></i> Pengaturan Toko Dinamis</h2>
-            <p class="text-xs text-slate-400 mb-6">Ubah data toko yang akan tercetak di bagian Header dan Footer struk belanja thermal kasir.</p>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div>
+              <h2 class="text-2xl font-bold font-outfit flex items-center gap-2">
+                <i class="fa-solid fa-gears text-emerald-500"></i> Pengaturan Toko & Konfigurasi Sistem
+              </h2>
+              <p class="text-xs text-slate-400 mt-0.5">Kelola profil toko, pembayaran QRIS, struk WhatsApp, printer thermal bluetooth, pencadangan database, dan pembaruan sistem.</p>
+            </div>
+          </div>
 
-            <form onsubmit="handleSettingsUpdateSubmit(event)" class="space-y-4">
-              <div>
-                <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Toko <span class="text-rose-500">*</span></label>
-                <input type="text" id="set-store-name" required class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
-              </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-500 mb-1">No Telepon Toko</label>
-                  <input type="text" id="set-store-phone" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
+          <!-- 2-Column Responsive Grid (1-Col on Mobile, 2-Col on PC / Desktop) -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <!-- ============================================== -->
+            <!-- KOLOM KIRI: Profil Toko, QRIS, & WhatsApp      -->
+            <!-- ============================================== -->
+            <div class="space-y-6">
+              <!-- Card 1: Profil Toko & QRIS Dinamis -->
+              <div class="w-full bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <h3 class="text-lg font-bold font-outfit flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                    <i class="fa-solid fa-store text-xl"></i> Profil Toko & Struk Kasir
+                  </h3>
+                  <p class="text-xs text-slate-400 mt-0.5">Ubah data identitas toko yang akan tercetak di bagian Header dan Footer struk belanja thermal kasir.</p>
                 </div>
-                <div>
-                  <label class="block text-xs font-semibold text-slate-500 mb-1">Alamat Toko</label>
-                  <input type="text" id="set-store-address" class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm">
-                </div>
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-500 mb-1">Keterangan Catatan Kaki (Receipt Footer)</label>
-                <textarea id="set-receipt-footer" rows="2" placeholder="Masukkan keterangan terima kasih atau info retur barang..." class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-sm"></textarea>
-              </div>
 
-              <!-- Pengaturan QRIS Statis Toko (Dengan Fitur Upload Gambar) -->
-              <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <label class="block text-xs font-semibold text-violet-600 dark:text-violet-400 flex items-center gap-1.5">
-                    <i class="fa-solid fa-qrcode text-sm"></i> Payload QRIS Statis Merchant Toko
-                  </label>
-                  
-                  <!-- Tombol Upload Gambar QRIS -->
+                <form onsubmit="handleSettingsUpdateSubmit(event)" class="space-y-4">
                   <div>
-                    <input type="file" id="qris-image-file-input" accept="image/*" onchange="handleQrisImageUpload(event)" class="hidden">
-                    <button type="button" onclick="document.getElementById('qris-image-file-input').click()" class="bg-violet-600 hover:bg-violet-700 active:scale-95 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-transform">
-                      <i class="fa-solid fa-cloud-arrow-up"></i> <span>Upload Gambar/Foto QRIS</span>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Toko <span class="text-rose-500">*</span></label>
+                    <input type="text" id="set-store-name" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-medium text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500">
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">No Telepon Toko</label>
+                      <input type="text" id="set-store-phone" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-medium text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Alamat Toko</label>
+                      <input type="text" id="set-store-address" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-medium text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Keterangan Catatan Kaki (Receipt Footer)</label>
+                    <textarea id="set-receipt-footer" rows="2" placeholder="Masukkan keterangan terima kasih atau info retur barang..." class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"></textarea>
+                  </div>
+
+                  <!-- Pengaturan QRIS Statis Toko (Dengan Fitur Upload Gambar) -->
+                  <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <label class="block text-xs font-semibold text-violet-600 dark:text-violet-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-qrcode text-sm"></i> Payload QRIS Statis Merchant Toko
+                      </label>
+                      
+                      <!-- Tombol Upload Gambar QRIS -->
+                      <div>
+                        <input type="file" id="qris-image-file-input" accept="image/*" onchange="handleQrisImageUpload(event)" class="hidden">
+                        <button type="button" onclick="document.getElementById('qris-image-file-input').click()" class="bg-violet-600 hover:bg-violet-700 active:scale-95 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-transform">
+                          <i class="fa-solid fa-cloud-arrow-up"></i> <span>Upload Foto QRIS</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Status Feedback Upload Gambar QRIS -->
+                    <div id="qris-upload-status" class="hidden text-xs"></div>
+
+                    <textarea id="set-qris-payload" rows="2" placeholder="00020101021126570011ID.DANA.WWW..." class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-mono text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-violet-500"></textarea>
+                    <p class="text-[10px] text-slate-400">
+                      <i class="fa-solid fa-circle-info text-violet-400"></i> Sistem akan otomatis mengonversi kode ini menjadi <strong>QRIS Dinamis</strong> sesuai total belanjaan kasir.
+                    </p>
+                  </div>
+
+                  <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2.5 rounded-xl font-bold text-xs shadow-md transition-transform flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> <span>SIMPAN PENGATURAN TOKO</span>
+                  </button>
+                </form>
+              </div>
+
+              <!-- Card 2: Pengaturan Struk Digital WhatsApp -->
+              <div class="w-full bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <h3 class="text-lg font-bold font-outfit flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                    <i class="fa-brands fa-whatsapp text-xl"></i> Pengaturan Struk Digital WhatsApp
+                  </h3>
+                  <p class="text-xs text-slate-400 mt-0.5">Atur metode pengiriman bukti transaksi via WhatsApp (Gratis Direct wa.me atau API Gateway).</p>
+                </div>
+
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Metode Pengiriman:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer hover:border-emerald-500 transition-colors">
+                        <input type="radio" name="set-wa-gateway-type" value="direct" checked onchange="toggleWaGatewayInputs()" class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
+                        <div>
+                          <strong class="text-xs text-slate-800 dark:text-slate-100 block">Direct wa.me (100% Gratis) ⭐</strong>
+                          <p class="text-[11px] text-slate-400">Membuka aplikasi WhatsApp / WhatsApp Web dengan rincian struk otomatis terisi.</p>
+                        </div>
+                      </label>
+
+                      <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer hover:border-emerald-500 transition-colors">
+                        <input type="radio" name="set-wa-gateway-type" value="fonnte" onchange="toggleWaGatewayInputs()" class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
+                        <div>
+                          <strong class="text-xs text-slate-800 dark:text-slate-100 block">Fonnte / API Gateway</strong>
+                          <p class="text-[11px] text-slate-400">Kirim otomatis di background menggunakan akun & token API Fonnte Anda.</p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Input Token API (Opsional) -->
+                  <div id="wa-gateway-api-fields" class="hidden p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        API Token / Authorization Token
+                      </label>
+                      <input type="text" id="set-wa-gateway-token" placeholder="Masukkan token API Fonnte / Gateway..." class="w-full px-3 py-2 border rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-mono">
+                    </div>
+                  </div>
+
+                  <!-- Webhook URL Box with 1-Click Copy Button -->
+                  <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                      <label class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-link text-indigo-500"></i> URL Webhook Gateway:
+                      </label>
+                      <span class="text-[10px] text-slate-400 font-mono">Untuk Fonnte / Wablas</span>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                      <div class="relative flex-1">
+                        <input type="text" id="wa-webhook-url-display" readonly class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold focus:outline-none select-all shadow-xs" value="http://localhost:3000/api/whatsapp/webhook">
+                      </div>
+                      <button type="button" onclick="copyWaWebhookUrl()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm whitespace-nowrap">
+                        <i class="fa-regular fa-copy"></i> <span>Salin</span>
+                      </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400">
+                      Tempelkan URL ini ke dashboard WhatsApp Gateway Anda untuk menerima laporan status pengiriman (DLR).
+                    </p>
+                  </div>
+
+                  <div class="pt-1">
+                    <button type="button" onclick="testSendWhatsAppFromSettings()" class="w-full sm:w-auto px-4 py-2.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs">
+                      <i class="fa-solid fa-paper-plane"></i> <span>Tes Kirim Struk Demo ke WhatsApp Saya</span>
                     </button>
                   </div>
                 </div>
-
-                <!-- Status Feedback Upload Gambar QRIS -->
-                <div id="qris-upload-status" class="hidden text-xs"></div>
-
-                <textarea id="set-qris-payload" rows="3" placeholder="00020101021126570011ID.DANA.WWW..." class="w-full px-3 py-2 border rounded-xl bg-white dark:bg-slate-800 text-xs font-mono"></textarea>
-                <p class="text-[11px] text-slate-400">
-                  <i class="fa-solid fa-circle-info text-violet-400"></i> Anda bisa <b>mengunggah gambar/foto/screenshot QRIS toko Anda</b> di atas, atau menempelkan string teks QRIS secara manual. Sistem akan otomatis mengonversi kode ini menjadi <strong>QRIS Dinamis</strong> sesuai total belanjaan kasir.
-                </p>
-              </div>
-
-              <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-sm">SIMPAN PENGATURAN TOKO</button>
-            </form>
-          </div>
-
-          <!-- Bluetooth Thermal Printer Section -->
-          <div class="max-w-2xl bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-            <h3 class="text-lg font-bold font-outfit flex items-center gap-2 text-indigo-500">
-              <i class="fa-brands fa-bluetooth-b text-indigo-500"></i> Printer Thermal Bluetooth (HP Android & Tablet)
-            </h3>
-            <p class="text-xs text-slate-400">Hubungkan HP / Tablet kasir Anda langsung ke printer thermal portabel (58mm/80mm) via Bluetooth tanpa perlu kabel.</p>
-            
-            <div class="pt-2 flex flex-wrap items-center gap-3">
-              <button type="button" onclick="testBluetoothPrinter()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-md transition-transform">
-                <i class="fa-solid fa-print"></i> <span>Sambungkan & Tes Cetak Bluetooth</span>
-              </button>
-              <button type="button" onclick="disconnectBluetoothPrinter()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-xl font-medium text-xs flex items-center gap-1.5 transition">
-                <i class="fa-solid fa-link-slash"></i> <span>Putus Koneksi</span>
-              </button>
-            </div>
-
-            <div id="bt-printer-status" class="text-xs font-mono text-slate-500 dark:text-slate-400 pt-1">
-              Status: <span id="bt-printer-name-label" class="font-bold text-slate-700 dark:text-slate-200">Belum terhubung</span>
-            </div>
-          </div>
-
-          <!-- Backup & Restore Database Section -->
-          <div class="max-w-3xl bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
-            <div>
-              <h3 class="text-lg font-bold font-outfit flex items-center gap-2 text-emerald-500">
-                <i class="fa-solid fa-database"></i> Backup & Restore Database
-              </h3>
-              <p class="text-xs text-slate-400 mt-1">Amankan data toko Anda dengan mencadangkan secara rutin atau pulihkan database dari file cadangan sebelumnya.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Kolom 1: Unduh Backup -->
-              <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between space-y-3">
-                <div class="space-y-1">
-                  <div class="font-bold text-xs flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                    <i class="fa-solid fa-cloud-arrow-down text-emerald-500"></i> Unduh Cadangan (Backup)
-                  </div>
-                  <p class="text-[11px] text-slate-400">Unduh salinan berkas database aktif (<code class="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded text-[10px]">database.db</code>) untuk disimpan di Google Drive atau Flashdisk.</p>
-                </div>
-                <button onclick="downloadDatabaseBackup()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-transform">
-                  <i class="fa-solid fa-download"></i> <span>Unduh Database (.db)</span>
-                </button>
-              </div>
-
-              <!-- Kolom 2: Restore Database -->
-              <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between space-y-3">
-                <div class="space-y-1">
-                  <div class="font-bold text-xs flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                    <i class="fa-solid fa-cloud-arrow-up text-amber-500"></i> Pulihkan Data (Restore)
-                  </div>
-                  <p class="text-[11px] text-slate-400">Pilih berkas <code class="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded text-[10px]">.db</code> hasil backup untuk mengembalikan seluruh produk, transaksi, dan stok.</p>
-                </div>
-                <div>
-                  <input type="file" id="db-restore-file-input" accept=".db,application/octet-stream,application/x-sqlite3" class="hidden" onchange="handleDatabaseRestoreFileSelect(event)">
-                  <button onclick="document.getElementById('db-restore-file-input').click()" class="w-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-transform">
-                    <i class="fa-solid fa-rotate-left"></i> <span>Pilih File & Restore (.db)</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- GitHub In-App Updater Section -->
-          <div class="max-w-3xl bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div>
-                <h3 class="text-lg font-bold font-outfit flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
-                  <i class="fa-brands fa-github text-xl"></i> Pembaruan Sistem (GitHub In-App Updater)
-                </h3>
-                <p class="text-xs text-slate-400 mt-0.5">Perbarui source code aplikasi langsung dari GitHub tanpa menghapus database, port, dan pengaturan admin.</p>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-lg font-bold font-mono border border-indigo-200 dark:border-indigo-800" id="current-system-version-badge">
-                  v1.1.0
-                </span>
               </div>
             </div>
 
-            <!-- Input Repositori GitHub -->
-            <div class="space-y-3">
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Nama / URL Repositori GitHub <span class="text-slate-400 font-normal">(Contoh: <code class="text-indigo-500">username/pos-app</code> atau <code class="text-indigo-500">https://github.com/username/pos-app</code>)</span>
-                </label>
-                <div class="flex gap-2">
-                  <div class="relative flex-1">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                      <i class="fa-brands fa-github text-sm"></i>
-                    </span>
-                    <input type="text" id="setting-github-repo-input" placeholder="alijayanet/app-toko" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none text-slate-800 dark:text-slate-100 shadow-sm">
-                  </div>
-                  <button type="button" onclick="checkSystemUpdate(true)" id="btn-check-update" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition-transform whitespace-nowrap">
-                    <i class="fa-solid fa-arrows-rotate"></i> <span>Cek Pembaruan</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Status & Kotak Informasi Hasil Cek Update -->
-              <div id="update-status-box" class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-semibold text-slate-700 dark:text-slate-300" id="update-status-title">
-                    <i class="fa-solid fa-circle-info text-indigo-500 mr-1"></i> Status Pembaruan:
-                  </span>
-                  <span id="update-status-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                    Siap Dicek
-                  </span>
+            <!-- ============================================== -->
+            <!-- KOLOM KANAN: Perangkat, Database, & Updater    -->
+            <!-- ============================================== -->
+            <div class="space-y-6">
+              <!-- Card 3: Printer Thermal Bluetooth -->
+              <div class="w-full bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <h3 class="text-lg font-bold font-outfit flex items-center gap-2 text-indigo-500">
+                    <i class="fa-brands fa-bluetooth-b text-indigo-500"></i> Printer Thermal Bluetooth
+                  </h3>
+                  <p class="text-xs text-slate-400 mt-0.5">Hubungkan HP / Tablet kasir Anda langsung ke printer thermal portabel (58mm/80mm) via Bluetooth tanpa perlu kabel.</p>
                 </div>
                 
-                <p id="update-status-desc" class="text-xs text-slate-500 dark:text-slate-400">
-                  Klik tombol <strong>"Cek Pembaruan"</strong> untuk memeriksa apakah ada versi yang lebih tinggi di GitHub.
-                </p>
-
-                <!-- Panel Detail Rilis & Changelog (Muncul saat ada versi baru) -->
-                <div id="update-available-details" class="hidden space-y-3 pt-2 border-t border-slate-200 dark:border-slate-700">
-                  <div class="bg-indigo-50/70 dark:bg-indigo-950/40 p-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800/80">
-                    <div class="flex items-center justify-between mb-2">
-                      <strong class="text-xs text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
-                        <i class="fa-solid fa-sparkles text-amber-500"></i> Versi Baru Tersedia: <span id="latest-version-label" class="font-mono bg-indigo-600 text-white px-2 py-0.5 rounded text-[11px]">v1.2.0</span>
-                      </strong>
-                    </div>
-                    <div class="text-[11px] text-slate-600 dark:text-slate-300 font-mono whitespace-pre-wrap max-h-36 overflow-y-auto scrollbar-thin p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700" id="latest-version-changelog">
-                      - Perbaikan bug dan fitur baru
-                    </div>
-                  </div>
-
-                  <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start gap-2.5">
-                    <i class="fa-solid fa-shield-halved text-base mt-0.5 text-emerald-500 shrink-0"></i>
-                    <span><strong>100% Aman & Terlindungi:</strong> File database (<code class="font-mono bg-emerald-100 dark:bg-emerald-900 px-1 py-0.5 rounded text-[10px]">database.db</code>), konfigurasi port (<code class="font-mono bg-emerald-100 dark:bg-emerald-900 px-1 py-0.5 rounded text-[10px]">.env</code>), dan seluruh data toko/kasir Anda <strong>TIDAK AKAN HILANG ATAU DITIMPA</strong> saat pembaruan berlangsung.</span>
-                  </div>
-
-                  <button type="button" onclick="confirmApplyUpdate()" id="btn-apply-update" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform">
-                    <i class="fa-solid fa-cloud-arrow-down text-sm"></i> <span>⚡ UPDATE SEKARANG KE VERSI TERBARU</span>
+                <div class="pt-2 flex flex-wrap items-center gap-2.5">
+                  <button type="button" onclick="testBluetoothPrinter()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-transform">
+                    <i class="fa-solid fa-print"></i> <span>Sambungkan & Tes Cetak</span>
                   </button>
+                  <button type="button" onclick="disconnectBluetoothPrinter()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-xl font-medium text-xs flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-link-slash"></i> <span>Putus</span>
+                  </button>
+                </div>
+
+                <div id="bt-printer-status" class="text-xs font-mono text-slate-500 dark:text-slate-400 pt-1">
+                  Status: <span id="bt-printer-name-label" class="font-bold text-slate-700 dark:text-slate-200">Belum terhubung</span>
+                </div>
+              </div>
+
+              <!-- Card 4: Backup & Restore Database -->
+              <div class="w-full bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <h3 class="text-lg font-bold font-outfit flex items-center gap-2 text-emerald-500">
+                    <i class="fa-solid fa-database"></i> Backup & Restore Database
+                  </h3>
+                  <p class="text-xs text-slate-400 mt-0.5">Amankan data toko Anda dengan mencadangkan secara rutin atau pulihkan database dari file cadangan sebelumnya.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <!-- Kolom 1: Unduh Backup -->
+                  <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between space-y-3">
+                    <div class="space-y-1">
+                      <div class="font-bold text-xs flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                        <i class="fa-solid fa-cloud-arrow-down text-emerald-500"></i> Unduh Cadangan
+                      </div>
+                      <p class="text-[11px] text-slate-400">Unduh salinan berkas database aktif (<code class="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded text-[10px]">database.db</code>) untuk disimpan di Google Drive.</p>
+                    </div>
+                    <button onclick="downloadDatabaseBackup()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-transform">
+                      <i class="fa-solid fa-download"></i> <span>Unduh (.db)</span>
+                    </button>
+                  </div>
+
+                  <!-- Kolom 2: Restore Database -->
+                  <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between space-y-3">
+                    <div class="space-y-1">
+                      <div class="font-bold text-xs flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                        <i class="fa-solid fa-cloud-arrow-up text-amber-500"></i> Pulihkan Data
+                      </div>
+                      <p class="text-[11px] text-slate-400">Pilih berkas <code class="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded text-[10px]">.db</code> hasil backup untuk mengembalikan seluruh transaksi.</p>
+                    </div>
+                    <div>
+                      <input type="file" id="db-restore-file-input" accept=".db,application/octet-stream,application/x-sqlite3" class="hidden" onchange="handleDatabaseRestoreFileSelect(event)">
+                      <button onclick="document.getElementById('db-restore-file-input').click()" class="w-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-transform">
+                        <i class="fa-solid fa-rotate-left"></i> <span>Restore (.db)</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 5: Pembaruan Sistem (GitHub In-App Updater) -->
+              <div class="w-full bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div>
+                    <h3 class="text-lg font-bold font-outfit flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                      <i class="fa-brands fa-github text-xl"></i> Pembaruan Sistem
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Perbarui source code aplikasi langsung dari GitHub dengan aman.</p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-lg font-bold font-mono border border-indigo-200 dark:border-indigo-800" id="current-system-version-badge">
+                      v1.1.0
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Input Repositori GitHub -->
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Nama / URL Repositori GitHub
+                    </label>
+                    <div class="flex gap-2">
+                      <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                          <i class="fa-brands fa-github text-sm"></i>
+                        </span>
+                        <input type="text" id="setting-github-repo-input" placeholder="alijayanet/app-toko" class="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none text-slate-800 dark:text-slate-100 shadow-sm rounded-xl">
+                      </div>
+                      <button type="button" onclick="checkSystemUpdate(true)" id="btn-check-update" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition-transform whitespace-nowrap">
+                        <i class="fa-solid fa-arrows-rotate"></i> <span>Cek</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Status & Kotak Informasi Hasil Cek Update -->
+                  <div id="update-status-box" class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-semibold text-slate-700 dark:text-slate-300" id="update-status-title">
+                        <i class="fa-solid fa-circle-info text-indigo-500 mr-1"></i> Status Pembaruan:
+                      </span>
+                      <span id="update-status-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                        Siap Dicek
+                      </span>
+                    </div>
+                    
+                    <p id="update-status-desc" class="text-xs text-slate-500 dark:text-slate-400">
+                      Klik tombol <strong>"Cek"</strong> untuk memeriksa versi terbaru di GitHub.
+                    </p>
+
+                    <!-- Panel Detail Rilis & Changelog (Muncul saat ada versi baru) -->
+                    <div id="update-available-details" class="hidden space-y-3 pt-2 border-t border-slate-200 dark:border-slate-700">
+                      <div class="bg-indigo-50/70 dark:bg-indigo-950/40 p-3 rounded-xl border border-indigo-200 dark:border-indigo-800/80">
+                        <div class="flex items-center justify-between mb-1.5">
+                          <strong class="text-xs text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-sparkles text-amber-500"></i> Versi Baru Tersedia: <span id="latest-version-label" class="font-mono bg-indigo-600 text-white px-2 py-0.5 rounded text-[11px]">v1.2.0</span>
+                          </strong>
+                        </div>
+                        <div class="text-[11px] text-slate-600 dark:text-slate-300 font-mono whitespace-pre-wrap max-h-28 overflow-y-auto scrollbar-thin p-2 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700" id="latest-version-changelog">
+                          - Perbaikan bug dan fitur baru
+                        </div>
+                      </div>
+
+                      <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[10px] text-emerald-800 dark:text-emerald-300 flex items-start gap-2">
+                        <i class="fa-solid fa-shield-halved text-sm mt-0.5 text-emerald-500 shrink-0"></i>
+                        <span><strong>100% Terlindungi:</strong> File database (<code class="font-mono bg-emerald-100 dark:bg-emerald-900 px-1 py-0.2 rounded">database.db</code>) & port (<code class="font-mono bg-emerald-100 dark:bg-emerald-900 px-1 py-0.2 rounded">.env</code>) <strong>TIDAK AKAN DITIMPA</strong>.</span>
+                      </div>
+
+                      <button type="button" onclick="confirmApplyUpdate()" id="btn-apply-update" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform">
+                        <i class="fa-solid fa-cloud-arrow-down text-sm"></i> <span>⚡ UPDATE SEKARANG KE VERSI TERBARU</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1147,13 +1255,13 @@
 
       <!-- NATIVE MOBILE BOTTOM NAVIGATION BAR -->
       <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 z-40 flex items-center justify-around px-1 shadow-[0_-4px_25px_rgba(0,0,0,0.08)]">
-        <!-- 1. Tab Kasir -->
+        <!-- 1. Tab Penjualan -->
         <button type="button" onclick="switchTab('kasir')" id="bnav-kasir" class="mobile-bnav-btn flex-1 py-1 flex flex-col items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold transition-all relative">
           <div class="relative">
-            <i class="fa-solid fa-receipt text-lg"></i>
+            <i class="fa-solid fa-cart-shopping text-lg"></i>
             <span id="mobile-bottom-cart-badge" class="hidden absolute -top-1.5 -right-2.5 bg-rose-500 text-white font-bold text-[9px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
           </div>
-          <span class="text-[10px] tracking-tight">Kasir</span>
+          <span class="text-[10px] tracking-tight">Penjualan</span>
         </button>
 
         <!-- 2. Tab Riwayat Penjualan -->
@@ -1335,6 +1443,61 @@
     </div>
   </div>
 
+  <!-- Modal Kirim Struk WhatsApp (Paperless Receipt) -->
+  <div id="modal-send-wa-receipt" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shadow-xs">
+            <i class="fa-brands fa-whatsapp"></i>
+          </div>
+          <div>
+            <h3 class="font-outfit font-bold text-base text-slate-800 dark:text-slate-100">Kirim Struk WhatsApp</h3>
+            <p class="text-[11px] text-slate-400">Kirim bukti pembayaran langsung ke nomor pembeli</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-send-wa-receipt')" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <!-- Input Nomor WhatsApp -->
+      <div class="space-y-1.5 shrink-0">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+          Nomor WhatsApp Pelanggan <span class="text-rose-500">*</span>
+        </label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-bold font-mono">
+            🇮🇩 +62
+          </span>
+          <input type="tel" id="wa-receipt-phone-input" placeholder="81234567890 (atau 0812...)" class="w-full pl-16 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm">
+        </div>
+        <p class="text-[10px] text-slate-400">Format otomatis disesuaikan (awalan 08 / +62 / 62 tetap terbaca).</p>
+      </div>
+
+      <!-- Preview Teks Struk WhatsApp -->
+      <div class="space-y-1 flex-1 flex flex-col min-h-0">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">Pratinjau Pesan:</span>
+          <button type="button" onclick="copyWhatsAppReceiptText()" class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+            <i class="fa-regular fa-copy"></i> Salin Teks
+          </button>
+        </div>
+        <div id="wa-receipt-text-preview" class="flex-1 p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 font-mono text-[11px] text-slate-700 dark:text-slate-300 overflow-y-auto whitespace-pre-wrap scrollbar-thin max-h-48 select-all">
+          <!-- Dinamis text preview -->
+        </div>
+      </div>
+
+      <!-- Tombol Aksi -->
+      <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2 shrink-0">
+        <button type="button" onclick="closeModal('modal-send-wa-receipt')" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 transition">
+          Tutup
+        </button>
+        <button type="button" onclick="executeSendWhatsAppReceipt()" id="btn-execute-send-wa" class="flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform">
+          <i class="fa-brands fa-whatsapp text-sm"></i> <span>KIRIM KE WHATSAPP</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Pengaturan Printer & Bluetooth (Kasir & Admin) -->
   <div id="modal-printer-settings" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
@@ -1474,13 +1637,16 @@
       </div>
       
       <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-2">
+        <button id="btn-reprint-wa-modal" onclick="openSendWhatsAppReceiptModalFromDetail()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2.5 px-3.5 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm text-xs" title="Kirim Struk ke WhatsApp Pelanggan">
+          <i class="fa-brands fa-whatsapp text-sm"></i> <span>WhatsApp</span>
+        </button>
         <button id="btn-reprint-rawbt-modal" onclick="printCurrentModalRawBT()" class="bg-amber-600 hover:bg-amber-700 active:scale-95 text-white py-2.5 px-3.5 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm text-xs" title="Cetak via RawBT Android">
           <i class="fa-solid fa-bolt"></i> <span>RawBT</span>
         </button>
         <button id="btn-reprint-bt-modal" onclick="printCurrentModalBluetooth()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white py-2.5 px-3.5 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm text-xs" title="Cetak langsung ke Printer Thermal Bluetooth">
           <i class="fa-brands fa-bluetooth-b text-xs"></i> <span>Bluetooth</span>
         </button>
-        <button id="btn-reprint-modal" onclick="printCurrentModalReceipt()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 text-xs">
+        <button id="btn-reprint-modal" onclick="printCurrentModalReceipt()" class="flex-1 bg-slate-700 hover:bg-slate-800 active:scale-95 text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 text-xs">
           <i class="fa-solid fa-print"></i> <span>Browser</span>
         </button>
         <button id="btn-void-modal" onclick="voidCurrentModalSale()" class="admin-only bg-rose-600 hover:bg-rose-700 active:scale-95 text-white px-3.5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 text-xs">
@@ -1492,35 +1658,114 @@
 
   <!-- Modal Tampilan QRIS Pelanggan (Customer Facing Display) -->
   <div id="modal-qris-display" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-violet-500/30">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-5 sm:p-6 shadow-2xl text-center space-y-3.5 border border-violet-500/30">
       <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
         <div class="text-left">
-          <span class="text-[10px] font-mono uppercase tracking-widest text-violet-500 font-bold">PEMBAYARAN QRIS</span>
+          <span class="text-[10px] font-mono uppercase tracking-widest text-violet-500 font-bold">PEMBAYARAN QRIS DINAMIS</span>
           <h3 id="modal-qris-merchant-title" class="font-outfit font-bold text-base text-slate-800 dark:text-slate-100">ALIJAYA</h3>
         </div>
         <button onclick="closeModal('modal-qris-display')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
 
       <!-- QR Box -->
-      <div class="bg-white p-4 rounded-2xl shadow-md border border-slate-200 inline-block mx-auto">
-        <div id="modal-qris-canvas-wrapper" class="flex items-center justify-center min-w-[240px] min-h-[240px]">
+      <div class="bg-white p-3.5 rounded-2xl shadow-md border border-slate-200 inline-block mx-auto">
+        <div id="modal-qris-canvas-wrapper" class="flex items-center justify-center min-w-[220px] min-h-[220px]">
           <!-- Huge QR Code here -->
         </div>
       </div>
 
       <div>
         <span class="text-xs text-slate-400">Total Tagihan Belanja:</span>
-        <h2 id="modal-qris-total-amount" class="text-3xl font-black font-outfit text-emerald-500 mt-0.5">Rp 0</h2>
+        <h2 id="modal-qris-total-amount" class="text-2xl sm:text-3xl font-black font-outfit text-emerald-500 mt-0.5">Rp 0</h2>
       </div>
 
       <div class="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl text-[11px] text-slate-500 dark:text-slate-400">
         Buka aplikasi BCA / Mandiri / BRI / GoPay / DANA / ShopeePay / OVO, lalu scan kode QR di atas.
       </div>
 
-      <div class="pt-2 flex gap-2">
-        <button onclick="closeModal('modal-qris-display')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-emerald-500/20">
-          <i class="fa-solid fa-check"></i> Selesai / Tutup
+      <!-- Action Buttons: Kirim ke WhatsApp & Unduh Gambar -->
+      <div class="space-y-2 pt-1">
+        <button type="button" onclick="openSendQrisWaModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 transition-transform">
+          <i class="fa-brands fa-whatsapp text-base"></i> <span>Kirim Tagihan & Gambar QRIS ke WhatsApp</span>
         </button>
+
+        <div class="flex gap-2">
+          <button type="button" onclick="downloadQrisInvoiceImage()" class="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 text-slate-700 dark:text-slate-300 py-2 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition">
+            <i class="fa-solid fa-download"></i> <span>Unduh (.PNG)</span>
+          </button>
+          <button onclick="closeModal('modal-qris-display')" class="px-4 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 rounded-xl font-semibold text-xs">
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Kirim Tagihan QRIS ke WhatsApp -->
+  <div id="modal-send-qris-wa" class="fixed inset-0 bg-black/75 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto scrollbar-thin border border-slate-200 dark:border-slate-800">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg">
+            <i class="fa-brands fa-whatsapp"></i>
+          </div>
+          <div>
+            <h3 class="font-outfit font-bold text-base text-slate-800 dark:text-slate-100">Kirim Tagihan QRIS via WhatsApp</h3>
+            <p class="text-[11px] text-slate-400">Kirim detail belanja beserta gambar kode QRIS ke pelanggan</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-send-qris-wa')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <!-- Input Nomor WA Pelanggan -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+            Nomor WhatsApp Pelanggan <span class="text-rose-500">*</span>
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-xs font-mono text-slate-400 font-bold">+62</span>
+            <input type="tel" id="qris-wa-phone-input" placeholder="81234567890" class="w-full pl-12 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold font-mono text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Pratinjau Banner Gambar QRIS yang Akan Dikirim -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Pratinjau Gambar Invoice QRIS:</label>
+            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold font-mono">Format PNG</span>
+          </div>
+          <div class="p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center">
+            <img id="qris-wa-image-preview" src="" alt="QRIS Invoice Preview" class="max-h-48 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 object-contain">
+          </div>
+        </div>
+
+        <!-- Pratinjau Teks Rincian Tagihan -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Teks Pesan WhatsApp:</label>
+            <button type="button" onclick="copyQrisWhatsAppText()" class="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center gap-1">
+              <i class="fa-regular fa-copy"></i> Salin Teks
+            </button>
+          </div>
+          <textarea id="qris-wa-text-preview" rows="5" readonly class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-mono text-slate-700 dark:text-slate-300 select-all focus:outline-none leading-relaxed"></textarea>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <button type="button" onclick="executeSendQrisWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform">
+          <i class="fa-brands fa-whatsapp text-sm"></i> <span>Kirim Pesan Tagihan via WhatsApp</span>
+        </button>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="shareOrDownloadQrisImage()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-transform">
+            <i class="fa-solid fa-share-nodes"></i> <span>Bagikan Gambar QRIS</span>
+          </button>
+          <button type="button" onclick="downloadQrisInvoiceImage()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 text-slate-700 dark:text-slate-300 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition">
+            <i class="fa-solid fa-download"></i> <span>Unduh Gambar (.PNG)</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -3079,6 +3324,18 @@
             }
           }
           updateQuickModeUI();
+
+          if (storeSettings.wa_gateway_type) {
+            const r = document.querySelector(`input[name="set-wa-gateway-type"][value="${storeSettings.wa_gateway_type}"]`);
+            if (r) r.checked = true;
+          }
+          if (document.getElementById('set-wa-gateway-token')) {
+            document.getElementById('set-wa-gateway-token').value = storeSettings.wa_gateway_token || '';
+          }
+          if (document.getElementById('wa-webhook-url-display')) {
+            document.getElementById('wa-webhook-url-display').value = window.location.origin + '/api/whatsapp/webhook';
+          }
+          toggleWaGatewayInputs();
         }
       } catch (e) {
         console.error("Gagal mengambil pengaturan toko", e);
@@ -3162,11 +3419,22 @@
       const receipt_footer = document.getElementById('set-receipt-footer').value.trim();
       const qris_static_payload = document.getElementById('set-qris-payload')?.value.trim() || '';
       const github_repo_url = document.getElementById('setting-github-repo-input')?.value.trim() || '';
+      const wa_gateway_type = document.querySelector('input[name="set-wa-gateway-type"]:checked')?.value || 'direct';
+      const wa_gateway_token = document.getElementById('set-wa-gateway-token')?.value.trim() || '';
 
       try {
         const res = await fetchAPI('/api/settings', {
           method: 'POST',
-          body: JSON.stringify({ store_name, store_phone, store_address, receipt_footer, qris_static_payload, github_repo_url })
+          body: JSON.stringify({ 
+            store_name, 
+            store_phone, 
+            store_address, 
+            receipt_footer, 
+            qris_static_payload, 
+            github_repo_url,
+            wa_gateway_type,
+            wa_gateway_token 
+          })
         });
         const json = await res.json();
         if (json.success) {
@@ -3543,16 +3811,71 @@
     }
 
     function setupKeyboardShortcuts() {
+      // Matikan default help browser Windows/Edge/Chrome
+      window.onhelp = function() { return false; };
+
       window.addEventListener('keydown', (e) => {
-        if (!localStorage.getItem('pos_token')) return;
-        if (e.key === 'F1') {
+        // Intersep F1 sebelum browser/OS membuka Microsoft Support
+        if (e.key === 'F1' || e.keyCode === 112) {
           e.preventDefault();
-          processCheckout();
-        } else if (e.key === 'F2') {
-          e.preventDefault();
-          clearCart();
+          e.stopPropagation();
+          
+          if (!localStorage.getItem('pos_token')) return false;
+
+          switchTab('kasir');
+          setTimeout(() => {
+            const barcodeInput = document.getElementById('barcode-input');
+            if (barcodeInput) {
+              barcodeInput.focus();
+              barcodeInput.select();
+            }
+          }, 50);
+          return false;
         }
-      });
+
+        if (!localStorage.getItem('pos_token')) return;
+
+        // F2: Fokus Kolom Bayar Tunai / Panel Pembayaran
+        if (e.key === 'F2' || e.keyCode === 113) {
+          e.preventDefault();
+          e.stopPropagation();
+          switchTab('kasir');
+          focusPaymentPanel();
+          return false;
+        }
+
+        // F3: Cari Katalog Produk
+        if (e.key === 'F3' || e.keyCode === 114) {
+          e.preventDefault();
+          e.stopPropagation();
+          openProductSearchModal();
+          return false;
+        }
+
+        // F4: Tahan Keranjang (Hold Cart)
+        if (e.key === 'F4' || e.keyCode === 115) {
+          e.preventDefault();
+          e.stopPropagation();
+          parkCurrentCart();
+          return false;
+        }
+
+        // F8: Antrean Keranjang Tertahan
+        if (e.key === 'F8' || e.keyCode === 119) {
+          e.preventDefault();
+          e.stopPropagation();
+          openParkedCartsModal();
+          return false;
+        }
+
+        // F9: Kosongkan Keranjang
+        if (e.key === 'F9' || e.keyCode === 120) {
+          e.preventDefault();
+          e.stopPropagation();
+          clearCart();
+          return false;
+        }
+      }, true); // Capture phase agar terintersep sebelum default handler browser
     }
 
 
@@ -4037,6 +4360,7 @@
     });
 
     function addToCart(productData, unitId = null, qty = 1) {
+      if (!productData || !productData.units || productData.units.length === 0) return;
       const baseUnit = productData.units.find(u => u.conversion_factor === 1) || productData.units[0];
       const selectedUnitId = unitId || baseUnit.id;
       
@@ -4055,6 +4379,19 @@
       }
       playBeep('beep');
       updateCartUI();
+    }
+
+    function addToCartByProduct(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod) {
+        console.warn("Produk cepat tidak ditemukan:", productId);
+        return;
+      }
+      const baseUnit = prod.units && prod.units.length > 0 
+        ? (prod.units.find(u => u.conversion_factor === 1) || prod.units[0])
+        : null;
+      const unitId = baseUnit ? baseUnit.id : null;
+      addToCart(prod, unitId, 1);
     }
 
     function updateCartUI() {
@@ -4532,7 +4869,6 @@
         if (json.success) {
           playBeep('success');
           closeModal('modal-qris-display');
-          alert("Transaksi sukses!");
           
           const defaultPrintMode = localStorage.getItem('pos_print_mode') || 'browser';
           if (defaultPrintMode === 'rawbt') {
@@ -4542,6 +4878,22 @@
           } else {
             printReceipt(json.receipt);
           }
+
+          // Simpan data struk transaksi terakhir
+          lastCompletedSaleReceipt = json.receipt;
+
+          // Tawarkan kirim struk WhatsApp jika pelanggan memiliki nomor HP
+          if (json.receipt && json.receipt.customer_phone) {
+            setTimeout(() => {
+              if (confirm(`Transaksi berhasil! Kirim struk belanja ke WhatsApp ${json.receipt.customer_name} (${json.receipt.customer_phone})?`)) {
+                openSendWhatsAppReceiptModal(json.receipt);
+              }
+            }, 600);
+          } else {
+            // Tampilkan notifikasi toast atau konfirmasi
+            alert("Transaksi sukses!");
+          }
+
           cart = [];
           document.getElementById('cash-amount-input').value = '';
           document.getElementById('credit-dp-input').value = '0';
@@ -7054,11 +7406,546 @@
       }).join('');
     }
 
-    function addToCartByProduct(productId) {
-      if (navigator.vibrate) navigator.vibrate(20);
-      const prod = products.find(p => p.id === productId);
-      if (prod) {
-        addToCart(prod);
+    // ==========================================
+    // WHATSAPP PAPERLESS DIGITAL RECEIPT
+    // ==========================================
+    let currentWhatsAppSaleData = null;
+    let lastCompletedSaleReceipt = null;
+
+    function formatWhatsAppReceiptText(sale) {
+      if (!sale) return '';
+      const storeName = (storeSettings && storeSettings.store_name) ? storeSettings.store_name.toUpperCase() : 'KASIRKU';
+      const storeAddr = (storeSettings && storeSettings.store_address) ? storeSettings.store_address : '';
+      const storePhone = (storeSettings && storeSettings.store_phone) ? storeSettings.store_phone : '';
+      const receiptFooter = (storeSettings && storeSettings.receipt_footer) ? storeSettings.receipt_footer : 'Terima kasih telah berbelanja!';
+
+      const saleDate = sale.sale_date ? parseDatabaseDate(sale.sale_date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : new Date().toLocaleString('id-ID');
+      const invoiceNo = sale.invoice_no || '-';
+      const cashierName = sale.cashier_name || 'Kasir';
+      const customerName = sale.customer_name || 'Pelanggan Umum';
+
+      let text = `🧾 *STRUK PEMBAYARAN - ${storeName}*\n`;
+      text += `==================================\n`;
+      text += `No. Nota  : *${invoiceNo}*\n`;
+      text += `Tanggal   : ${saleDate}\n`;
+      text += `Kasir     : ${cashierName}\n`;
+      text += `Pelanggan : ${customerName}\n`;
+      text += `----------------------------------\n`;
+      text += `🛒 *RINCIAN BELANJA:*\n`;
+
+      if (sale.items && sale.items.length > 0) {
+        sale.items.forEach((it, idx) => {
+          const pName = it.product_name || it.name || 'Produk';
+          const uName = it.unit_name || 'Pcs';
+          const qty = it.qty || 1;
+          const price = it.price_used || 0;
+          const sub = it.subtotal || (qty * price);
+          text += `${idx + 1}. *${pName}*\n`;
+          text += `   ${qty} ${uName} x Rp ${formatNumber(price)} = *Rp ${formatNumber(sub)}*\n`;
+        });
+      }
+
+      text += `----------------------------------\n`;
+      if (sale.discount_amount > 0) {
+        const subBeforeDisc = (sale.total_amount || 0) + (sale.discount_amount || 0);
+        text += `Subtotal    : Rp ${formatNumber(subBeforeDisc)}\n`;
+        text += `Diskon      : -Rp ${formatNumber(sale.discount_amount)}\n`;
+      }
+      text += `*TOTAL BAYAR : Rp ${formatNumber(sale.total_amount || 0)}*\n`;
+      text += `Metode      : ${sale.payment_type || 'CASH'}\n`;
+
+      if (sale.payment_type === 'CASH') {
+        text += `Bayar Tunai : Rp ${formatNumber(sale.cash_amount || sale.total_amount || 0)}\n`;
+        text += `Kembalian   : Rp ${formatNumber(sale.change_amount || 0)}\n`;
+      } else if (sale.payment_type === 'QRIS') {
+        text += `Status QRIS : *LUNAS (QRIS)*\n`;
+      } else {
+        text += `Uang Muka   : Rp ${formatNumber(sale.cash_amount || 0)}\n`;
+        text += `Sisa Piutang: Rp ${formatNumber(sale.debt_balance || 0)}\n`;
+      }
+
+      text += `Status      : *${sale.payment_status === 'VOID' ? 'DIBATALKAN (VOID)' : 'LUNAS'}* ${sale.payment_status === 'VOID' ? '❌' : '✅'}\n`;
+      text += `==================================\n`;
+      text += `_${receiptFooter}_\n`;
+      if (storeAddr || storePhone) {
+        text += `_${[storeAddr, storePhone ? 'Telp: ' + storePhone : ''].filter(Boolean).join(' | ')}_\n`;
+      }
+
+      return text;
+    }
+
+    function openSendWhatsAppReceiptModal(saleData) {
+      if (!saleData) return;
+      currentWhatsAppSaleData = saleData;
+
+      const phoneInput = document.getElementById('wa-receipt-phone-input');
+      let targetPhone = saleData.customer_phone || '';
+      
+      if (!targetPhone && saleData.customer_id && typeof customers !== 'undefined') {
+        const cust = customers.find(c => c.id == saleData.customer_id);
+        if (cust && cust.phone) targetPhone = cust.phone;
+      }
+
+      if (phoneInput) {
+        let clean = targetPhone.replace(/\D/g, '');
+        if (clean.startsWith('62')) clean = clean.slice(2);
+        else if (clean.startsWith('0')) clean = clean.slice(1);
+        phoneInput.value = clean;
+      }
+
+      const previewEl = document.getElementById('wa-receipt-text-preview');
+      if (previewEl) {
+        previewEl.textContent = formatWhatsAppReceiptText(saleData);
+      }
+
+      openModal('modal-send-wa-receipt');
+    }
+
+    function openSendWhatsAppReceiptModalFromDetail() {
+      if (currentModalSale) {
+        openSendWhatsAppReceiptModal(currentModalSale);
+      }
+    }
+
+    function openSendWhatsAppReceiptModalFromLastSale() {
+      if (lastCompletedSaleReceipt) {
+        openSendWhatsAppReceiptModal(lastCompletedSaleReceipt);
+      }
+    }
+
+    async function executeSendWhatsAppReceipt() {
+      if (!currentWhatsAppSaleData) {
+        alert("Data transaksi tidak ditemukan.");
+        return;
+      }
+
+      const phoneInput = document.getElementById('wa-receipt-phone-input');
+      let rawPhone = (phoneInput?.value || '').trim();
+
+      if (!rawPhone) {
+        alert("Silakan masukkan nomor WhatsApp pelanggan.");
+        phoneInput?.focus();
+        return;
+      }
+
+      let cleanPhone = rawPhone.replace(/\D/g, '');
+      if (cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.slice(1);
+      else if (!cleanPhone.startsWith('62')) cleanPhone = '62' + cleanPhone;
+
+      const messageText = formatWhatsAppReceiptText(currentWhatsAppSaleData);
+
+      try {
+        const res = await fetchAPI('/api/whatsapp/send', {
+          method: 'POST',
+          body: JSON.stringify({
+            phone: cleanPhone,
+            message: messageText,
+            sale_id: currentWhatsAppSaleData.id
+          })
+        });
+
+        const json = await res.json();
+        if (json.success && json.direct_url) {
+          window.open(json.direct_url, '_blank');
+        } else {
+          const fallbackUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
+          window.open(fallbackUrl, '_blank');
+        }
+        closeModal('modal-send-wa-receipt');
+      } catch (err) {
+        const fallbackUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
+        window.open(fallbackUrl, '_blank');
+        closeModal('modal-send-wa-receipt');
+      }
+    }
+
+    function copyWhatsAppReceiptText() {
+      if (!currentWhatsAppSaleData) return;
+      const text = formatWhatsAppReceiptText(currentWhatsAppSaleData);
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Teks struk berhasil disalin ke clipboard!");
+      }).catch(() => {
+        const preview = document.getElementById('wa-receipt-text-preview');
+        if (preview) {
+          const range = document.createRange();
+          range.selectNode(preview);
+          window.getSelection().removeAllRanges();
+          window.getSelection().addRange(range);
+          document.execCommand('copy');
+          alert("Teks struk berhasil disalin!");
+        }
+      });
+    }
+
+    function toggleWaGatewayInputs() {
+      const type = document.querySelector('input[name="set-wa-gateway-type"]:checked')?.value || 'direct';
+      const apiFields = document.getElementById('wa-gateway-api-fields');
+      if (apiFields) {
+        apiFields.className = (type === 'fonnte') ? 'p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3' : 'hidden';
+      }
+      if (document.getElementById('wa-webhook-url-display')) {
+        document.getElementById('wa-webhook-url-display').value = window.location.origin + '/api/whatsapp/webhook';
+      }
+    }
+
+    function copyWaWebhookUrl() {
+      const webhookUrl = window.location.origin + '/api/whatsapp/webhook';
+      const inputEl = document.getElementById('wa-webhook-url-display');
+      if (inputEl) inputEl.value = webhookUrl;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(webhookUrl).then(() => {
+          playBeep('success');
+          alert("URL Webhook WhatsApp berhasil disalin ke clipboard:\n" + webhookUrl);
+        }).catch(() => {
+          fallbackCopyWebhook(inputEl, webhookUrl);
+        });
+      } else {
+        fallbackCopyWebhook(inputEl, webhookUrl);
+      }
+    }
+
+    function fallbackCopyWebhook(inputEl, url) {
+      if (inputEl) {
+        inputEl.select();
+        document.execCommand('copy');
+      }
+      playBeep('success');
+      alert("URL Webhook WhatsApp berhasil disalin:\n" + url);
+    }
+
+    function testSendWhatsAppFromSettings() {
+      const dummySale = {
+        invoice_no: 'INV-DEMO-001',
+        sale_date: new Date().toISOString(),
+        cashier_name: (currentUser && currentUser.name) ? currentUser.name : 'Admin',
+        customer_name: 'Pelanggan Demo',
+        total_amount: 50000,
+        discount_amount: 0,
+        payment_type: 'CASH',
+        payment_status: 'PAID',
+        cash_amount: 50000,
+        change_amount: 0,
+        items: [
+          { product_name: 'Indomie Goreng 85g', unit_name: 'Pcs', qty: 2, price_used: 3500, subtotal: 7000 },
+          { product_name: 'Minyak Goreng Bimoli 2L', unit_name: 'Pcs', qty: 1, price_used: 38000, subtotal: 38000 }
+        ]
+      };
+      openSendWhatsAppReceiptModal(dummySale);
+    }
+
+    // ==========================================
+    // QRIS INVOICE IMAGE GENERATOR & WHATSAPP SHARING
+    // ==========================================
+
+    function formatQrisWhatsAppMessage() {
+      const storeName = (storeSettings && storeSettings.store_name) ? storeSettings.store_name.toUpperCase() : 'KASIRKU';
+      const storePhone = (storeSettings && storeSettings.store_phone) ? `\n📞 *Kontak Toko:* ${storeSettings.store_phone}` : '';
+      const cashierName = (currentUser && currentUser.name) ? currentUser.name : 'Kasir';
+      const merchant = currentQrisMerchantName || storeSettings.store_name || 'MERCHANT';
+
+      let subtotalAmount = 0;
+      let itemsList = '';
+      cart.forEach((item, idx) => {
+        const u = item.units.find(unit => unit.id === item.unit_id) || item.units[0];
+        const price = (u.wholesale_min_qty > 0 && item.qty >= u.wholesale_min_qty) ? u.price_wholesale : u.price_retail;
+        const sub = item.qty * price;
+        subtotalAmount += sub;
+        itemsList += `${idx + 1}. *${item.product_name}* (${item.qty} ${u.unit_name}) = *Rp ${formatNumber(sub)}*\n`;
+      });
+
+      const discountVal = parseFloat(document.getElementById('discount-amount-input')?.value || 0);
+      const grandTotal = Math.max(0, subtotalAmount - discountVal);
+      const discountText = discountVal > 0 ? `\n🏷️ *Diskon:* -Rp ${formatNumber(discountVal)}` : '';
+
+      return `🧾 *TAGIHAN PEMBAYARAN QRIS DINAMIS*\n` +
+             `🏪 *${storeName}*${storePhone}\n` +
+             `👤 *Kasir:* ${cashierName}\n` +
+             `📅 *Tanggal:* ${new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}\n` +
+             `━━━━━━━━━━━━━━━━━━━━━\n` +
+             `🛒 *RINCIAN BELANJA:*\n${itemsList || '- Tidak ada item -\n'}` +
+             `━━━━━━━━━━━━━━━━━━━━━\n` +
+             `💰 *TOTAL TAGIHAN:* *Rp ${formatNumber(grandTotal)}*${discountText}\n` +
+             `📱 *Metode Bayar:* QRIS Dinamis (${merchant})\n` +
+             `━━━━━━━━━━━━━━━━━━━━━\n` +
+             `📌 *Petunjuk Pembayaran:*\n` +
+             `1. Buka aplikasi M-Banking (BCA, BRI, Mandiri, BNI) atau E-Wallet (GoPay, DANA, OVO, ShopeePay).\n` +
+             `2. Scan kode QRIS yang kami lampirkan.\n` +
+             `3. Pastikan nominal transfer pas: *Rp ${formatNumber(grandTotal)}*.\n` +
+             `4. Tunjukkan bukti pembayaran ke kasir.\n\n` +
+             `_Terima kasih telah berbelanja di ${storeName}!_ 🙏`;
+    }
+
+    function generateQrisInvoiceCanvas() {
+      const canvasWrapper = document.getElementById('modal-qris-canvas-wrapper');
+      const qrCanvas = canvasWrapper ? canvasWrapper.querySelector('canvas') : null;
+      const qrImg = canvasWrapper ? canvasWrapper.querySelector('img') : null;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 540;
+      canvas.height = 700;
+      const ctx = canvas.getContext('2d');
+
+      // White Background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Header Banner (Emerald Style)
+      ctx.fillStyle = '#059669';
+      ctx.fillRect(0, 0, canvas.width, 95);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText((storeSettings.store_name || 'KASIRKU').toUpperCase(), canvas.width / 2, 42);
+
+      ctx.font = 'bold 13px Arial, sans-serif';
+      ctx.fillStyle = '#d1fae5';
+      ctx.fillText('TAGIHAN PEMBAYARAN QRIS DINAMIS', canvas.width / 2, 70);
+
+      // Total Box
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(25, 110, canvas.width - 50, 78);
+      ctx.strokeRect(25, 110, canvas.width - 50, 78);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('TOTAL PEMBAYARAN', canvas.width / 2, 134);
+
+      let subtotalAmount = 0;
+      cart.forEach(item => {
+        const u = item.units.find(unit => unit.id === item.unit_id) || item.units[0];
+        const price = (u.wholesale_min_qty > 0 && item.qty >= u.wholesale_min_qty) ? u.price_wholesale : u.price_retail;
+        subtotalAmount += item.qty * price;
+      });
+      const discountVal = parseFloat(document.getElementById('discount-amount-input')?.value || 0);
+      const grandTotal = Math.max(0, subtotalAmount - discountVal);
+
+      ctx.fillStyle = '#059669';
+      ctx.font = 'bold 28px Arial, sans-serif';
+      ctx.fillText(formatRupiah(grandTotal), canvas.width / 2, 168);
+
+      // Draw QR Code
+      const qrX = (canvas.width - 240) / 2;
+      const qrY = 205;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(qrX - 10, qrY - 10, 260, 260);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.strokeRect(qrX - 10, qrY - 10, 260, 260);
+
+      if (qrCanvas) {
+        ctx.drawImage(qrCanvas, qrX, qrY, 240, 240);
+      } else if (qrImg) {
+        ctx.drawImage(qrImg, qrX, qrY, 240, 240);
+      }
+
+      // QR Instruction
+      ctx.fillStyle = '#334155';
+      ctx.font = 'bold 12px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Scan dengan Mobile Banking / E-Wallet QRIS', canvas.width / 2, 485);
+      ctx.font = '11px Arial, sans-serif';
+      ctx.fillStyle = '#64748b';
+      ctx.fillText('BCA • Mandiri • BRI • BNI • GoPay • OVO • DANA • ShopeePay', canvas.width / 2, 503);
+
+      // Item summary box
+      ctx.fillStyle = '#f1f5f9';
+      ctx.fillRect(25, 520, canvas.width - 50, 115);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.strokeRect(25, 520, canvas.width - 50, 115);
+
+      ctx.fillStyle = '#1e293b';
+      ctx.font = 'bold 12px Arial, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Rincian Belanja (' + cart.length + ' Item):', 40, 542);
+
+      ctx.font = '11px Arial, sans-serif';
+      ctx.fillStyle = '#475569';
+      let lineY = 562;
+      cart.slice(0, 3).forEach(item => {
+        const u = item.units.find(unit => unit.id === item.unit_id) || item.units[0];
+        const price = (u.wholesale_min_qty > 0 && item.qty >= u.wholesale_min_qty) ? u.price_wholesale : u.price_retail;
+        const sub = item.qty * price;
+        const itemText = `${item.product_name} (${item.qty} ${u.unit_name})`;
+        ctx.fillText(itemText.length > 30 ? itemText.substring(0, 28) + '...' : itemText, 40, lineY);
+        ctx.textAlign = 'right';
+        ctx.fillText('Rp ' + formatNumber(sub), canvas.width - 40, lineY);
+        ctx.textAlign = 'left';
+        lineY += 18;
+      });
+      if (cart.length > 3) {
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(`+ ${cart.length - 3} item lainnya...`, 40, lineY);
+      }
+
+      // Footer
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px Arial, sans-serif';
+      ctx.fillText('Terima kasih atas kunjungan Anda!', canvas.width / 2, 665);
+
+      return canvas;
+    }
+
+    function openSendQrisWaModal() {
+      if (cart.length === 0) {
+        alert("Keranjang belanja masih kosong!");
+        return;
+      }
+
+      // Auto populate customer phone if selected in credit or customer select
+      const custSelect = document.getElementById('customer-select');
+      const phoneInput = document.getElementById('qris-wa-phone-input');
+      if (phoneInput) {
+        phoneInput.value = '';
+        if (custSelect && custSelect.value) {
+          const cust = customers.find(c => String(c.id) === String(custSelect.value));
+          if (cust && cust.phone) {
+            let p = cust.phone.replace(/\D/g, '');
+            if (p.startsWith('62')) p = p.slice(2);
+            else if (p.startsWith('0')) p = p.slice(1);
+            phoneInput.value = p;
+          }
+        }
+      }
+
+      // Generate text preview
+      const textPreview = document.getElementById('qris-wa-text-preview');
+      if (textPreview) {
+        textPreview.value = formatQrisWhatsAppMessage();
+      }
+
+      // Generate image preview
+      const canvas = generateQrisInvoiceCanvas();
+      const imgPreview = document.getElementById('qris-wa-image-preview');
+      if (imgPreview && canvas) {
+        imgPreview.src = canvas.toDataURL('image/png');
+      }
+
+      openModal('modal-send-qris-wa');
+    }
+
+    function downloadQrisInvoiceImage() {
+      const canvas = generateQrisInvoiceCanvas();
+      if (!canvas) return;
+
+      const link = document.createElement('a');
+      const storeSlug = (storeSettings.store_name || 'TOKO').replace(/[^a-zA-Z0-9]/g, '_');
+      link.download = `QRIS_${storeSlug}_${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      playBeep('success');
+    }
+
+    async function shareOrDownloadQrisImage() {
+      const canvas = generateQrisInvoiceCanvas();
+      if (!canvas) return;
+
+      const messageText = formatQrisWhatsAppMessage();
+      const storeSlug = (storeSettings.store_name || 'TOKO').replace(/[^a-zA-Z0-9]/g, '_');
+      const filename = `QRIS_${storeSlug}.png`;
+
+      // Check if Web Share API with files is supported (HP Android / iOS)
+      if (navigator.canShare && canvas.toBlob) {
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            downloadQrisInvoiceImage();
+            return;
+          }
+          const file = new File([blob], filename, { type: 'image/png' });
+          if (navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                files: [file],
+                title: 'Tagihan QRIS ' + (storeSettings.store_name || 'Toko'),
+                text: messageText
+              });
+              return;
+            } catch (err) {
+              if (err.name !== 'AbortError') {
+                console.warn('Web Share failed:', err);
+              }
+            }
+          }
+          // Fallback to download
+          downloadQrisInvoiceImage();
+        }, 'image/png');
+      } else {
+        downloadQrisInvoiceImage();
+      }
+    }
+
+    async function executeSendQrisWhatsApp() {
+      const phoneInput = document.getElementById('qris-wa-phone-input');
+      const rawPhone = phoneInput ? phoneInput.value.trim() : '';
+
+      if (!rawPhone) {
+        alert("Silakan masukkan nomor WhatsApp pelanggan terlebih dahulu.");
+        if (phoneInput) phoneInput.focus();
+        return;
+      }
+
+      let cleanPhone = rawPhone.replace(/\D/g, '');
+      if (cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.slice(1);
+      else if (cleanPhone.startsWith('8')) cleanPhone = '62' + cleanPhone;
+
+      if (cleanPhone.length < 9) {
+        alert("Format nomor telepon tidak valid. Masukkan nomor HP yang benar.");
+        return;
+      }
+
+      const messageText = formatQrisWhatsAppMessage();
+      const gatewayType = storeSettings.wa_gateway_type || 'direct';
+
+      if (gatewayType === 'fonnte' && storeSettings.wa_gateway_token) {
+        try {
+          const res = await fetchAPI('/api/whatsapp/send', {
+            method: 'POST',
+            body: JSON.stringify({
+              phone: cleanPhone,
+              message: messageText
+            })
+          });
+          const json = await res.json();
+          if (json.success) {
+            playBeep('success');
+            alert(`Pesan tagihan QRIS berhasil dikirim ke WhatsApp (${cleanPhone})!`);
+            closeModal('modal-send-qris-wa');
+          } else {
+            const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
+            window.open(waUrl, '_blank');
+          }
+        } catch (e) {
+          const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
+          window.open(waUrl, '_blank');
+        }
+      } else {
+        const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
+        window.open(waUrl, '_blank');
+        playBeep('success');
+      }
+    }
+
+    function copyQrisWhatsAppText() {
+      const textPreview = document.getElementById('qris-wa-text-preview');
+      if (!textPreview) return;
+      textPreview.select();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(textPreview.value).then(() => {
+          playBeep('success');
+          alert("Teks rincian tagihan QRIS berhasil disalin!");
+        }).catch(() => {
+          document.execCommand('copy');
+          playBeep('success');
+          alert("Teks rincian tagihan QRIS berhasil disalin!");
+        });
+      } else {
+        document.execCommand('copy');
+        playBeep('success');
+        alert("Teks rincian tagihan QRIS berhasil disalin!");
       }
     }
 

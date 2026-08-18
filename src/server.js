@@ -176,7 +176,7 @@ app.post('/api/settings', authenticate, (req, res) => {
     return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Administrator yang dapat mengubah pengaturan.' });
   }
 
-  const { store_name, store_address, store_phone, receipt_footer, qris_static_payload, github_repo_url, quick_products_mode, quick_products_pinned_ids } = req.body;
+  const { store_name, store_address, store_phone, receipt_footer, qris_static_payload, github_repo_url, quick_products_mode, quick_products_pinned_ids, wa_gateway_type, wa_gateway_token, wa_gateway_url } = req.body;
   if (!store_name) {
     return res.status(400).json({ success: false, message: 'Nama toko wajib diisi.' });
   }
@@ -200,6 +200,15 @@ app.post('/api/settings', authenticate, (req, res) => {
       const pinnedStr = typeof quick_products_pinned_ids === 'string' ? quick_products_pinned_ids : JSON.stringify(quick_products_pinned_ids);
       upsert.run('quick_products_pinned_ids', pinnedStr);
     }
+    if (wa_gateway_type !== undefined) {
+      upsert.run('wa_gateway_type', String(wa_gateway_type).trim());
+    }
+    if (wa_gateway_token !== undefined) {
+      upsert.run('wa_gateway_token', String(wa_gateway_token).trim());
+    }
+    if (wa_gateway_url !== undefined) {
+      upsert.run('wa_gateway_url', String(wa_gateway_url).trim());
+    }
   });
 
   try {
@@ -207,6 +216,97 @@ app.post('/api/settings', authenticate, (req, res) => {
     return res.json({ success: true, message: 'Pengaturan toko berhasil diperbarui.' });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Endpoint Send WhatsApp Receipt (Direct wa.me or API Gateway)
+app.post('/api/whatsapp/send', authenticate, async (req, res) => {
+  try {
+    const { phone, message } = req.body;
+    if (!phone || !message) {
+      return res.status(400).json({ success: false, message: 'Nomor telepon dan pesan WhatsApp wajib diisi.' });
+    }
+
+    // Format nomor HP ke format internasional (628xxx)
+    let cleanPhone = String(phone).replace(/\D/g, '');
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = '62' + cleanPhone.slice(1);
+    } else if (cleanPhone.startsWith('8')) {
+      cleanPhone = '62' + cleanPhone;
+    }
+
+    const settingsRows = db.prepare("SELECT key, value FROM m_settings WHERE key IN ('wa_gateway_type', 'wa_gateway_token', 'wa_gateway_url')").all();
+    const config = {};
+    settingsRows.forEach(r => config[r.key] = r.value);
+
+    const gatewayType = config.wa_gateway_type || 'direct';
+    const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+
+    // Jika menggunakan API Gateway Fonnte
+    if (gatewayType === 'fonnte' && config.wa_gateway_token) {
+      try {
+        const https = require('https');
+        const fonntePayload = { target: cleanPhone, message: message };
+        if (req.body.url) fonntePayload.url = req.body.url;
+        const postData = JSON.stringify(fonntePayload);
+        const options = {
+          hostname: 'api.fonnte.com',
+          port: 443,
+          path: '/send',
+          method: 'POST',
+          headers: {
+            'Authorization': config.wa_gateway_token,
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData)
+          }
+        };
+
+        const apiPromise = new Promise((resolve, reject) => {
+          const apiReq = https.request(options, (apiRes) => {
+            let data = '';
+            apiRes.on('data', chunk => data += chunk);
+            apiRes.on('end', () => resolve(data));
+          });
+          apiReq.on('error', reject);
+          apiReq.write(postData);
+          apiReq.end();
+        });
+
+        await apiPromise;
+        return res.json({
+          success: true,
+          method: 'api',
+          provider: 'fonnte',
+          phone: cleanPhone,
+          direct_url: waLink,
+          message: 'Struk berhasil dikirim via Fonnte Gateway!'
+        });
+      } catch (err) {
+        console.error('Fonnte gateway error, fallback to direct wa.me:', err);
+      }
+    }
+
+    // Default: Direct wa.me
+    return res.json({
+      success: true,
+      method: 'direct',
+      phone: cleanPhone,
+      direct_url: waLink,
+      message: 'Membuka WhatsApp...'
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Endpoint Webhook WhatsApp (Menerima status pengiriman atau balasan dari gateway WhatsApp)
+app.post('/api/whatsapp/webhook', (req, res) => {
+  try {
+    const payload = req.body;
+    console.log('[WhatsApp Webhook Event Received]:', JSON.stringify(payload).slice(0, 200));
+    return res.json({ status: true, message: 'Webhook event received successfully' });
+  } catch (error) {
+    return res.status(500).json({ status: false, error: error.message });
   }
 });
 
