@@ -14,6 +14,29 @@ const HOST = process.env.HOST || '0.0.0.0';
 // Rate Limiting Store (in-memory simple implementation)
 const loginAttempts = new Map(); // { ip: { count, lastAttempt } }
 
+// Cleanup expired sessions every hour
+setInterval(() => {
+  try {
+    const deleted = db.prepare('DELETE FROM t_sessions WHERE expires_at < datetime("now")').run();
+    if (deleted.changes > 0) {
+      console.log(`[Session Cleanup] Removed ${deleted.changes} expired session(s)`);
+    }
+  } catch (err) {
+    console.error('[Session Cleanup] Error:', err.message);
+  }
+}, 60 * 60 * 1000); // Every 1 hour
+
+// Cleanup rate limit map every 30 minutes
+setInterval(() => {
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000;
+  for (const [ip, record] of loginAttempts.entries()) {
+    if (now - record.lastAttempt > windowMs) {
+      loginAttempts.delete(ip);
+    }
+  }
+}, 30 * 60 * 1000); // Every 30 minutes
+
 function checkRateLimit(ip, maxAttempts = 5, windowMs = 15 * 60 * 1000) {
   const now = Date.now();
   const record = loginAttempts.get(ip);
@@ -40,7 +63,32 @@ function resetRateLimit(ip) {
   loginAttempts.delete(ip);
 }
 
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, curl)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost and local network IPs
+    const allowedOrigins = [
+      /^http:\/\/localhost(:\d+)?$/,
+      /^http:\/\/127\.0\.0\.1(:\d+)?$/,
+      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/,
+      /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/
+    ];
+    
+    const isAllowed = allowedOrigins.some(pattern => pattern.test(origin));
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.raw({ type: ['application/octet-stream', 'application/x-sqlite3'], limit: '100mb' }));
 app.use(express.static(path.join(__dirname, '../public')));
@@ -155,7 +203,7 @@ function authenticate(req, res, next) {
 
   try {
     const session = db.prepare(`
-      SELECT s.token, u.id, u.username, u.name, u.role 
+      SELECT s.token, s.expires_at, u.id, u.username, u.name, u.role 
       FROM t_sessions s 
       JOIN m_users u ON s.user_id = u.id 
       WHERE s.token = ?
@@ -163,6 +211,12 @@ function authenticate(req, res, next) {
 
     if (!session) {
       return res.status(401).json({ success: false, message: 'Sesi tidak valid atau telah berakhir.' });
+    }
+    
+    // Check session expiry
+    if (session.expires_at && new Date(session.expires_at) < new Date()) {
+      db.prepare('DELETE FROM t_sessions WHERE token = ?').run(token);
+      return res.status(401).json({ success: false, message: 'Sesi telah kadaluarsa. Silakan login kembali.' });
     }
 
     req.user = {
@@ -245,7 +299,12 @@ app.post('/api/auth/login', (req, res) => {
     }
 
     const token = crypto.randomBytes(32).toString('hex'); // 256-bit token (lebih aman)
-    db.prepare('INSERT INTO t_sessions (token, user_id) VALUES (?, ?)').run(token, user.id);
+    
+    // Session expires in 24 hours (configurable via env)
+    const sessionTimeout = parseInt(process.env.SESSION_TIMEOUT) || 24 * 60 * 60 * 1000; // 24 hours
+    const expiresAt = new Date(Date.now() + sessionTimeout).toISOString();
+    
+    db.prepare('INSERT INTO t_sessions (token, user_id, expires_at) VALUES (?, ?, ?)').run(token, user.id, expiresAt);
 
     // Reset rate limit on successful login
     resetRateLimit(clientIp);
@@ -1883,3 +1942,43 @@ server.on('error', (err) => {
   }
 });
 
+// Graceful Shutdown Handler
+function gracefulShutdown(signal) {
+  console.log(`\n[${signal}] Menerima sinyal shutdown. Menutup server dengan aman...`);
+  
+  server.close(() => {
+    console.log('[Server] HTTP server ditutup');
+    
+    // Close database connection
+    try {
+      db.pragma('wal_checkpoint(TRUNCATE)');
+      db.close();
+      console.log('[Database] Koneksi database ditutup');
+    } catch (err) {
+      console.error('[Database] Error closing:', err.message);
+    }
+    
+    console.log('[Shutdown] Aplikasi ditutup dengan aman');
+    process.exit(0);
+  });
+  
+  // Force shutdown after 10 seconds
+  setTimeout(() => {
+    console.error('[Shutdown] Forced shutdown setelah 10 detik timeout');
+    process.exit(1);
+  }, 10000);
+}
+
+// Handle shutdown signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught errors
+process.on('uncaughtException', (err) => {
+  console.error('[Uncaught Exception]', err);
+  gracefulShutdown('UNCAUGHT_EXCEPTION');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Unhandled Rejection]', reason);
+});

@@ -1,6 +1,6 @@
 {
   "name": "centralized-pos-sqlite",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Centralized POS Application with SQLite, designed for Ubuntu Server & Windows Desktop (.exe)",
   "main": "desktop/main.js",
   "scripts": {
@@ -14,11 +14,13 @@
     "prod:restart": "pm2 restart pos-central",
     "prod:logs": "pm2 logs pos-central",
     "seed": "node src/seed.js",
+    "seed:demo": "node src/seed-with-demo.js",
     "migrate": "node src/migrate.js",
     "db:vacuum": "node -e \"const db=require('./src/db');db.pragma('vacuum');console.log('✅ Database vacuum selesai!')\"",
     "db:optimize": "node -e \"const db=require('./src/db');db.pragma('optimize');console.log('✅ Database optimize selesai!')\"",
     "health": "node -e \"const h=require('http');h.get('http://localhost:3000/health',(r)=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>console.log(JSON.parse(d)))})\"",
-    "test:hash": "node -e \"const c=require('crypto');const p=process.argv[2]||'test123';const s=c.randomBytes(16).toString('hex');const h=c.pbkdf2Sync(p,s,100000,64,'sha512').toString('hex');console.log('Password:',p);console.log('Salt:',s);console.log('Hash:',h);\""
+    "test:hash": "node -e \"const c=require('crypto');const p=process.argv[2]||'test123';const s=c.randomBytes(16).toString('hex');const h=c.pbkdf2Sync(p,s,100000,64,'sha512').toString('hex');console.log('Password:',p);console.log('Salt:',s);console.log('Hash:',h);\"",
+    "test:login": "node test-login.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.1.2",

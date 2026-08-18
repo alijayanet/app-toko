@@ -333,11 +333,13 @@ function initDatabase() {
       token TEXT PRIMARY KEY,
       user_id INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME NOT NULL,
       FOREIGN KEY (user_id) REFERENCES m_users(id) ON DELETE CASCADE
     )
   `).run();
 
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_sessions_user ON t_sessions(user_id)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_sessions_expires ON t_sessions(expires_at)`).run();
 
   // 14. Tabel Pengaturan Toko
   db.prepare(`
@@ -370,6 +372,9 @@ function autoMigrateColumns() {
   tryAddColumn('m_users', 'salt TEXT');
   tryAddColumn('m_users', 'created_at DATETIME DEFAULT CURRENT_TIMESTAMP');
   tryAddColumn('m_users', 'updated_at DATETIME DEFAULT CURRENT_TIMESTAMP');
+  
+  // Migrasi kolom expires_at untuk sessions
+  tryAddColumn('t_sessions', 'expires_at DATETIME');
 
   // Migrasi skema t_sales jika database lama belum memiliki CHECK constraint 'QRIS' atau 'VOID'
   try {
