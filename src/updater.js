@@ -4,8 +4,20 @@ const https = require('https');
 const http = require('http');
 const { execSync } = require('child_process');
 
+// Deteksi apakah berjalan sebagai Electron EXE atau Node.js dev
+// Di Electron: __dirname = resources/app/src → ROOT_DIR = resources/app/
+// Di Node dev : __dirname = D:/POS/src         → ROOT_DIR = D:/POS/
 const ROOT_DIR = path.resolve(__dirname, '..');
 const VERSION_FILE = path.join(ROOT_DIR, 'version.txt');
+
+// Callback untuk restart app (diisi oleh desktop/main.js jika dijalankan di Electron)
+let _restartCallback = null;
+function setRestartCallback(fn) { _restartCallback = fn; }
+function triggerRestart() {
+  if (typeof _restartCallback === 'function') {
+    _restartCallback();
+  }
+}
 
 // Daftar file & folder yang DILINDUNGI (TIDAK BOLEH DITIMPA SAAT UPDATE)
 const PROTECTED_PATTERNS = [
@@ -292,5 +304,8 @@ module.exports = {
   parseRepoString,
   compareSemver,
   checkGitHubUpdate,
-  applyGitHubUpdate
+  applyGitHubUpdate,
+  setRestartCallback,
+  triggerRestart,
+  ROOT_DIR
 };

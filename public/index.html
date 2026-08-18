@@ -1208,9 +1208,15 @@
                         <span><strong>100% Terlindungi:</strong> File database (<code class="font-mono bg-emerald-100 dark:bg-emerald-900 px-1 py-0.2 rounded">database.db</code>) & port (<code class="font-mono bg-emerald-100 dark:bg-emerald-900 px-1 py-0.2 rounded">.env</code>) <strong>TIDAK AKAN DITIMPA</strong>.</span>
                       </div>
 
-                      <button type="button" onclick="confirmApplyUpdate()" id="btn-apply-update" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform">
+                      <button type="button" onclick="executeSystemUpdate()" id="btn-apply-update" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform">
                         <i class="fa-solid fa-cloud-arrow-down text-sm"></i> <span>⚡ UPDATE SEKARANG KE VERSI TERBARU</span>
                       </button>
+
+                      <!-- Progress Log Update -->
+                      <div id="update-progress-log" class="hidden mt-3 p-3 bg-slate-900 dark:bg-black rounded-xl border border-slate-700 text-left">
+                        <p class="text-[10px] font-bold text-slate-400 mb-2 font-mono">📋 LOG PROSES UPDATE:</p>
+                        <div id="update-progress-lines" class="space-y-1 max-h-36 overflow-y-auto scrollbar-thin font-mono text-[11px]"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -3551,22 +3557,46 @@
       openModal('modal-confirm-update');
     }
 
-    async function executeSystemUpdate() {
-      const btn = document.getElementById('btn-modal-execute-update');
-      const applyBtn = document.getElementById('btn-apply-update');
+    function addUpdateLog(msg, type = 'info') {
+      const container = document.getElementById('update-progress-lines');
+      const logBox = document.getElementById('update-progress-log');
+      if (!container || !logBox) return;
+      logBox.classList.remove('hidden');
+      const colors = { info: 'text-slate-300', success: 'text-emerald-400', error: 'text-rose-400', warn: 'text-amber-400' };
+      const icons = { info: '▶', success: '✅', error: '❌', warn: '⚠️' };
+      const line = document.createElement('div');
+      line.className = colors[type] || 'text-slate-300';
+      line.textContent = `${icons[type] || '▶'} ${msg}`;
+      container.appendChild(line);
+      container.scrollTop = container.scrollHeight;
+    }
 
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Mengunduh & Memperbarui...</span>';
+    async function executeSystemUpdate() {
+      const applyBtn = document.getElementById('btn-apply-update');
+      const logLines = document.getElementById('update-progress-lines');
+
+      if (!cachedLatestUpdateInfo || !cachedLatestUpdateInfo.has_update) {
+        alert('Tidak ada pembaruan yang siap diinstal. Klik "Cek" terlebih dahulu.');
+        return;
       }
+
+      if (!confirm(`Yakin ingin memperbarui ke versi v${cachedLatestUpdateInfo.latest_version}?\n\nDatabase & pengaturan toko 100% aman.`)) return;
+
       if (applyBtn) {
         applyBtn.disabled = true;
-        applyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sedang Memperbarui Kode...</span>';
+        applyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sedang Memperbarui...</span>';
       }
+      if (logLines) logLines.innerHTML = '';
+
+      addUpdateLog('Memulai proses pembaruan...');
+      addUpdateLog(`Target versi: v${cachedLatestUpdateInfo.latest_version}`);
 
       try {
         const repoVal = document.getElementById('setting-github-repo-input')?.value.trim() || '';
         const branchVal = cachedLatestUpdateInfo?.branch || 'main';
+
+        addUpdateLog(`Menghubungi GitHub: ${repoVal || 'repo default'}...`);
+        addUpdateLog('Mengunduh paket pembaruan dari GitHub... (mohon tunggu)');
 
         const res = await fetchAPI('/api/system/apply-update', {
           method: 'POST',
@@ -3575,24 +3605,29 @@
         const json = await res.json();
 
         if (json.success) {
-          closeModal('modal-confirm-update');
+          addUpdateLog(`Pembaruan ke v${json.new_version} berhasil diterapkan!`, 'success');
+          addUpdateLog('Database & pengaturan toko aman tidak tertimpa.', 'success');
+          addUpdateLog('Memuat ulang aplikasi dalam 3 detik...', 'warn');
           playBeep('success');
-          alert(json.message || "Pembaruan berhasil diterapkan! Halaman akan dimuat ulang dengan versi baru.");
-          setTimeout(() => {
-            window.location.reload();
-          }, 800);
+          let countdown = 3;
+          const timer = setInterval(() => {
+            addUpdateLog(`Reload dalam ${countdown--} detik...`, 'warn');
+            if (countdown < 0) {
+              clearInterval(timer);
+              window.location.reload();
+            }
+          }, 1000);
         } else {
+          addUpdateLog('Gagal: ' + (json.message || json.error), 'error');
           playBeep('error');
-          alert("Gagal menerapkan update: " + (json.message || json.error));
+          if (applyBtn) {
+            applyBtn.disabled = false;
+            applyBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down text-sm"></i> <span>⚡ UPDATE SEKARANG KE VERSI TERBARU</span>';
+          }
         }
       } catch (err) {
+        addUpdateLog('Error: ' + err.message, 'error');
         playBeep('error');
-        alert("Terjadi kesalahan saat menerapkan update: " + err.message);
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fa-solid fa-bolt"></i> <span>Terapkan Pembaruan</span>';
-        }
         if (applyBtn) {
           applyBtn.disabled = false;
           applyBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down text-sm"></i> <span>⚡ UPDATE SEKARANG KE VERSI TERBARU</span>';

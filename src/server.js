@@ -441,13 +441,34 @@ app.post('/api/system/apply-update', authenticate, async (req, res) => {
       repo = storeSetting?.value || 'alijayanet/app-toko';
     }
 
+    // ✅ PERLINDUNGAN: Cek versi GitHub dulu sebelum apply
+    // Hanya update jika GitHub punya versi yang LEBIH BARU dari lokal
+    const checkResult = await updater.checkGitHubUpdate(repo, branch || 'main');
+    if (!checkResult.success) {
+      return res.status(400).json({ success: false, message: checkResult.message || 'Gagal memverifikasi versi di GitHub.' });
+    }
+    if (!checkResult.has_update) {
+      return res.status(400).json({
+        success: false,
+        message: `Update dibatalkan: Versi GitHub (v${checkResult.latest_version}) tidak lebih baru dari versi lokal (v${checkResult.current_version}). Upload kode terbaru ke GitHub terlebih dahulu.`
+      });
+    }
+
     const result = await updater.applyGitHubUpdate(repo, branch || 'main');
+
+    // Jika berjalan di Electron desktop, kirim sinyal restart ke main process
+    if (result.success) {
+      setTimeout(() => updater.triggerRestart(), 1500);
+    }
+
     return res.json(result);
   } catch (error) {
     console.error('Error applying GitHub update:', error);
     return res.status(500).json({ success: false, message: error.message || 'Gagal menerapkan pembaruan sistem.' });
   }
 });
+
+
 
 
 // ==========================================
@@ -1685,9 +1706,18 @@ app.get('/api/reports/dashboard', authenticate, (req, res) => {
 });
 
 // Jalankan Server Express
-app.listen(PORT, HOST, () => {
+const server = app.listen(PORT, HOST, () => {
   console.log(`====================================================`);
   console.log(` POS Central Server berjalan di http://${HOST}:${PORT}`);
   console.log(` Dapat diakses dari HP / Client di LAN lewat IP server.`);
   console.log(`====================================================`);
 });
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`[Server] Port ${PORT} sudah aktif/digunakan. Server Express tetap berjalan di proses utama.`);
+  } else {
+    console.error('[Server Error]', err);
+  }
+});
+
