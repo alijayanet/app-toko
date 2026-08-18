@@ -1,9 +1,12 @@
 const db = require('./db');
 const crypto = require('crypto');
 
-function hashPassword(password) {
-  const salt = 'pos_secret_salt_123';
-  return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+function hashPassword(password, salt = null) {
+  // Gunakan salt unik per user atau generate baru
+  const actualSalt = salt || crypto.randomBytes(16).toString('hex');
+  const iterations = 100000; // Standar OWASP untuk PBKDF2
+  const hash = crypto.pbkdf2Sync(password, actualSalt, iterations, 64, 'sha512').toString('hex');
+  return { hash, salt: actualSalt };
 }
 
 console.log('Memulai seeding database...');
@@ -30,10 +33,14 @@ const runSeeding = db.transaction(() => {
 
   // Seed default users
   const insertUser = db.prepare(`
-    INSERT INTO m_users (username, password, name, role) VALUES (?, ?, ?, ?)
+    INSERT INTO m_users (username, password, salt, name, role) VALUES (?, ?, ?, ?, ?)
   `);
-  insertUser.run('admin', hashPassword('admin123'), 'Administrator Toko', 'ADMIN');
-  insertUser.run('kasir1', hashPassword('kasir123'), 'Siti Kasir', 'CASHIER');
+  
+  const adminHash = hashPassword('admin123');
+  insertUser.run('admin', adminHash.hash, adminHash.salt, 'Administrator Toko', 'ADMIN');
+  
+  const kasirHash = hashPassword('kasir123');
+  insertUser.run('kasir1', kasirHash.hash, kasirHash.salt, 'Siti Kasir', 'CASHIER');
 
   // Seed default settings
   const insertSetting = db.prepare(`

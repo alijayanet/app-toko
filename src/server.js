@@ -11,15 +11,138 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
+// Rate Limiting Store (in-memory simple implementation)
+const loginAttempts = new Map(); // { ip: { count, lastAttempt } }
+
+function checkRateLimit(ip, maxAttempts = 5, windowMs = 15 * 60 * 1000) {
+  const now = Date.now();
+  const record = loginAttempts.get(ip);
+  
+  if (!record) {
+    loginAttempts.set(ip, { count: 1, lastAttempt: now });
+    return true;
+  }
+  
+  // Reset jika sudah lewat window time
+  if (now - record.lastAttempt > windowMs) {
+    loginAttempts.set(ip, { count: 1, lastAttempt: now });
+    return true;
+  }
+  
+  // Increment attempt
+  record.count++;
+  record.lastAttempt = now;
+  
+  return record.count <= maxAttempts;
+}
+
+function resetRateLimit(ip) {
+  loginAttempts.delete(ip);
+}
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.raw({ type: ['application/octet-stream', 'application/x-sqlite3'], limit: '100mb' }));
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Hash Password Helper (PBKDF2)
-function hashPassword(password) {
-  const salt = 'pos_secret_salt_123';
-  return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+// ==========================================
+// HEALTH CHECK & SYSTEM INFO
+// ==========================================
+
+// Health Check Endpoint (untuk monitoring/load balancer)
+app.get('/health', (req, res) => {
+  try {
+    // Test database connection
+    const dbCheck = db.prepare('SELECT 1 as status').get();
+    
+    // Test WAL mode
+    const walCheck = db.pragma('journal_mode');
+    
+    const healthStatus = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: {
+        connected: dbCheck?.status === 1,
+        mode: walCheck?.[0]?.journal_mode || 'unknown'
+      },
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
+      },
+      node_version: process.version,
+      platform: process.platform
+    };
+    
+    res.status(200).json(healthStatus);
+  } catch (error) {
+    res.status(503).json({
+      status: 'unhealthy',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// System Info Endpoint (admin only)
+app.get('/api/system/info', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak.' });
+  }
+  
+  try {
+    const dbStats = {
+      products: db.prepare('SELECT COUNT(*) as count FROM m_products').get().count,
+      sales: db.prepare('SELECT COUNT(*) as count FROM t_sales').get().count,
+      customers: db.prepare('SELECT COUNT(*) as count FROM m_customers').get().count,
+      suppliers: db.prepare('SELECT COUNT(*) as count FROM m_suppliers').get().count,
+      users: db.prepare('SELECT COUNT(*) as count FROM m_users').get().count
+    };
+    
+    const serverInfo = {
+      version: require('../package.json').version,
+      node_version: process.version,
+      platform: process.platform,
+      uptime_seconds: Math.floor(process.uptime()),
+      uptime_formatted: formatUptime(process.uptime()),
+      memory_usage_mb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      database_stats: dbStats
+    };
+    
+    res.json({ success: true, data: serverInfo });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Helper function untuk format uptime
+function formatUptime(seconds) {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (secs > 0 || parts.length === 0) parts.push(`${secs}s`);
+  
+  return parts.join(' ');
+}
+
+// Hash Password Helper (PBKDF2) - Improved Security
+function hashPassword(password, salt = null) {
+  // Gunakan salt unik per user atau generate baru
+  const actualSalt = salt || crypto.randomBytes(16).toString('hex');
+  const iterations = 100000; // Naikkan dari 1000 ke 100000 (standar OWASP)
+  const hash = crypto.pbkdf2Sync(password, actualSalt, iterations, 64, 'sha512').toString('hex');
+  return { hash, salt: actualSalt };
+}
+
+function verifyPassword(password, storedHash, storedSalt) {
+  const { hash } = hashPassword(password, storedSalt);
+  return hash === storedHash;
 }
 
 // Authentication Middleware
@@ -71,9 +194,24 @@ function generateInvoiceNumber() {
 
 // Login
 app.post('/api/auth/login', (req, res) => {
+  const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+  
+  // Check rate limit
+  if (!checkRateLimit(clientIp)) {
+    return res.status(429).json({ 
+      success: false, 
+      message: 'Terlalu banyak percobaan login. Silakan coba lagi dalam 15 menit.' 
+    });
+  }
+
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ success: false, message: 'Username dan password wajib diisi.' });
+  }
+
+  // Validasi panjang input
+  if (username.length > 50 || password.length > 128) {
+    return res.status(400).json({ success: false, message: 'Input tidak valid.' });
   }
 
   try {
@@ -82,13 +220,35 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(401).json({ success: false, message: 'Username atau password salah.' });
     }
 
-    const hashedInput = hashPassword(password);
-    if (user.password !== hashedInput) {
+    // Support backward compatibility untuk user lama tanpa salt
+    let passwordMatch = false;
+    if (user.salt) {
+      // User baru dengan salt
+      const { hash } = hashPassword(password, user.salt);
+      passwordMatch = (hash === user.password);
+    } else {
+      // User lama (legacy) - masih pakai salt hardcoded
+      const legacySalt = 'pos_secret_salt_123';
+      const legacyHash = crypto.pbkdf2Sync(password, legacySalt, 1000, 64, 'sha512').toString('hex');
+      passwordMatch = (legacyHash === user.password);
+      
+      // Auto-migrate: Jika login berhasil, update ke salt baru
+      if (passwordMatch) {
+        const newHashData = hashPassword(password);
+        db.prepare('UPDATE m_users SET password = ?, salt = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+          .run(newHashData.hash, newHashData.salt, user.id);
+      }
+    }
+
+    if (!passwordMatch) {
       return res.status(401).json({ success: false, message: 'Username atau password salah.' });
     }
 
-    const token = crypto.randomBytes(16).toString('hex');
+    const token = crypto.randomBytes(32).toString('hex'); // 256-bit token (lebih aman)
     db.prepare('INSERT INTO t_sessions (token, user_id) VALUES (?, ?)').run(token, user.id);
+
+    // Reset rate limit on successful login
+    resetRateLimit(clientIp);
 
     return res.json({
       success: true,
@@ -129,10 +289,12 @@ app.put('/api/auth/profile', authenticate, (req, res) => {
     }
 
     if (password && password.trim() !== '') {
-      const hashedPass = hashPassword(password);
-      db.prepare('UPDATE m_users SET name = ?, username = ?, password = ? WHERE id = ?').run(name, username, hashedPass, userId);
+      const hashData = hashPassword(password);
+      db.prepare('UPDATE m_users SET name = ?, username = ?, password = ?, salt = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run(name, username, hashData.hash, hashData.salt, userId);
     } else {
-      db.prepare('UPDATE m_users SET name = ?, username = ? WHERE id = ?').run(name, username, userId);
+      db.prepare('UPDATE m_users SET name = ?, username = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run(name, username, userId);
     }
 
     const updatedUser = db.prepare('SELECT id, username, name, role FROM m_users WHERE id = ?').get(userId);

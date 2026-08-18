@@ -162,6 +162,7 @@ function initDatabase() {
 
   // Buat index untuk mempercepat pencarian satuan berdasarkan produk
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_product_units_prod ON m_product_units(product_id)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_product_units_name ON m_product_units(product_id, unit_name)`).run();
 
   // 3. Tabel Master Pelanggan (untuk piutang/bon)
   db.prepare(`
@@ -209,6 +210,8 @@ function initDatabase() {
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_invoice ON t_sales(invoice_no)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_customer ON t_sales(customer_id)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_date ON t_sales(sale_date)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_status ON t_sales(payment_status)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_user ON t_sales(user_id)`).run();
 
   // 6. Tabel Detail Penjualan (Sales Details)
   db.prepare(`
@@ -230,6 +233,7 @@ function initDatabase() {
   `).run();
 
   db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_det_sale ON t_sales_details(sale_id)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_det_product ON t_sales_details(product_id)`).run();
 
   // 7. Tabel Log Pembayaran Cicilan Piutang Pelanggan
   db.prepare(`
@@ -315,8 +319,11 @@ function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
+      salt TEXT,
       name TEXT NOT NULL,
-      role TEXT NOT NULL CHECK(role IN ('ADMIN', 'CASHIER'))
+      role TEXT NOT NULL CHECK(role IN ('ADMIN', 'CASHIER')),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `).run();
 
@@ -358,6 +365,11 @@ function autoMigrateColumns() {
   tryAddColumn('t_sales', 'user_id INTEGER');
   tryAddColumn('t_sales', 'cashier_name TEXT');
   tryAddColumn('t_sales', 'discount_amount REAL NOT NULL DEFAULT 0.0');
+  
+  // Migrasi kolom salt untuk user (keamanan password)
+  tryAddColumn('m_users', 'salt TEXT');
+  tryAddColumn('m_users', 'created_at DATETIME DEFAULT CURRENT_TIMESTAMP');
+  tryAddColumn('m_users', 'updated_at DATETIME DEFAULT CURRENT_TIMESTAMP');
 
   // Migrasi skema t_sales jika database lama belum memiliki CHECK constraint 'QRIS' atau 'VOID'
   try {

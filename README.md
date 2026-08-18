@@ -3,8 +3,35 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D%2016.0.0-emerald)](https://nodejs.org)
 [![Database](https://img.shields.io/badge/database-SQLite3%20(WAL%20Mode)-blue)](https://www.sqlite.org)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.1.0-green)](CHANGELOG.md)
+[![Security](https://img.shields.io/badge/security-hardened-red)](SECURITY.md)
 
 Aplikasi POS (Kasir) terpusat, modern, dan sangat ringan yang dirancang khusus untuk menjalankan operasional toko kelontong, retail, dan grosir skala kecil hingga menengah. Sistem ini berjalan mandiri secara **Self-Hosted** di server lokal (Ubuntu Server/PC Windows di toko) dan dapat diakses secara nirkabel (Wi-Fi/LAN lokal) oleh kasir menggunakan berbagai klien seperti laptop Windows, tablet, maupun HP Android/iOS.
+
+---
+
+## 🆕 What's New in v1.1.0
+
+### 🔐 **Enhanced Security**
+- ✅ Unique salt per user (PBKDF2 with 100,000 iterations)
+- ✅ Rate limiting for login (5 attempts per 15 minutes)
+- ✅ 256-bit session tokens
+- ✅ Auto-migration from legacy passwords
+- ✅ Comprehensive security documentation
+
+### 📊 **Performance Improvements**
+- ✅ New database indexes for faster queries
+- ✅ Health check endpoint (`/health`)
+- ✅ System info API for monitoring
+- ✅ Database optimization commands
+
+### 🛠️ **Developer Tools**
+- ✅ Interactive migration script
+- ✅ Maintenance commands (vacuum, optimize)
+- ✅ Password hash testing tool
+- ✅ Complete deployment guide
+
+📖 **Lihat [CHANGELOG.md](CHANGELOG.md) untuk detail lengkap**
 
 ---
 
@@ -101,6 +128,11 @@ Aplikasi POS ini dibuat seminimalis mungkin agar tidak membebani server lokal na
 
 ## 🚀 Panduan Instalasi & Konfigurasi
 
+**📖 Untuk panduan deployment lengkap, lihat [DEPLOYMENT.md](DEPLOYMENT.md)**  
+**🔐 Untuk panduan keamanan, lihat [SECURITY.md](SECURITY.md)**
+
+### Ringkasan Cepat
+
 ### Prasyarat Sebelum Install
 Pastikan server lokal (Ubuntu Server atau Windows PC) Anda sudah terpasang:
 *   [Node.js](https://nodejs.org) (Versi 16 atau lebih baru)
@@ -122,6 +154,21 @@ Pada server Ubuntu, buat file `.env` dengan menyalin file template `env.example.
 ```bash
 cp env.example.txt .env
 ```
+
+**PENTING**: Edit file `.env` dan ganti `SESSION_SECRET` dengan nilai random yang kuat:
+```bash
+# Generate SESSION_SECRET
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Copy hasilnya dan paste ke file `.env`:
+```env
+PORT=3000
+HOST=0.0.0.0
+SESSION_SECRET=<paste_hasil_generate_di_sini>
+NODE_ENV=production
+```
+
 Setelah disalin, Anda dapat menyesuaikan konfigurasi port di dalam `.env` jika diperlukan (secara default diset ke `PORT=3000` dan `HOST=0.0.0.0` agar server Express dapat diakses dari IP lokal mana pun dalam jaringan Wi-Fi/LAN toko Anda).
 
 ### Langkah 4: Seeding Database Awal
@@ -182,12 +229,22 @@ Aplikasi ini sudah mendukung **PWA Standalone**:
 
 ## 🔑 Kredensial Default (Akses Masuk)
 
+⚠️ **PENTING: SEGERA GANTI PASSWORD SETELAH LOGIN PERTAMA!**
+
 Gunakan akun bawaan berikut setelah melakukan seeding database:
 
 | Peran (Role) | Username | Password | Fitur Utama |
 |---|---|---|---|
-| **Administrator** | `admin` | `admin123` | Akses penuh, stok masuk, laporan laba rugi, pengaturan toko |
-| **Kasir (Cashier)** | `kasir1` | `kasir123` | Transaksi kasir, cicilan piutang pelanggan |
+| **Administrator** | `admin` | `admin123` | ⚠️ **WAJIB DIGANTI!** Akses penuh, stok masuk, laporan laba rugi, pengaturan toko |
+| **Kasir (Cashier)** | `kasir1` | `kasir123` | ⚠️ **WAJIB DIGANTI!** Transaksi kasir, cicilan piutang pelanggan |
+
+**Cara mengganti password**:
+1. Login dengan akun default
+2. Klik icon Profil di header (atau menu sidebar)
+3. Update password dengan kombinasi kuat (min 12 karakter, huruf besar/kecil/angka/simbol)
+4. Simpan perubahan
+
+📖 **Lihat [SECURITY.md](SECURITY.md) untuk panduan keamanan lengkap**
 
 ---
 
