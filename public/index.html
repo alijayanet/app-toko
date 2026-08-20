@@ -175,9 +175,14 @@
           <i class="fa-solid fa-print text-lg w-5 text-indigo-400"></i>
           <span>Pengaturan Printer</span>
         </button>
-        <button onclick="switchTab('users')" id="nav-users" class="nav-btn-admin w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200">
-          <i class="fa-solid fa-users text-lg w-5"></i>
-          <span>Manajemen User</span>
+        <button onclick="handleUsersNavClick()" id="nav-users" class="nav-btn-admin w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-users text-lg w-5"></i>
+            <span>Manajemen User</span>
+          </div>
+          <span id="nav-users-lock-badge" class="text-[10px] text-amber-300 bg-amber-950/70 border border-amber-700/60 px-1.5 py-0.5 rounded-full flex items-center gap-1 font-medium" title="Fitur Terkunci (Khusus Donatur)">
+            <i class="fa-solid fa-lock text-[9px]"></i>
+          </span>
         </button>
         <button onclick="switchTab('laporan')" id="nav-laporan" class="nav-btn-admin w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200">
           <i class="fa-solid fa-chart-pie text-lg w-5"></i>
@@ -1334,6 +1339,81 @@
   <!-- ==========================================
        MODALS
        ========================================== -->
+
+  <!-- Modal Aktivasi Fitur Manajemen User (Khusus Donatur) -->
+  <div id="modal-activate-user-mgmt" class="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-5 border border-amber-200 dark:border-amber-900/50 relative overflow-hidden">
+      <!-- Background subtle accent glow -->
+      <div class="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+      <!-- Header -->
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center text-xl shadow-lg shadow-amber-500/25 shrink-0">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 class="font-outfit font-bold text-lg text-slate-800 dark:text-slate-100">Aktivasi Manajemen User</h3>
+          <span class="inline-block mt-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">
+            Fitur Khusus Donatur
+          </span>
+        </div>
+        <button type="button" onclick="closeModal('modal-activate-user-mgmt')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg p-1 -mr-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Keterangan & Deskripsi -->
+      <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p>
+          Menu <strong>Manajemen User & Karyawan</strong> terkunci dan memerlukan kode aktivasi donasi untuk dibuka. Fitur ini digunakan untuk mengelola akun kasir, admin, dan hak akses toko.
+        </p>
+        
+        <!-- Box Info Donasi & Link -->
+        <div class="p-3.5 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border border-amber-200/80 dark:border-amber-800/60 rounded-2xl space-y-2.5">
+          <div class="flex items-center gap-2 font-semibold text-amber-900 dark:text-amber-200">
+            <i class="fa-solid fa-heart text-rose-500"></i>
+            <span>Dukung Pengembangan Aplikasi:</span>
+          </div>
+          <p class="text-[11px] text-slate-600 dark:text-slate-400">
+            Untuk mendapatkan kode aktivasi, silakan buka tautan donasi resmi kami:
+          </p>
+          <a href="https://app.alijaya.com/donasi" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shadow-amber-500/20 transition-all text-xs">
+            <i class="fa-solid fa-up-right-from-square text-xs"></i>
+            <span>https://app.alijaya.com/donasi</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Form Input Kode Aktivasi -->
+      <div class="space-y-3 pt-1">
+        <div>
+          <label for="input-activation-code" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+            <span>Masukkan Kode Aktivasi:</span>
+            <span class="text-[10px] font-normal text-slate-400 font-mono">Kode Donasi</span>
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <i class="fa-solid fa-key text-xs"></i>
+            </div>
+            <input type="text" id="input-activation-code" placeholder="Masukkan kode aktivasi donasi..." autocomplete="off" onkeydown="if(event.key==='Enter') submitUserManagementActivation()" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 shadow-inner">
+          </div>
+          <p id="activation-error-msg" class="hidden text-[11px] text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+            <i class="fa-solid fa-circle-exclamation"></i> <span id="activation-error-text">Kode aktivasi salah.</span>
+          </p>
+        </div>
+
+        <div class="flex gap-2.5 pt-2">
+          <button type="button" onclick="closeModal('modal-activate-user-mgmt')" class="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 py-2.5 px-4 rounded-xl text-xs font-semibold transition-colors">
+            Tutup
+          </button>
+          <button type="button" onclick="submitUserManagementActivation()" id="btn-submit-activation" class="flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-transform">
+            <i class="fa-solid fa-lock-open"></i>
+            <span>Aktifkan Fitur</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal Konfirmasi Restore Database -->
   <div id="modal-confirm-restore" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 hidden">
@@ -3164,7 +3244,8 @@
         fetchCustomers();
         fetchSuppliers();
         updateDashboardReport();
-        if (role === 'ADMIN') {
+        updateUserManagementLockUI();
+        if (role === 'ADMIN' && isUserManagementUnlocked()) {
           fetchUsers();
         }
       } else {
@@ -3300,6 +3381,7 @@
         const json = await res.json();
         if (json.success && json.data) {
           storeSettings = json.data;
+          updateUserManagementLockUI();
           
           // Terapkan ke Header UI Kasir
           document.getElementById('app-title-store-name').textContent = storeSettings.store_name || 'KASIRKU';
@@ -3930,7 +4012,143 @@
       }
     }
 
+    // ==========================================
+    // USER MANAGEMENT ACTIVATION LOCK SYSTEM
+    // ==========================================
+    function isUserManagementUnlocked() {
+      if (storeSettings && storeSettings.feature_user_management_unlocked === 'true') {
+        return true;
+      }
+      if (localStorage.getItem('feature_user_management_unlocked') === 'true') {
+        return true;
+      }
+      return false;
+    }
+
+    function updateUserManagementLockUI() {
+      const lockBadge = document.getElementById('nav-users-lock-badge');
+      const isUnlocked = isUserManagementUnlocked();
+      if (lockBadge) {
+        if (isUnlocked) {
+          lockBadge.classList.add('hidden');
+        } else {
+          lockBadge.classList.remove('hidden');
+          lockBadge.className = 'text-[10px] text-amber-300 bg-amber-950/70 border border-amber-700/60 px-1.5 py-0.5 rounded-full flex items-center gap-1 font-medium';
+          lockBadge.innerHTML = '<i class="fa-solid fa-lock text-[9px]"></i>';
+        }
+      }
+    }
+
+    function handleUsersNavClick() {
+      if (isUserManagementUnlocked()) {
+        switchTab('users');
+      } else {
+        openUserManagementActivationModal();
+      }
+    }
+
+    function openUserManagementActivationModal() {
+      const input = document.getElementById('input-activation-code');
+      const errBox = document.getElementById('activation-error-msg');
+      if (input) input.value = '';
+      if (errBox) errBox.classList.add('hidden');
+      openModal('modal-activate-user-mgmt');
+      setTimeout(() => {
+        if (input) input.focus();
+      }, 150);
+    }
+
+    async function submitUserManagementActivation() {
+      const input = document.getElementById('input-activation-code');
+      const btn = document.getElementById('btn-submit-activation');
+      const errBox = document.getElementById('activation-error-msg');
+      const errText = document.getElementById('activation-error-text');
+
+      const code = input ? input.value.trim() : '';
+      if (!code) {
+        if (errBox && errText) {
+          errText.textContent = 'Silakan masukkan kode aktivasi terlebih dahulu.';
+          errBox.classList.remove('hidden');
+        }
+        if (input) input.focus();
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Memeriksa...</span>';
+      }
+      if (errBox) errBox.classList.add('hidden');
+
+      try {
+        const res = await fetchAPI('/api/settings/activate-feature', {
+          method: 'POST',
+          body: JSON.stringify({ feature: 'user_management', code: code })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          localStorage.setItem('feature_user_management_unlocked', 'true');
+          if (storeSettings) {
+            storeSettings.feature_user_management_unlocked = 'true';
+          }
+          updateUserManagementLockUI();
+          closeModal('modal-activate-user-mgmt');
+          playBeep('success');
+          alert('🎉 ' + (json.message || 'Aktivasi Manajemen User Berhasil! Menu kini telah aktif dan dapat digunakan.'));
+          switchTab('users');
+        } else {
+          // Fallback offline verification if exact match
+          if (code.toLowerCase() === 'donasidulu') {
+            localStorage.setItem('feature_user_management_unlocked', 'true');
+            if (storeSettings) {
+              storeSettings.feature_user_management_unlocked = 'true';
+            }
+            updateUserManagementLockUI();
+            closeModal('modal-activate-user-mgmt');
+            playBeep('success');
+            alert('🎉 Aktivasi Manajemen User Berhasil! Menu kini telah aktif dan dapat digunakan.');
+            switchTab('users');
+          } else {
+            playBeep('error');
+            if (errBox && errText) {
+              errText.textContent = json.message || 'Kode aktivasi salah. Silakan coba lagi.';
+              errBox.classList.remove('hidden');
+            }
+          }
+        }
+      } catch (err) {
+        if (code.toLowerCase() === 'donasidulu') {
+          localStorage.setItem('feature_user_management_unlocked', 'true');
+          if (storeSettings) {
+            storeSettings.feature_user_management_unlocked = 'true';
+          }
+          updateUserManagementLockUI();
+          closeModal('modal-activate-user-mgmt');
+          playBeep('success');
+          alert('🎉 Aktivasi Manajemen User Berhasil! Menu kini telah aktif dan dapat digunakan.');
+          switchTab('users');
+        } else {
+          playBeep('error');
+          if (errBox && errText) {
+            errText.textContent = 'Gagal memvalidasi kode aktivasi. Periksa koneksi atau coba lagi.';
+            errBox.classList.remove('hidden');
+          }
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-lock-open"></i> <span>Aktifkan Fitur</span>';
+        }
+      }
+    }
+
     function switchTab(tabName) {
+      if (tabName === 'users' && !isUserManagementUnlocked()) {
+        openUserManagementActivationModal();
+        return;
+      }
+
       activeTab = tabName;
       document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
       document.getElementById(`tab-${tabName}`).classList.remove('hidden');

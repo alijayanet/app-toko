@@ -8,7 +8,7 @@ const qrisUtil = require('./qrisUtil');
 const updater = require('./updater');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || '0.0.0.0';
 
 // Rate Limiting Store (in-memory simple implementation)
@@ -438,6 +438,38 @@ app.post('/api/settings', authenticate, (req, res) => {
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
+});
+
+// Endpoint Aktivasi Fitur Berbayar / Donasi (e.g. Manajemen User)
+app.post('/api/settings/activate-feature', authenticate, (req, res) => {
+  const { feature, code } = req.body || {};
+  if (!code || typeof code !== 'string') {
+    return res.status(400).json({ success: false, message: 'Kode aktivasi wajib diisi.' });
+  }
+
+  const cleanCode = code.trim().toLowerCase();
+
+  if (feature === 'user_management' || !feature) {
+    if (cleanCode === 'donasidulu') {
+      try {
+        db.prepare("INSERT OR REPLACE INTO m_settings (key, value) VALUES ('feature_user_management_unlocked', 'true')").run();
+        return res.json({
+          success: true,
+          message: 'Aktivasi Manajemen User berhasil! Menu kini telah aktif dan dapat digunakan sepenuhnya.',
+          feature: 'user_management'
+        });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Kode aktivasi salah atau tidak valid. Silakan periksa kembali atau lakukan donasi di https://app.alijaya.com/donasi'
+      });
+    }
+  }
+
+  return res.status(400).json({ success: false, message: 'Fitur tidak dikenali.' });
 });
 
 // Endpoint Send WhatsApp Receipt (Direct wa.me or API Gateway)

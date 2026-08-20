@@ -21,6 +21,8 @@ xcopy /y "%SRC%\src\updater.js"       "%TARGET%\src\"
 xcopy /y "%SRC%\desktop\main.js"      "%TARGET%\desktop\"
 xcopy /y "%SRC%\version.txt"          "%TARGET%\"
 xcopy /y "%SRC%\package.json"         "%TARGET%\"
+xcopy /y "%SRC%\README.md"            "%TARGET%\"
+xcopy /y "%SRC%\env.example.txt"      "%TARGET%\"
 
 echo.
 echo [2/2] Selesai! File berhasil diperbarui.

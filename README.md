@@ -79,6 +79,8 @@ Sistem POS ini dikembangkan dengan fokus pada kemudahan operasional kasir di lap
 *   **Halaman Login Glassmorphism**: Desain antarmuka login yang modern dan elegan dengan chip akun demo instan, toggle lihat sandi, serta penguncian sesi otomatis.
 *   **Role CASHIER**: Terbatas hanya untuk melakukan transaksi kasir dan melihat daftar piutang pelanggan. Menu administrator otomatis disembunyikan.
 *   **Role ADMIN**: Akses penuh ke dasbor laporan laba rugi, penyesuaian stok opname, input pembelian supplier, pendaftaran produk baru, audit kasir, dan konfigurasi toko.
+*   **Aktivasi Fitur Manajemen User (Khusus Donatur)**: Menu Manajemen User & Karyawan dilengkapi dengan sistem penguncian aktivasi. Pengguna dapat membuka fitur ini dengan berdonasi melalui [https://app.alijaya.com/donasi](https://app.alijaya.com/donasi) dan memasukkan kode aktivasi resmi.
+*   **Struk & QRIS Digital WhatsApp**: Kirim struk belanja digital teks atau gambar QRIS beresolusi tinggi langsung ke nomor WhatsApp pembeli melalui deep-link `wa.me` atau integrasi WhatsApp API Gateway.
 *   **Backup Database 1-Klik**: Tombol unduh cadangan SQLite database (`.db`) langsung dari menu pengaturan untuk perlindungan data toko.
 *   **Restore Database Aman**: Fitur pemulihan database dari file cadangan lama dengan validasi integritas SQLite, verifikasi akun admin, dialog konfirmasi peringatan, dan pembuatan *safety backup* otomatis sebelum data ditimpa.
 *   **GitHub In-App Auto Updater (Terhubung ke GitHub)**: Cek dan perbarui source code langsung dari repositori GitHub berdasarkan berkas `version.txt`. Proses update **100% aman** karena **database (`database.db`), konfigurasi port (`.env`), dan pengaturan toko tidak akan pernah ditimpa atau hilang**.
@@ -163,16 +165,16 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 Copy hasilnya dan paste ke file `.env`:
 ```env
-PORT=3000
+PORT=5000
 HOST=0.0.0.0
 SESSION_SECRET=<paste_hasil_generate_di_sini>
 NODE_ENV=production
 ```
 
-Setelah disalin, Anda dapat menyesuaikan konfigurasi port di dalam `.env` jika diperlukan (secara default diset ke `PORT=3000` dan `HOST=0.0.0.0` agar server Express dapat diakses dari IP lokal mana pun dalam jaringan Wi-Fi/LAN toko Anda).
+Setelah disalin, Anda dapat menyesuaikan konfigurasi port di dalam `.env` jika diperlukan (secara default diset ke `PORT=5000` dan `HOST=0.0.0.0` agar server Express dapat diakses dari IP lokal mana pun dalam jaringan Wi-Fi/LAN toko Anda).
 
 ### Langkah 4: Seeding Database Awal
-Jalankan perintah berikut untuk menginisialisasi database SQLite (`pos.db`) dan membuat tabel-tabel data master beserta data awal (users, settings, dan produk dummy):
+Jalankan perintah berikut untuk menginisialisasi database SQLite (`database.db`) dan membuat tabel-tabel data master beserta data awal (users, settings, dan produk dummy):
 ```bash
 npm run seed
 ```
@@ -181,17 +183,18 @@ npm run seed
 
 #### Pilihan A: Mode Desktop Windows (.exe)
 Jika Anda menggunakan komputer/laptop Windows di toko:
-1. **Cara Cepat (1-Klik):** Dobel-klik file `Start-POS-Desktop.bat` di folder aplikasi.
+1. **Cara Cepat (1-Klik):** Dobel-klik file `Start-POS-Desktop.bat` di folder aplikasi atau jalankan file portable di `dist/POS Kasir Pintar UMKM-win32-x64/POS Kasir Pintar UMKM.exe`.
 2. **Cara Manual via Terminal:**
    ```bash
    npm run desktop
    ```
-3. **Build File Installer Windows (.exe):**
+3. **Build File Installer / Portable Windows (.exe):**
    Untuk mengompilasi menjadi file setup installer `.exe` mandiri:
    ```bash
    npm run build:win
+   # atau untuk portable:
+   npm run build:portable
    ```
-   File installer `POS-Kasir-Pintar-Setup-1.0.0.exe` akan tersimpan di dalam folder `dist/`.
 
 #### Pilihan B: Mode Server Linux / Ubuntu (PM2)
 Sangat disarankan menggunakan **PM2 Process Manager** agar aplikasi berjalan stabil 24/7 di server dan otomatis menyala kembali jika server reboot:
@@ -221,7 +224,7 @@ npm start
 
 ## 📱 Fitur Progressive Web App (PWA)
 Aplikasi ini sudah mendukung **PWA Standalone**:
-- **Di Google Chrome / Microsoft Edge (PC/Laptop):** Buka `http://localhost:3000`, lalu klik tombol **`Install App`** di sudut kanan atas header untuk menginstall aplikasi ke Windows Desktop/Start Menu.
+- **Di Google Chrome / Microsoft Edge (PC/Laptop):** Buka `http://localhost:5000`, lalu klik tombol **`Install App`** di sudut kanan atas header untuk menginstall aplikasi ke Windows Desktop/Start Menu.
 - **Di HP Android (Chrome):** Buka alamat IP server di browser Chrome, buka menu titik tiga ➔ Pilih **"Tambahkan ke Layar Utama" / "Install Aplikasi"**.
 - **Di iPhone / iPad (Safari):** Buka alamat IP server di Safari, tekan tombol Share ➔ Pilih **"Add to Home Screen"**.
 
@@ -253,14 +256,14 @@ Gunakan akun bawaan berikut setelah melakukan seeding database:
 2.  Cari tahu alamat IP lokal server (contoh pada Ubuntu: jalankan `ip a` atau `ifconfig` untuk melihat IP, misal: `192.168.1.100`).
 3.  Buka web browser di HP kasir atau PC kasir klien, lalu akses URL:
     ```
-    http://192.168.1.100:3000
+    http://192.168.1.100:5000
     ```
 4.  Layar Login akan muncul, silakan masuk menggunakan kredensial kasir/admin Anda.
 
 ---
 
 ## 📷 Panduan Mengaktifkan Kamera HP Kasir (Non-HTTPS)
-Browser modern pada HP (Chrome, Safari, dll.) melarang keras akses perangkat keras seperti kamera pada protokol HTTP biasa (Non-HTTPS) demi alasan keamanan, kecuali untuk alamat `localhost`. Jika kasir mengakses POS menggunakan IP lokal server (misal: `http://192.168.1.100:3000`), kamera HP tidak akan bisa terbuka secara otomatis.
+Browser modern pada HP (Chrome, Safari, dll.) melarang keras akses perangkat keras seperti kamera pada protokol HTTP biasa (Non-HTTPS) demi alasan keamanan, kecuali untuk alamat `localhost`. Jika kasir mengakses POS menggunakan IP lokal server (misal: `http://192.168.1.100:5000`), kamera HP tidak akan bisa terbuka secara otomatis.
 
 Berikut adalah 2 cara mudah untuk membebaskan akses kamera tersebut:
 
@@ -271,7 +274,7 @@ Berikut adalah 2 cara mudah untuk membebaskan akses kamera tersebut:
     chrome://flags/#unsafely-treat-insecure-origin-as-secure
     ```
 3.  Cari bagian **"Insecure origins treated as secure"**.
-4.  Pada kotak input teks yang disediakan, masukkan alamat IP server POS Anda lengkap beserta port-nya (misal: `http://192.168.1.100:3000`).
+4.  Pada kotak input teks yang disediakan, masukkan alamat IP server POS Anda lengkap beserta port-nya (misal: `http://192.168.1.100:5000`).
 5.  Ubah pilihan dropdown di sebelahnya dari **Disabled** menjadi **Enabled**.
 6.  Tekan tombol **Relaunch** di bagian kanan bawah layar untuk memulai ulang Chrome.
 7.  Buka kembali alamat POS tersebut. Browser kini menganggap koneksi aman dan kamera HP kasir akan langsung terbuka secara otomatis saat tombol scan ditekan.
@@ -280,7 +283,7 @@ Berikut adalah 2 cara mudah untuk membebaskan akses kamera tersebut:
 Jika Anda ingin mengakses aplikasi kasir lewat internet secara aman (HTTPS) dengan SSL gratis bawaan untuk uji coba cepat:
 1.  Jalankan localtunnel secara gratis di server (pastikan server terkoneksi internet):
     ```bash
-    npx localtunnel --port 3000
+    npx localtunnel --port 5000
     ```
 2.  Gunakan tautan `https` yang diberikan (misal: `https://toko-rejeki.localtunnel.me`) untuk diakses di HP kasir. Karena menggunakan HTTPS, kamera HP akan langsung terbuka secara otomatis tanpa perlu konfigurasi tambahan.
 
@@ -294,7 +297,7 @@ Jika Anda memiliki domain kustom (misal: `tokoanda.com`) dan menggunakan Cloudfl
     *   Login dan hubungkan dengan akun Cloudflare Anda: `cloudflared tunnel login`.
     *   Buat tunnel baru: `cloudflared tunnel create pos-toko`.
     *   Rute kustom domain ke localhost server: `cloudflared tunnel route dns pos-toko pos.tokoanda.com`.
-    *   Jalankan tunnel untuk mengarahkan ke port aplikasi POS: `cloudflared tunnel run --url http://localhost:3000 pos-toko`.
+    *   Jalankan tunnel untuk mengarahkan ke port aplikasi POS: `cloudflared tunnel run --url http://localhost:5000 pos-toko`.
 
 
 ---
