@@ -63,32 +63,13 @@ function resetRateLimit(ip) {
   loginAttempts.delete(ip);
 }
 
-// CORS configuration
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, curl)
-    if (!origin) return callback(null, true);
-    
-    // Allow localhost and local network IPs
-    const allowedOrigins = [
-      /^http:\/\/localhost(:\d+)?$/,
-      /^http:\/\/127\.0\.0\.1(:\d+)?$/,
-      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/,
-      /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/
-    ];
-    
-    const isAllowed = allowedOrigins.some(pattern => pattern.test(origin));
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+// CORS configuration (Izinkan seluruh origin termasuk IP lokal, Public VPS, domain kustom, & tunnel)
+app.use(cors({
+  origin: true,
   credentials: true,
-  optionsSuccessStatus: 200
-};
-
-app.use(cors(corsOptions));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.raw({ type: ['application/octet-stream', 'application/x-sqlite3'], limit: '100mb' }));
 app.use(express.static(path.join(__dirname, '../public')));
