@@ -349,6 +349,111 @@ function initDatabase() {
     )
   `).run();
 
+  // 15. Tabel Biaya Operasional Toko (Buku Kas Keluar)
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS t_expenses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      expense_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+      category TEXT NOT NULL,
+      amount REAL NOT NULL DEFAULT 0.0,
+      description TEXT,
+      user_id INTEGER,
+      cashier_name TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES m_users(id) ON DELETE SET NULL
+    )
+  `).run();
+
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_expenses_date ON t_expenses(expense_date)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_expenses_cat ON t_expenses(category)`).run();
+
+  // 16. Tabel Rekapitulasi Shift Kasir & Tutup Toko (Z-Report)
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS t_shifts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      cashier_name TEXT NOT NULL,
+      start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+      end_time DATETIME,
+      starting_cash REAL NOT NULL DEFAULT 0.0,
+      cash_sales REAL NOT NULL DEFAULT 0.0,
+      qris_sales REAL NOT NULL DEFAULT 0.0,
+      credit_sales REAL NOT NULL DEFAULT 0.0,
+      debt_collected REAL NOT NULL DEFAULT 0.0,
+      expenses_paid REAL NOT NULL DEFAULT 0.0,
+      expected_cash REAL NOT NULL DEFAULT 0.0,
+      actual_cash REAL NOT NULL DEFAULT 0.0,
+      difference REAL NOT NULL DEFAULT 0.0,
+      status TEXT NOT NULL CHECK(status IN ('OPEN', 'CLOSED')) DEFAULT 'OPEN',
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES m_users(id)
+    )
+  `).run();
+
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_shifts_user_status ON t_shifts(user_id, status)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_shifts_start_time ON t_shifts(start_time)`).run();
+
+  // 17. Tabel Retur Penjualan (Refund & Pengembalian Barang)
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS t_sales_returns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      return_no TEXT UNIQUE NOT NULL,
+      sale_id INTEGER NOT NULL,
+      sale_invoice TEXT,
+      customer_id INTEGER,
+      customer_name TEXT,
+      return_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+      total_refund REAL NOT NULL DEFAULT 0.0,
+      refund_method TEXT NOT NULL CHECK(refund_method IN ('CASH', 'DEBT_DEDUCTION')),
+      reason TEXT,
+      cashier_name TEXT,
+      user_id INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (sale_id) REFERENCES t_sales(id) ON DELETE CASCADE
+    )
+  `).run();
+
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_returns_sale_id ON t_sales_returns(sale_id)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_returns_date ON t_sales_returns(return_date)`).run();
+
+  // 18. Tabel Detail Item Retur Penjualan
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS t_sales_return_details (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      return_id INTEGER NOT NULL,
+      product_id TEXT NOT NULL,
+      product_name TEXT NOT NULL,
+      unit_name TEXT NOT NULL,
+      conversion_factor REAL DEFAULT 1,
+      qty INTEGER NOT NULL,
+      refund_price REAL NOT NULL,
+      subtotal REAL NOT NULL,
+      FOREIGN KEY (return_id) REFERENCES t_sales_returns(id) ON DELETE CASCADE,
+      FOREIGN KEY (product_id) REFERENCES m_products(id)
+    )
+  `).run();
+
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_sales_return_details_ret_id ON t_sales_return_details(return_id)`).run();
+
+  // 19. Tabel Log Poin Loyalitas Pelanggan (Customer Loyalty Points)
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS t_point_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL,
+      sale_id INTEGER,
+      points_change INTEGER NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('EARN', 'REDEEM', 'ADJUSTMENT')),
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (customer_id) REFERENCES m_customers(id) ON DELETE CASCADE,
+      FOREIGN KEY (sale_id) REFERENCES t_sales(id) ON DELETE SET NULL
+    )
+  `).run();
+
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_point_logs_customer ON t_point_logs(customer_id)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_point_logs_sale ON t_point_logs(sale_id)`).run();
+
   // Migrasi otomatis kolom baru untuk database yang sudah berjalan
   autoMigrateColumns();
 }
@@ -364,9 +469,18 @@ function autoMigrateColumns() {
   };
 
   tryAddColumn('m_products', 'category TEXT DEFAULT "Umum"');
+  tryAddColumn('m_products', 'expiry_date DATE');
+  try {
+    db.prepare(`CREATE INDEX IF NOT EXISTS idx_products_expiry ON m_products(expiry_date)`).run();
+  } catch (_) {}
+
+  tryAddColumn('m_customers', 'points INTEGER DEFAULT 0');
   tryAddColumn('t_sales', 'user_id INTEGER');
   tryAddColumn('t_sales', 'cashier_name TEXT');
   tryAddColumn('t_sales', 'discount_amount REAL NOT NULL DEFAULT 0.0');
+  tryAddColumn('t_sales', 'points_earned INTEGER DEFAULT 0');
+  tryAddColumn('t_sales', 'points_redeemed INTEGER DEFAULT 0');
+  tryAddColumn('t_sales', 'points_discount_amount REAL DEFAULT 0.0');
   
   // Migrasi kolom salt untuk user (keamanan password)
   tryAddColumn('m_users', 'salt TEXT');
@@ -375,6 +489,36 @@ function autoMigrateColumns() {
   
   // Migrasi kolom expires_at untuk sessions
   tryAddColumn('t_sessions', 'expires_at DATETIME');
+
+  // Migrasi skema t_stock_logs jika belum memiliki 'RETURN_IN'
+  try {
+    const stockLogSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='t_stock_logs'").get()?.sql || '';
+    if (stockLogSql && !stockLogSql.includes("'RETURN_IN'")) {
+      db.pragma('foreign_keys = OFF');
+      db.prepare(`
+        CREATE TABLE t_stock_logs_migration (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          product_id TEXT NOT NULL,
+          qty_change INTEGER NOT NULL,
+          type TEXT NOT NULL CHECK(type IN ('SALE', 'PURCHASE', 'ADJUSTMENT', 'VOID_RESTORE', 'RETURN_IN')),
+          reference_id TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (product_id) REFERENCES m_products(id) ON DELETE CASCADE
+        )
+      `).run();
+      db.prepare(`
+        INSERT INTO t_stock_logs_migration (id, product_id, qty_change, type, reference_id, created_at)
+        SELECT id, product_id, qty_change, type, reference_id, created_at FROM t_stock_logs
+      `).run();
+      db.prepare(`DROP TABLE t_stock_logs`).run();
+      db.prepare(`ALTER TABLE t_stock_logs_migration RENAME TO t_stock_logs`).run();
+      db.prepare(`CREATE INDEX IF NOT EXISTS idx_stock_logs_prod ON t_stock_logs(product_id)`).run();
+      db.pragma('foreign_keys = ON');
+    }
+  } catch (e) {
+    console.error("Migration error for t_stock_logs RETURN_IN constraint:", e);
+    try { db.pragma('foreign_keys = ON'); } catch (_) {}
+  }
 
   // Migrasi skema t_sales jika database lama belum memiliki CHECK constraint 'QRIS' atau 'VOID'
   try {
@@ -426,6 +570,22 @@ function autoMigrateColumns() {
     }
   } catch (e) {
     console.error("Default QRIS payload seed error:", e);
+  }
+
+  // Seed default pengaturan Loyalitas & Cash Drawer jika belum ada
+  try {
+    const seedDefaultSetting = (key, val) => {
+      const existing = db.prepare("SELECT value FROM m_settings WHERE key = ?").get(key);
+      if (!existing) {
+        db.prepare("INSERT INTO m_settings (key, value) VALUES (?, ?)").run(key, val);
+      }
+    };
+    seedDefaultSetting('loyalty_enabled', '1');
+    seedDefaultSetting('loyalty_spend_per_point', '10000');
+    seedDefaultSetting('loyalty_point_value', '100');
+    seedDefaultSetting('kick_cash_drawer_enabled', '1');
+  } catch (e) {
+    console.error("Default loyalty & drawer settings seed error:", e);
   }
 }
 

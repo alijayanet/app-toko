@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pos-kasir-v1.0';
+const CACHE_NAME = 'pos-kasir-v2.1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -14,19 +14,20 @@ const STATIC_ASSETS = [
   'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'
 ];
 
-// Install Event - Pre-cache core shell
+// Install Event - Pre-cache core shell & skip waiting immediately
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Pre-caching static app shell assets...');
+      console.log('[SW] Pre-caching static app shell assets v2.1...');
       return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('[SW] Non-critical asset cache failed:', err);
+        console.warn('[SW] Non-critical asset cache warning:', err);
       });
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// Activate Event - Clean old caches
+// Activate Event - Clean ALL old caches immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -42,7 +43,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event - Dynamic caching with Network-First for API and Stale-While-Revalidate for UI
+// Fetch Event
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -52,12 +53,33 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle API Requests (Network First, Cache Fallback)
+  // 1. HTML / Navigation Requests -> NETWORK FIRST (Always get newest UI if connected)
+  if (request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html' || (request.headers.get('accept') && request.headers.get('accept').includes('text/html'))) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request) || await caches.match('/') || await caches.match('/index.html');
+          if (cached) return cached;
+          return new Response('<h1>Offline</h1><p>Server kasir tidak dapat dijangkau.</p>', {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+          });
+        })
+    );
+    return;
+  }
+
+  // 2. Handle API Requests (Network First, Cache Fallback)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // If successful response, clone and update API cache
           if (response && response.status === 200) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -67,7 +89,6 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(async () => {
-          // Offline fallback for API
           const cachedResponse = await caches.match(request);
           if (cachedResponse) {
             console.log('[SW] Serving cached API response offline for:', url.pathname);
@@ -85,7 +106,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle Static Assets & App Shell (Stale-While-Revalidate / Cache First with fallback)
+  // 3. Handle Static Assets & App Shell
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       const fetchPromise = fetch(request).then((networkResponse) => {
@@ -97,10 +118,7 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       }).catch(() => {
-        // If network fails and no cached response, fallback to root /
-        if (request.mode === 'navigate') {
-          return caches.match('/');
-        }
+        return cachedResponse;
       });
 
       return cachedResponse || fetchPromise;
