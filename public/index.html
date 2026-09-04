@@ -58,6 +58,15 @@
         }
       }
     }
+    // Deteksi awal lingkungan Android APK
+    (function() {
+      if (typeof window !== 'undefined') {
+        const isAndroid = (typeof window.AndroidPrinter !== 'undefined') || (navigator.userAgent && navigator.userAgent.includes('AlijayanetPOS'));
+        if (isAndroid) {
+          document.documentElement.classList.add('is-android-app');
+        }
+      }
+    })();
   </script>
 </head>
 <body class="h-full overflow-hidden text-slate-800 dark:text-slate-100 font-sans">
@@ -268,7 +277,7 @@
       </header>
 
       <!-- Content Area -->
-      <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-28 md:pb-6 relative">
+      <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-32 md:pb-6 relative">
 
         <!-- TAB 1: KASIR (POS) -->
         <section id="tab-kasir" class="tab-content h-full">
@@ -1753,38 +1762,38 @@
       </div>
 
       <!-- NATIVE MOBILE BOTTOM NAVIGATION BAR -->
-      <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 z-40 flex items-center justify-around px-1 shadow-[0_-4px_25px_rgba(0,0,0,0.08)]">
+      <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 min-h-[72px] pb-3.5 pt-1.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 z-40 flex items-center justify-around px-2 shadow-[0_-6px_25px_rgba(0,0,0,0.12)]">
         <!-- 1. Tab Penjualan -->
         <button type="button" onclick="switchTab('kasir')" id="bnav-kasir" class="mobile-bnav-btn flex-1 py-1 flex flex-col items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold transition-all relative">
           <div class="relative">
-            <i class="fa-solid fa-cart-shopping text-lg"></i>
+            <i class="fa-solid fa-cart-shopping text-xl"></i>
             <span id="mobile-bottom-cart-badge" class="hidden absolute -top-1.5 -right-2.5 bg-rose-500 text-white font-bold text-[9px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
           </div>
-          <span class="text-[10px] tracking-tight">Penjualan</span>
+          <span class="text-[11px] tracking-tight font-semibold">Penjualan</span>
         </button>
 
         <!-- 2. Tab Riwayat Penjualan -->
         <button type="button" onclick="switchTab('history')" id="bnav-history" class="mobile-bnav-btn flex-1 py-1 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium transition-all">
-          <i class="fa-solid fa-clock-rotate-left text-lg"></i>
-          <span class="text-[10px] tracking-tight">Riwayat</span>
+          <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+          <span class="text-[11px] tracking-tight font-medium">Riwayat</span>
         </button>
 
         <!-- 3. Tab Stok Barang -->
         <button type="button" onclick="switchTab('stok')" id="bnav-stok" class="mobile-bnav-btn flex-1 py-1 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium transition-all">
-          <i class="fa-solid fa-boxes-stacked text-lg"></i>
-          <span class="text-[10px] tracking-tight">Stok</span>
+          <i class="fa-solid fa-boxes-stacked text-xl"></i>
+          <span class="text-[11px] tracking-tight font-medium">Stok</span>
         </button>
 
         <!-- 4. Pengaturan Printer -->
         <button type="button" onclick="openPrinterSettingsModal()" id="bnav-printer" class="mobile-bnav-btn flex-1 py-1 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium transition-all">
-          <i class="fa-solid fa-print text-lg text-indigo-400"></i>
-          <span class="text-[10px] tracking-tight">Printer</span>
+          <i class="fa-solid fa-print text-xl text-indigo-400"></i>
+          <span class="text-[11px] tracking-tight font-medium">Printer</span>
         </button>
 
         <!-- 5. Menu Lainnya / Drawer Sidebar -->
         <button type="button" onclick="toggleMobileSidebar()" id="bnav-menu" class="mobile-bnav-btn flex-1 py-1 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium transition-all">
-          <i class="fa-solid fa-bars text-lg"></i>
-          <span class="text-[10px] tracking-tight">Menu</span>
+          <i class="fa-solid fa-bars text-xl"></i>
+          <span class="text-[11px] tracking-tight font-medium">Menu</span>
         </button>
       </nav>
     </main>
@@ -4166,6 +4175,10 @@
 
     // Dom Loaded
     document.addEventListener("DOMContentLoaded", () => {
+      if (window.AndroidPrinter || (navigator.userAgent && navigator.userAgent.includes('AlijayanetPOS'))) {
+        document.documentElement.classList.add('is-android-app');
+        document.body.classList.add('is-android-app');
+      }
       loadPaperSizePreference();
       checkSession();
       setupGlobalScanner();

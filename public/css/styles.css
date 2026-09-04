@@ -32,9 +32,28 @@
   border: 1px solid rgba(55, 65, 81, 0.5);
 }
 
-/* Safe Area Inset untuk Native Mobile Bottom Navigation */
+/* Safe Area Inset & Elevated Position untuk Native Mobile Bottom Navigation */
 #mobile-bottom-nav {
-  padding-bottom: max(0px, env(safe-area-inset-bottom));
+  min-height: 68px !important;
+  padding-top: 6px !important;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
+  box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Khusus Native Android APK: Angkat Navbar Lebih Tinggi agar Nyaman & Bebas dari Navigation Bar HP */
+.is-android-app #mobile-bottom-nav {
+  min-height: 80px !important;
+  padding-top: 8px !important;
+  padding-bottom: 24px !important;
+}
+
+.is-android-app #main-app > main > div.overflow-y-auto {
+  padding-bottom: 130px !important;
+}
+
+.mobile-bnav-btn {
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
 }
 
 /* Sembunyikan container cetak di tampilan layar normal */
