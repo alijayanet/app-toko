@@ -17,7 +17,7 @@ const loginAttempts = new Map(); // { ip: { count, lastAttempt } }
 // Cleanup expired sessions every hour
 setInterval(() => {
   try {
-    const deleted = db.prepare('DELETE FROM t_sessions WHERE expires_at < datetime("now")').run();
+    const deleted = db.prepare("DELETE FROM t_sessions WHERE expires_at < datetime('now')").run();
     if (deleted.changes > 0) {
       console.log(`[Session Cleanup] Removed ${deleted.changes} expired session(s)`);
     }

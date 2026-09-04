@@ -32,6 +32,11 @@
   border: 1px solid rgba(55, 65, 81, 0.5);
 }
 
+/* Safe Area Inset untuk Native Mobile Bottom Navigation */
+#mobile-bottom-nav {
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
 /* Sembunyikan container cetak di tampilan layar normal */
 @media screen {
   #thermal-receipt,
